@@ -22,8 +22,6 @@ readHMC <- function(file, includeLoci=NULL, shortIndNames=TRUE,
   nLoc <- ifelse(is.null(includeLoci), length(filelines) - 1,
                  length(includeLoci))
   # set up matrix to contain results
-#  counts1 <- counts2 <- matrix(as.integer(0), nrow=nInd, ncol=nLoc,
-#                               dimnames = list(indstrings, NULL))
   alDepth <- matrix(as.integer(0), nrow = nInd, ncol = 2*nLoc,
                     dimnames = list(indstrings, NULL))
   # loop to fill in data
@@ -41,7 +39,7 @@ readHMC <- function(file, includeLoci=NULL, shortIndNames=TRUE,
     for(i in 2:length(filelines)){
       # get locus name for this line of the file and see if it is in
       # the list of loci that we are keeping. If so, what position?
-      Lnum <- match(filelines[[i]][1], locnames)
+      Lnum <- fastmatch::fmatch(filelines[[i]][1], locnames)
       # go to next line of file if we don't want this locus
       if(is.na(Lnum)) next
       thesecounts <- strsplit(filelines[[i]][2:(nInd+1)],
@@ -54,11 +52,14 @@ readHMC <- function(file, includeLoci=NULL, shortIndNames=TRUE,
   
   # get nucleotides for the alleles
   fastalines <- readLines(fastafile)
+  fastaseq <- fastalines[seq(2,length(fastalines), by = 2)] # just sequences
+  fastaloc <- sapply(strsplit(fastalines[seq(1,length(fastalines)-1, by = 2)],
+                              split = "_"), function(x) x[1])
   alleleNucleotides <- character(nLoc * 2)
   for(i in 1:nLoc){
-    theseseq <- strsplit(fastalines[grep(paste(locnames[i], "_", sep = ""),
-                                         fastalines) + 1], split = "")
-    varpos <- theseseq[[1]] != thseseq[[2]]
+    rowid <- fastmatch::fmatch(locnames[i], fastaloc)
+    theseseq <- strsplit(fastaseq[c(rowid, rowid + 1)], split = "")
+    varpos <- theseseq[[1]] != theseseq[[2]]
     alleleNucleotides[2*i - 1] <- theseseq[[1]][varpos]
     alleleNucleotides[2*i] <- theseseq[[2]][varpos]
   }

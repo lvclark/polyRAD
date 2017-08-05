@@ -30,7 +30,8 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   if(!is.list(possiblePloidies)){
     stop("possiblePloidies must be list")
   }
-  if(!all(sapply(possiblePloidies, function(x) is.integer(x) && all(x > 0)))){
+  possiblePloidies <- lapply(possiblePloidies, as.integer)
+  if(!all(sapply(possiblePloidies, function(x) all(!is.na(x) && x > 0)))){
     stop("Each element of possiblePloidies should be a vector of integers greater than zero.")
   }
   if(contamRate < 0 || contamRate > 1){
@@ -61,7 +62,7 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   antiAlleleDepth <- expandedLocDepth - alleleDepth
   
   return(structure(list(alleleDepth = alleleDepth, alleles2loc = alleles2loc,
-                        locTable = loctable, possiblePloidies = possiblePloidies,
+                        locTable = locTable, possiblePloidies = possiblePloidies,
                         locDepth = locDepth, 
                         depthSamplingPermutations = depthSamplingPermutations,
                         depthRatio = depthRatio, antiAlleleDepth = antiAlleleDepth), 
