@@ -54,7 +54,7 @@ readHMC <- function(file, includeLoci=NULL, shortIndNames=TRUE,
   fastalines <- readLines(fastafile)
   fastaseq <- fastalines[seq(2,length(fastalines), by = 2)] # just sequences
   fastaloc <- sapply(strsplit(fastalines[seq(1,length(fastalines)-1, by = 2)],
-                              split = "_"), function(x) x[1])
+                              split = "_"), function(x) substring(x[1], 2, nchar(x[1])))
   alleleNucleotides <- character(nLoc * 2)
   for(i in 1:nLoc){
     rowid <- fastmatch::fmatch(locnames[i], fastaloc)

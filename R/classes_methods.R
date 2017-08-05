@@ -65,7 +65,8 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
                         locTable = locTable, possiblePloidies = possiblePloidies,
                         locDepth = locDepth, 
                         depthSamplingPermutations = depthSamplingPermutations,
-                        depthRatio = depthRatio, antiAlleleDepth = antiAlleleDepth), 
+                        depthRatio = depthRatio, antiAlleleDepth = antiAlleleDepth,
+                        alleleNucleotides = alleleNucleotides), 
                    class = "RADdata", taxa = taxa, nTaxa = nTaxa, nLoci = nLoci,
                    contamRate = contamRate))
 }
