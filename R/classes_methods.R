@@ -179,6 +179,60 @@ AddAlleleFreqHWE.RADdata <- function(object, ...){
   return(object)
 }
 
+# estimate likelihood of genotypes given the read depth
+# (i.e. the probability of that read count distribution given each 
+# possible genotype)
+AddGenotypeLikelihood <- function(object, ...){
+  UseMethod("AddGenotypeLikelihood", object)
+}
+AddGenotypeLikelihood.RADdata <- function(object, ...){
+  if(is.null(object$alleleFreq)){
+    cat("Allele frequencies not found; estimating under HWE from depth ratios.",
+        sep = "\n")
+    object <- AddAlleleFreqHWE(object)
+  }
+  if(is.matrix(object$alleleFreq)){
+    # If allele frequency was estimated seperately for each taxon, get mean
+    # across the whole sample, since contamination could come from any taxon.
+    alFreq <- colMeans(object$alleleFreq, na.rm = TRUE)
+  } else {
+    alFreq <- object$alleleFreq
+  }
+  
+  # get ploidies, ignoring inheritance pattern
+  ploidies <- sort(unique(sapply(object$possiblePloidies, sum)))
+  # set up list for genotype likelihoods and loop through
+  object$genotypeLikelihood <- list()
+  length(object$genotypeLikelihood) <- length(ploidies)
+  # probability of getting each allele from contamination
+  sampleContam <- attr(object, "contamRate") * alFreq
+  for(i in 1:length(ploidies)){
+    # get probability of sampling each allele from each possible genotype
+    sampleReal <- (0:ploidies[i])/ploidies[i] * (1 - attr(object, "contamRate"))
+    alleleProb <- matrix(0, nrow = length(sampleReal), 
+                         ncol = length(sampleContam))
+    for(j in 1:length(sampleReal)){
+      alleleProb[j,] <- sampleReal[j] + sampleContam
+    }
+    antiAlleleProb <- 1 - alleleProb
+    
+    # get likelihoods
+    object$genotypeLikelihood[[i]] <- array(0, dim = c(ploidies[i]+1, 
+                                                  dim(object$alleleDepth)),
+                                       dimnames = list(as.character(0:ploidies[i]),
+                                                       attr(object, "taxa"),
+                                                       dimnames(object$alleleDepth)[[2]]))
+    for(j in 1:(ploidies[i]+1)){
+      object$genotypeLikelihood[[i]][j,,] <- 
+        object$depthSamplingPermutations * 
+          t(apply(object$alleleDepth, 1, function(x) alleleProb[j,] ^ x) * 
+            apply(object$antiAlleleDepth, 1, function(x) antiAlleleProb[j,] ^ x))
+    }
+  }
+  
+  return(object)
+}
+
 #### Accessors ####
 GetTaxa <- function(object, ...){
   UseMethod("GetTaxa", object)
