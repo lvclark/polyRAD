@@ -1,4 +1,4 @@
-# polyRAD: Genotype Probability Distributions from Sequence Read Depth in Polyploids and Diploids
+# polyRAD: Genotype Calling with Uncertainty from Sequencing Data in Polyploids and Diploids
 
 This R package is currently under development.
 
