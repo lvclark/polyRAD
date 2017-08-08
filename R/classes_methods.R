@@ -133,11 +133,19 @@ AddAlleleFreqMapping <- function(object, ...){
 AddAlleleFreqMapping.RADdata <- function(object, 
                                          expectedFreqs = seq(0, 1, 0.25),
                                          allowedDeviation = 0.05,
+                                         excludeTaxa = character(0),
                                          deleteLociOutsideFreqRange = FALSE){
   if(min(dist(expectedFreqs, method = "manhattan"))/2 < allowedDeviation){
     stop("allowedDeviation is too large given intervals within expectedFreqs")
   }
-  meanRat <- colMeans(object$depthRatio, na.rm = TRUE)
+  if(!is.character(excludeTaxa)){
+    stop("excludeTaxa must be a character vector (taxa names).")
+  }
+  for(ext in excludeTaxa[!excludeTaxa %in% GetTaxa(object)]){
+    warning(paste(ext, "not found in taxa list."))
+  }
+  taxaToKeep <- !GetTaxa(object) %in% excludeTaxa
+  meanRat <- colMeans(object$depthRatio[taxaToKeep,], na.rm = TRUE)
   outFreq <- rep(NA, length(meanRat))
   names(outFreq) <- names(meanRat)
   for(f in expectedFreqs){
@@ -233,12 +241,30 @@ AddGenotypeLikelihood.RADdata <- function(object, ...){
   return(object)
 }
 
+# for a mapping population with two parents, get prior genotype probabilities
+# based on parent genotypes and progeny allele frequencies
+AddGenotypePriorProb_Mapping2Parents <- function(object, ...){
+  UseMethod("AddGenotypePriorProb_Mapping2Parents", object)
+}
+AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
+    donorParent, recurrentParent, n.gen.backcrossing = 0,
+    n.gen.selfing = 0, donorParentPloidies = object$possiblePloidies,
+    recurrentParentPloidies = object$possiblePloidies){
+  
+}
+
 #### Accessors ####
 GetTaxa <- function(object, ...){
   UseMethod("GetTaxa", object)
 }
 GetTaxa.RADdata <- function(object, ...){
   return(attr(object, "taxa"))
+}
+GetLoci <- function(object, ...){
+  UseMethod("GetLoci", object)
+}
+GetLoci.RADdata(object, ...){
+  return(row.names(object$locTable))
 }
 GetLocDepth <- function(object, ...){
   UseMethod("GetLocDepth", object)
@@ -268,4 +294,63 @@ SetContamRate.RADdata <- function(object, value, ...){
   }
   attr(object, "contamRate") <- value
   return(object)
+}
+
+# Functions for assigning taxa to specific roles
+SetDonorParent <- function(object, value){
+  UseMethod("SetDonorParent", object)
+}
+SetDonorParent.RADdata <- function(object, value){
+  if(!is.character(value) || length(value) != 1){
+    stop("value must be one character string indicating the donor parent.")
+  }
+  if(!value %in% GetTaxa(object)){
+    stop("value must be one of the taxa listed in the object.")
+  }
+  attr(object, "donorParent") <- value
+  return(object)
+}
+GetDonorParent <- function(object, ...){
+  UseMethod("GetDonorParent", object)
+}
+GetDonorParent.RADdata <- function(object, ...){
+  return(attr(object, "donorParent"))
+}
+SetRecurrentParent <- function(object, value){
+  UseMethod("SetRecurrentParent", object)
+}
+SetRecurrentParent.RADdata <- function(object, value){
+  if(!is.character(value) || length(value) != 1){
+    stop("value must be one character string indicating the recurrent parent.")
+  }
+  if(!value %in% GetTaxa(object)){
+    stop("value must be one of the taxa listed in the object.")
+  }
+  attr(object, "recurrentParent") <- value
+  return(object)
+}
+GetRecurrentParent <- function(object, ...){
+  UseMethod("GetRecurrentParent", object)
+}
+GetRecurrentParent.RADdata <- function(object, ...){
+  return(attr(object, "recurrentParent"))
+}
+SetBlankTaxa <- function(object, value){
+  UseMethod("SetBlankTaxa", object)
+}
+SetBlankTaxa.RADdata <- function(object, value){
+  if(!is.character(value)){
+    stop("value must be a character vector")
+  }
+  if(!all(value %in% GetTaxa(object))){
+    stop("Every element in value must be a taxon listed in the object.")
+  }
+  attr(object, "blankTaxa") <- value
+  return(object)
+}
+GetBlankTaxa <- function(object, ...){
+  UseMethod("GetBlankTaxa", object)
+}
+GetBlankTaxa.RADdata <- function(object, ...){
+  return(attr(object, "blankTaxa"))
 }
