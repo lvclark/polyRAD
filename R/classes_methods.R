@@ -243,6 +243,36 @@ AddGenotypeLikelihood.RADdata <- function(object, ...){
   return(object)
 }
 
+# for a given taxon, return the most likely genotypes (based on likelihoods only)
+GetLikelyGen <- function(object, taxon){
+  UseMethod("GetLikelyGen", object)
+}
+GetLikelyGen.RADdata <- function(object, taxon){
+  if(length(taxon) != 1){
+    stop("Only one taxon can be passed to GetLikelyGen.")
+  }
+  taxind <- match(taxon, GetTaxa(object))
+  if(is.na(taxind)){
+    stop("taxon not found in object.")
+  }
+  if(is.null(object$genotypeLikelihood)){
+    cat("Genotype likelihoods not found.  Estimating.", sep = "\n")
+    object <- AddGenotypeLikelihood(object)
+  }
+  npld <- length(object$genotypeLikelihood)
+  ploidies <- sapply(object$genotypeLikelihood, function(x) dim(x)[1] - 1)
+  nAllele <- dim(object$alleleDepth)[2]
+  
+  outmat <- matrix(NA_integer_, nrow = npld, ncol = nAllele,
+                   dimnames = list(as.character(ploidies), 
+                                   dimnames(object$alleleDepth)[[2]]))
+  naAlleles <- which(is.na(object$genotypeLikelihood[[i]][1,taxind,]))
+  for(i in 1:npld){
+    outmat[i,-naAlleles] <- apply(object$genotypeLikelihood[[i]][,taxind,-naAlleles], 2, which.max) - 1
+  }
+  return(outmat)
+}
+
 # for a mapping population with two parents, get prior genotype probabilities
 # based on parent genotypes and progeny allele frequencies
 AddGenotypePriorProb_Mapping2Parents <- function(object, ...){
@@ -274,11 +304,47 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     object <- AddGenotypeLikelihood(object)
   }
   # get most likely genotype for the parents
-  pldtot <- sapply(object$genotypeLikelihood, function(x) dim(x)[1])
+  pldtot <- sapply(object$genotypeLikelihood, function(x) dim(x)[1] - 1)
   pldtot.don <- pldtot[pldtot %in% sapply(donorParentPloidies, sum)]
   pldtot.rec <- pldtot[pldtot %in% sapply(recurrentParentPloidies, sum)]
-  apply(object$genotypeLikelihood[[i]][,donorParent,], 2, which.max) - 1 # work on stuff from here
+  nAlleles <- dim(object$alleleDepth)[2]
+  likelyGen.don <- GetLikelyGen(object, donorParent)[as.character(pldtot.don),]
+  likelyGen.rec <- GetLikelyGen(object, recurrentParent)[as.character(pldtot.rec),]
+  # combinations of parent ploidies that match list of progeny ploidies
+  pldcombos <- matrix(NA, nrow = 0, ncol = 2, 
+                      dimnames = list(NULL,c("donor","recurrent")))
+  for(pl.d in pldtot.don){
+    for(pl.r in pldtot.rec){
+      if((pl.d/2 + pl.r/2) %in% pldtot && (n.gen.backcrossing == 0 || pl.d == pl.r)){
+        pldcombos <- rbind(pldcombos, matrix(c(pl.d, pl.r), nrow = 1, ncol = 2))
+      }
+    }
+  }
+  # do allele frequencies match parent genotypes?
+  freqMatchGen <- matrix(FALSE, nrow = dim(pldcombos)[1], ncol = nAlleles)
+  for(i in 1:dim(pldcombos)[1]){
+    thisgen.don <- likelyGen.don[as.character(pldcombos[i,"donor"]),]
+    thisgen.rec <- likelyGen.rec[as.character(pldcombos[i,"recurrent"]),]
+    expfreq <- (thisgen.don * 0.5^n.gen.backcrossing + 
+      thisgen.rec * (2 - 0.5^n.gen.backcrossing))/(pldcombos[i,"donor"] + 
+                                                     pldcombos[i,"recurrent"])
+    freqMatchGen[i,] <- expfreq == object$alleleFreq
+  }
   
+  # expand ploidy combinations across allo and auto types
+  ploidies.don <- sapply(donorParentPloidies, sum)
+  ploidies.rec <- sapply(recurrentParentPloidies, sum)
+  pldcombosExpand <- array(list(), dim = c(0,2), 
+                           dimnames = list(NULL, c("donor","recurrent")))
+  for(i in 1:dim(pldcombos)[1]){
+    thesepl.don <- donorParentPloidies[ploidies.don == pldcombos[i,"donor"]]
+    thesepl.rec <- recurrentParentPloidies[ploidies.rec == pldcombos[i,"recurrent"]]
+    for(pl.d in thesepl.don){
+      for(pl.r in thesepl.rec){
+        pldcombosExpand <- rbind(pldcombosExpand, array(list(pl.d, pl.r), dim = c(1,2)))
+      }
+    }
+  }
   # get prior genotype probabilities for F1
   # backcross
   if(n.gen.backcrossing == 0){
@@ -304,7 +370,7 @@ GetTaxa.RADdata <- function(object, ...){
 GetLoci <- function(object, ...){
   UseMethod("GetLoci", object)
 }
-GetLoci.RADdata(object, ...){
+GetLoci.RADdata <- function(object, ...){
   return(row.names(object$locTable))
 }
 GetLocDepth <- function(object, ...){
