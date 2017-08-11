@@ -133,7 +133,9 @@ AddAlleleFreqMapping <- function(object, ...){
 AddAlleleFreqMapping.RADdata <- function(object, 
                                          expectedFreqs = seq(0, 1, 0.25),
                                          allowedDeviation = 0.05,
-                                         excludeTaxa = character(0),
+                                         excludeTaxa = c(GetDonorParent(object),
+                                                         GetRecurrentParent(object),
+                                                         GetBlankTaxa(object)),
                                          deleteLociOutsideFreqRange = FALSE){
   if(min(dist(expectedFreqs, method = "manhattan"))/2 < allowedDeviation){
     stop("allowedDeviation is too large given intervals within expectedFreqs")
@@ -247,10 +249,49 @@ AddGenotypePriorProb_Mapping2Parents <- function(object, ...){
   UseMethod("AddGenotypePriorProb_Mapping2Parents", object)
 }
 AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
-    donorParent, recurrentParent, n.gen.backcrossing = 0,
+    donorParent = GetDonorParent(object), 
+    recurrentParent = GetRecurrentParent(object), n.gen.backcrossing = 0,
     n.gen.selfing = 0, donorParentPloidies = object$possiblePloidies,
     recurrentParentPloidies = object$possiblePloidies){
+  if(any(!donorParentPloidies %in% object$possiblePloidies) ||
+     any(!recurrentParentPloidies %in% object$possiblePloidies)){
+    # make sure we have all parental ploidies so we can get likelihoods 
+    ### change this? ploidy by individual in future?
+    stop("All parent ploidies must be in the possible ploidies for the object")
+  }
+  if(is.null(object$alleleFreq) || attr(object,"alleleFreqType") != "mapping"){
+    cat("Allele frequencies for mapping population not found.  Estimating.", 
+        sep = "\n")
+    allelesin <- max(sapply(donorParentPloidies, sum)) + 
+      max(sapply(recurrentParentPloidies, sum))
+    possfreq <- seq(0, 1, length.out = (n.gen.backcrossing + 1) * allelesin + 1)
+    alldev <- (possfreq[2] - possfreq[1])/2
+    object <- AddAlleleFreqMapping(object, allowedDeviation = alldev, 
+                                   expectedFreq = possfreq)
+  }
+  if(is.null(object$genotypeLikelihood)){
+    cat("Genotype likelihoods not found.  Estimating.", sep = "\n")
+    object <- AddGenotypeLikelihood(object)
+  }
+  # get most likely genotype for the parents
+  pldtot <- sapply(object$genotypeLikelihood, function(x) dim(x)[1])
+  pldtot.don <- pldtot[pldtot %in% sapply(donorParentPloidies, sum)]
+  pldtot.rec <- pldtot[pldtot %in% sapply(recurrentParentPloidies, sum)]
+  apply(object$genotypeLikelihood[[i]][,donorParent,], 2, which.max) - 1 # work on stuff from here
   
+  # get prior genotype probabilities for F1
+  # backcross
+  if(n.gen.backcrossing == 0){
+    bcloop <- integer(0)
+  } else {
+    bcloop <- 1:n.gen.backcrossing
+  }
+  for(gen in bcloop){
+    # reestimate prior probs
+  }
+  # self
+  
+  return(object)
 }
 
 #### Accessors ####
@@ -314,7 +355,11 @@ GetDonorParent <- function(object, ...){
   UseMethod("GetDonorParent", object)
 }
 GetDonorParent.RADdata <- function(object, ...){
-  return(attr(object, "donorParent"))
+  dp <- attr(object, "donorParent")
+  if(is.null(dp)){
+    stop("Need to assign a donor parent with SetDonorParent.")
+  }
+  return(dp)
 }
 SetRecurrentParent <- function(object, value){
   UseMethod("SetRecurrentParent", object)
@@ -333,7 +378,11 @@ GetRecurrentParent <- function(object, ...){
   UseMethod("GetRecurrentParent", object)
 }
 GetRecurrentParent.RADdata <- function(object, ...){
-  return(attr(object, "recurrentParent"))
+  rp <- attr(object, "recurrentParent")
+  if(is.null(rp)){
+    stop("Need to assign a recurrent parent with SetRecurrentParent.")
+  }
+  return(rp)
 }
 SetBlankTaxa <- function(object, value){
   UseMethod("SetBlankTaxa", object)
@@ -352,5 +401,9 @@ GetBlankTaxa <- function(object, ...){
   UseMethod("GetBlankTaxa", object)
 }
 GetBlankTaxa.RADdata <- function(object, ...){
-  return(attr(object, "blankTaxa"))
+  bt <- attr(object, "blankTaxa")
+  if(is.null(bt)){
+    bt <- character(0)
+  }
+  return(bt)
 }
