@@ -135,8 +135,8 @@ AddAlleleFreqMapping.RADdata <- function(object,
                                          allowedDeviation = 0.05,
                                          excludeTaxa = c(GetDonorParent(object),
                                                          GetRecurrentParent(object),
-                                                         GetBlankTaxa(object)),
-                                         deleteLociOutsideFreqRange = FALSE){
+                                                         GetBlankTaxa(object))){#,
+#                                         deleteLociOutsideFreqRange = FALSE){
   if(min(dist(expectedFreqs, method = "manhattan"))/2 < allowedDeviation){
     stop("allowedDeviation is too large given intervals within expectedFreqs")
   }
@@ -169,10 +169,10 @@ AddAlleleFreqMapping.RADdata <- function(object,
   attr(object, "alleleFreqType") <- "mapping"
   
   # delete loci that don't match expected allele frequencies
-  if(deleteLociOutsideFreqRange){
-    lociToDelete <- unique(object$allele2loc[is.na(outFreq)])
-    object <- SubsetLoci(object, loci = lociToDelete, delete = TRUE)
-  }
+#  if(deleteLociOutsideFreqRange){
+#    lociToDelete <- unique(object$allele2loc[is.na(outFreq)])
+#    object <- SubsetLoci(object, loci = lociToDelete, delete = TRUE)
+#  }
   
   return(object)
 }

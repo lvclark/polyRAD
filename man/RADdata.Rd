@@ -1,6 +1,5 @@
 \name{RADdata}
 \alias{RADdata}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 RADdata object constructor
 }
@@ -14,7 +13,6 @@ not already in a format supported by \pkg{polyRAD}.
 RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies, contamRate,
         alleleNucleotides)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{alleleDepth}{
 An integer matrix, with taxa in rows and alleles in columns.  Taxa names should
@@ -90,20 +88,12 @@ the rows of \code{alleleDepth}.}
 \item{nLoc }{An integer indicating the number of loci in \code{locTable}.}
 \item{contamRate }{Identical to the argument provided to the function.}
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
 \author{
 Lindsay V. Clark
 }
-\note{
-%%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{readHMC}}
 }
 \examples{
 # create the dataset
