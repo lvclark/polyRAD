@@ -34,8 +34,14 @@ To estimate the genotype likelihood, where \eqn{nr_i} is the number of reads
 corresponding to allele \eqn{i} for a given taxon and locus and \eqn{nr_j} is the
 number of reads corresponding to all other alleles for that taxon and locus:
 
-\deqn{P(nr_i, nr_j | x) = {{nr_i + nr_j}\choose{nr_i}}P(r_i | x)^{nr_i} * [1 - P(r_i | x)]^{nr_j}}{
+\deqn{P(nr_i, nr_j | x) = {{nr_i + nr_j}\choose{nr_i}} * P(r_i | x)^{nr_i} * [1 - P(r_i | x)]^{nr_j}}{
 P(nr_i, nr_j | x) = [(nr_i + nr_j) choose nr_i] * P(r_i | x)^{nr_i} * [1 - P(r_i | x)]^{nr_j}
+}
+
+where
+
+\deqn{{{nr_i + nr_j}\choose{nr_i}} = \frac{(nr_i + nr_j)!}{nr_i! * nr_j!}}{
+[(nr_i + nr_j) choose nr_i] = (nr_i + nr_j)!/(nr_i! * nr_j!)
 }
 }
 \value{
@@ -50,25 +56,24 @@ and alleles in the third dimension.
 \author{
 Lindsay V. Clark
 }
-\note{
-%%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{AddAlleleFreqMapping}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+# load example dataset and add allele frequency
+data(exampleRAD)
+exampleRAD <- AddAlleleFreqHWE(exampleRAD)
 
-## The function is currently defined as
-function (object, ...) 
-{
-    UseMethod("AddGenotypeLikelihood", object)
-  }
+# estimate genotype likelihoods
+exampleRAD <- AddGenotypeLikelihood(exampleRAD)
+
+# inspect the results
+# the first ten individuals and first two alleles, assuming diploidy
+exampleRAD$alleleDepth[1:10,1:2]
+exampleRAD$genotypeLikelihood[[1]][,1:10,1:2]
+# assuming tetraploidy
+exampleRAD$genotypeLikelihood[[2]][,1:10,1:2]
 }
 
 \keyword{ methods }
