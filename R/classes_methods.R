@@ -345,6 +345,51 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
       }
     }
   }
+  # function to generate all gamete genotypes for a set of genotypes.
+  # alCopy is a vector of values ranging from zero to ploidy indicating 
+  # allele copy number.
+  # ploidy is the ploidy
+  # rnd indicates which round of the recursive algorithm we are on
+  # Output is a matrix.  Alleles are in columns, which should be treated
+  # independently.  Rows indicate how many copies of the allele that gamete
+  # has.
+  makeGametes <- function(alCopy, ploidy, rnd = ploidy[1]/2){
+    if(rnd %% 1 != 0 || ploidy < 2){
+      stop("Even numbered ploidy needed to simulate gametes.")
+    }
+    if(length(unique(ploidy)) != 1){
+      stop("Currently all subgenome ploidies must be equal.")
+    }
+    if(any(alCopy > ploidy)){
+      stop("Cannot have alCopy greater than ploidy.")
+    }
+    if(length(ploidy) > 1){ # allopolyploids
+      for(pl in ploidy){
+        # get allele copies for this isolocus.  Currently simplified; 
+        # minimizes the numbe of isoloci to which an allele can belong.
+        thisCopy <- alCopy
+        thisCopy[thisCopy > pl] <- pl
+        alCopy <- alCopy - thisCopy
+        # make gametes for this isolocus (recursive, goes to autopoly version)
+        thisIsoGametes <- makeGametes(thisCopy, pl, rnd)
+      }
+      ### continue from here; need to look at all combinations across isoloci ###
+      ### maybe use expand.grid? ###
+    } else { # autopolyploids
+      thisAl <- sapply(alCopy, function(x) c(rep(0L, ploidy - x), rep(1L, x)))
+      if(rnd > 1){
+        # recursively add alleles to gametes for polyploid
+        nReps <- factorial(ploidy-1)/factorial(ploidy - rnd)
+        thisAl <- thisAl[rep(1:ploidy, each = nReps),]
+        for(i in 1:ploidy){
+          thisAl[((i-1)*nReps+1):(i*nReps),] <- 
+            thisAl[((i-1)*nReps+1):(i*nReps),] + 
+            makeGametes(alCopy - thisAl[i*nReps,], ploidy - 1, rnd - 1)
+        }
+      }
+    }
+    return(thisAl)
+  }
   # get prior genotype probabilities for F1
   # backcross
   if(n.gen.backcrossing == 0){
