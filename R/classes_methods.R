@@ -351,8 +351,8 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
   # ploidy is the ploidy
   # rnd indicates which round of the recursive algorithm we are on
   # Output is a matrix.  Alleles are in columns, which should be treated
-  # independently.  Rows indicate how many copies of the allele that gamete
-  # has.
+  # independently.  Rows indicate gametes, with values indicating how many
+  # copies of the allele that gamete has.
   makeGametes <- function(alCopy, ploidy, rnd = ploidy[1]/2){
     if(rnd %% 1 != 0 || ploidy < 2){
       stop("Even numbered ploidy needed to simulate gametes.")
@@ -360,21 +360,26 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     if(length(unique(ploidy)) != 1){
       stop("Currently all subgenome ploidies must be equal.")
     }
-    if(any(alCopy > ploidy)){
+    if(any(alCopy > sum(ploidy))){
       stop("Cannot have alCopy greater than ploidy.")
     }
     if(length(ploidy) > 1){ # allopolyploids
+      thisAl <- matrix(0L, nrow = 1, ncol = length(alCopy))
       for(pl in ploidy){
         # get allele copies for this isolocus.  Currently simplified; 
         # minimizes the numbe of isoloci to which an allele can belong.
+        ### update in the future ###
         thisCopy <- alCopy
         thisCopy[thisCopy > pl] <- pl
         alCopy <- alCopy - thisCopy
         # make gametes for this isolocus (recursive, goes to autopoly version)
         thisIsoGametes <- makeGametes(thisCopy, pl, rnd)
+        # add to current gamete set
+        nGamCurr <- dim(thisAl)[1]
+        nGamNew <- dim(thisIsoGametes)[1]
+        thisAl <- thisAl[rep(1:nGamCurr, each = nGamNew),] + 
+          thisIsoGametes[rep(1:nGamNew, times = nGamCurr),]
       }
-      ### continue from here; need to look at all combinations across isoloci ###
-      ### maybe use expand.grid? ###
     } else { # autopolyploids
       thisAl <- sapply(alCopy, function(x) c(rep(0L, ploidy - x), rep(1L, x)))
       if(rnd > 1){
@@ -389,6 +394,12 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
       }
     }
     return(thisAl)
+  }
+  # function to get probability of a gamete with a given allele copy number,
+  # given output from makeGametes
+  gameteProb <- function(makeGamOutput, ploidy){
+    return(t(sapply(0:(sum(ploidy)/2), 
+                    function(x) colMeans(makeGamOutput == x))))
   }
   # get prior genotype probabilities for F1
   # backcross
