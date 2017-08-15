@@ -266,9 +266,9 @@ GetLikelyGen.RADdata <- function(object, taxon){
   outmat <- matrix(NA_integer_, nrow = npld, ncol = nAllele,
                    dimnames = list(as.character(ploidies), 
                                    dimnames(object$alleleDepth)[[2]]))
-  naAlleles <- which(is.na(object$genotypeLikelihood[[i]][1,taxind,]))
   for(i in 1:npld){
-    outmat[i,-naAlleles] <- apply(object$genotypeLikelihood[[i]][,taxind,-naAlleles], 2, which.max) - 1
+    nonNaAlleles <- which(!is.na(object$genotypeLikelihood[[i]][1,taxind,]))
+    outmat[i,nonNaAlleles] <- apply(object$genotypeLikelihood[[i]][,taxind,nonNaAlleles], 2, which.max) - 1
   }
   return(outmat)
 }
@@ -308,8 +308,8 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
   pldtot.don <- pldtot[pldtot %in% sapply(donorParentPloidies, sum)]
   pldtot.rec <- pldtot[pldtot %in% sapply(recurrentParentPloidies, sum)]
   nAlleles <- dim(object$alleleDepth)[2]
-  likelyGen.don <- GetLikelyGen(object, donorParent)[as.character(pldtot.don),]
-  likelyGen.rec <- GetLikelyGen(object, recurrentParent)[as.character(pldtot.rec),]
+  likelyGen.don <- GetLikelyGen(object, donorParent)[as.character(pldtot.don),,drop = FALSE]
+  likelyGen.rec <- GetLikelyGen(object, recurrentParent)[as.character(pldtot.rec),,drop = FALSE]
   # combinations of parent ploidies that match list of progeny ploidies
   pldcombos <- matrix(NA, nrow = 0, ncol = 2, 
                       dimnames = list(NULL,c("donor","recurrent")))
@@ -331,17 +331,16 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     freqMatchGen[i,] <- expfreq == object$alleleFreq
   }
   
-  # expand ploidy combinations across allo and auto types
-  ploidies.don <- sapply(donorParentPloidies, sum)
-  ploidies.rec <- sapply(recurrentParentPloidies, sum)
-  pldcombosExpand <- array(list(), dim = c(0,2), 
+  # expand ploidy combinations across allo and auto types, using index in possiblePloidies
+  pldtot2 <- sapply(object$possiblePloidies, sum)
+  pldcombosExpand <- array(0L, dim = c(0,2), 
                            dimnames = list(NULL, c("donor","recurrent")))
   for(i in 1:dim(pldcombos)[1]){
-    thesepl.don <- donorParentPloidies[ploidies.don == pldcombos[i,"donor"]]
-    thesepl.rec <- recurrentParentPloidies[ploidies.rec == pldcombos[i,"recurrent"]]
+    thesepl.don <- which(pldtot2 == pldcombos[i,"donor"])
+    thesepl.rec <- which(pldtot2 == pldcombos[i,"recurrent"])
     for(pl.d in thesepl.don){
       for(pl.r in thesepl.rec){
-        pldcombosExpand <- rbind(pldcombosExpand, array(list(pl.d, pl.r), dim = c(1,2)))
+        pldcombosExpand <- rbind(pldcombosExpand, array(c(pl.d, pl.r), dim = c(1,2)))
       }
     }
   }
@@ -401,7 +400,35 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     return(t(sapply(0:(sum(ploidy)/2), 
                     function(x) colMeans(makeGamOutput == x))))
   }
+  # function to take two sets of gamete probabilities (from two parents)
+  # and output genotype probabilities
+  progenyProb <- function(gamProb1, gamProb2){
+    outmat <- matrix(0L, nrow = dim(gamProb1)[1] + dim(gamProb2)[1] - 1,
+                     ncol = dim(gamProb1)[2])
+    for(i in 1:dim(gamProb1)[1]){
+      copy1 <- i - 1
+      for(j in 1:dim(gamProb2)[1]){
+        copy2 <- j - 1
+        thisrow <- copy1 + copy2 + 1
+        outmat[thisrow,] <- outmat[thisrow,] + gamProb1[i,] * gamProb2[j,]
+      }
+    }
+    return(outmat)
+  }
   # get prior genotype probabilities for F1
+  F1priors <- list()
+  length(F1priors) <- dim(pldcombosExpand)[1]
+  donorGen <- GetLikelyGen(object, donorParent)
+  recurGen <- GetLikelyGen(object, recurrentParent)
+  for(i in 1:length(F1priors)){
+    donorPld <- object$possiblePloidies[[pldcombosExpand[i,"donor"]]]
+    recurPld <- object$possiblePloidies[[pldcombosExpand[i,"recurrent"]]]
+    theseDonorGen <- donorGen[as.character(sum(donorPld)),]
+    theseRecurGen <- recurGen[as.character(sum(recurPld)),]
+    donorGamProb <- gameteProb(makeGametes(theseDonorGen, donorPld), donorPld)
+    recurGamProb <- gameteProb(makeGametes(theseRecurGen, recurPld), recurPld)
+    F1priors[[i]] <- progenyProb(donorGamProb, recurGamProb)
+  }
   # backcross
   if(n.gen.backcrossing == 0){
     bcloop <- integer(0)
@@ -413,6 +440,7 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
   }
   # self
   
+  object$priorProb <- F1priors
   return(object)
 }
 
