@@ -321,29 +321,66 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     }
   }
   # do allele frequencies match parent genotypes?
-  freqMatchGen <- matrix(FALSE, nrow = dim(pldcombos)[1], ncol = nAlleles)
-  for(i in 1:dim(pldcombos)[1]){
-    thisgen.don <- likelyGen.don[as.character(pldcombos[i,"donor"]),]
-    thisgen.rec <- likelyGen.rec[as.character(pldcombos[i,"recurrent"]),]
-    expfreq <- (thisgen.don * 0.5^n.gen.backcrossing + 
-      thisgen.rec * (2 - 0.5^n.gen.backcrossing))/(pldcombos[i,"donor"] + 
-                                                     pldcombos[i,"recurrent"])
-    freqMatchGen[i,] <- expfreq == object$alleleFreq
+#  freqMatchGen <- matrix(FALSE, nrow = dim(pldcombos)[1], ncol = nAlleles)
+#  for(i in 1:dim(pldcombos)[1]){
+#    thisgen.don <- likelyGen.don[as.character(pldcombos[i,"donor"]),]
+#    thisgen.rec <- likelyGen.rec[as.character(pldcombos[i,"recurrent"]),]
+#    expfreq <- (thisgen.don * 0.5^n.gen.backcrossing + 
+#      thisgen.rec * (2 - 0.5^n.gen.backcrossing))/(pldcombos[i,"donor"] + 
+#                                                     pldcombos[i,"recurrent"])
+#    freqMatchGen[i,] <- expfreq == object$alleleFreq
+#  }
+  
+  # function for deteriming ploidy of offspring (by index in possiblePloidies)
+  offspringPloidy <- function(pld1, pld2){ 
+    if(length(pld1) == length(pld2)){
+      newPld <- (pld1 + pld2)/2
+    } else {
+      newPld <- (sum(pld1) + sum(pld2))/2
+    }
+    newPld <- as.integer(newPld)
+    out <- which(sapply(object$possiblePloidies, function(x) identical(x, newPld)))
+    if(length(out) == 0){
+      out <- which(sapply(object$possiblePloidies, sum) == sum(newPld))
+    }
+    return(out)
   }
   
   # expand ploidy combinations across allo and auto types, using index in possiblePloidies
   pldtot2 <- sapply(object$possiblePloidies, sum)
-  pldcombosExpand <- array(0L, dim = c(0,2), 
-                           dimnames = list(NULL, c("donor","recurrent")))
+  if(n.gen.backcrossing == 0){
+    bcnames <- character(0)
+    bcloop <- integer(0)
+  } else {
+    bcloop <- 1:n.gen.backcrossing
+    bcnames <- paste("BC", bcloop, sep = "")
+  }
+  pldcombosExpand <- array(0L, dim = c(0, 4 + n.gen.backcrossing), 
+                           dimnames = list(NULL, c("donor","recurrent","F1",
+                                                   bcnames, "final")))
   for(i in 1:dim(pldcombos)[1]){
     thesepl.don <- which(pldtot2 == pldcombos[i,"donor"])
     thesepl.rec <- which(pldtot2 == pldcombos[i,"recurrent"])
     for(pl.d in thesepl.don){
       for(pl.r in thesepl.rec){
-        pldcombosExpand <- rbind(pldcombosExpand, array(c(pl.d, pl.r), dim = c(1,2)))
+        pldcombosExpand <- rbind(pldcombosExpand, 
+                                 array(c(pl.d, pl.r, rep(NA, 2+n.gen.backcrossing)),
+                                       dim = c(1,4 + n.gen.backcrossing)))
+        newrow <- dim(pldcombosExpand)[1]
+        pldcombosExpand[newrow, "F1"] <- offspringPloidy(object$possiblePloidies[[pl.d]],
+                                                         object$possiblePloidies[[pl.r]])
+        thiscol <- 3
+        for(b in bcloop){
+          thiscol <- match(paste("BC", b, sep = ""), dimnames(pldcombosExpand)[[2]])
+          pldcombosExpand[newrow, thiscol] <-
+            offspringPloidy(object$possiblePloidies[[pl.r]], 
+                            object$possiblePloidies[[pldcombosExpand[newrow, thiscol - 1]]])
+        }
+        pldcombosExpand[newrow, "final"] <- pldcombosExpand[newrow, thiscol]
       }
     }
   }
+
   # function to generate all gamete genotypes for a set of genotypes.
   # alCopy is a vector of values ranging from zero to ploidy indicating 
   # allele copy number.
@@ -415,10 +452,33 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     }
     return(outmat)
   }
+  # function to get gamete probabilities for a population, given genotype priors
+  gameteProbPop <- function(priors, ploidy){
+    # get gamete probs for all possible genotypes
+    possGamProb <- gameteProb(makeGametes(1:dim(priors)[1] - 1, ploidy),ploidy)
+    # output matrix
+    outmat <- possGamProb %*% priors
+    return(outmat)
+  }
+  # function to adjust genotype probabilities from one generation of selfing
+  selfPop <- function(priors, ploidy){
+    # get gamete probs for all possible genotypes
+    possGamProb <- gameteProb(makeGametes(1:dim(priors)[1] - 1, ploidy),ploidy)
+    # progeny probs for all possible genotypes, selfed
+    possProgenyProb <- matrix(0, nrow = dim(priors)[1], 
+                              ncol = dim(possGamProb)[2])
+    for(i in 1:dim(possGamProb)[2]){
+      possProgenyProb[,i] <- progenyProb(possGamProb[,i,drop = FALSE],
+                                         possGamProb[,i,drop = FALSE])
+    }
+    # multiple progeny probs by prior probabilities of those genotypes
+    outmat <- possProgenyProb %*% priors
+    return(outmat)
+  }
   # get prior genotype probabilities for F1
   OutPriors <- list()
   length(OutPriors) <- dim(pldcombosExpand)[1]
-  for(i in 1:length(F1priors)){
+  for(i in 1:length(OutPriors)){
     donorPld <- object$possiblePloidies[[pldcombosExpand[i,"donor"]]]
     recurPld <- object$possiblePloidies[[pldcombosExpand[i,"recurrent"]]]
     theseDonorGen <- likelyGen.don[as.character(sum(donorPld)),]
@@ -428,17 +488,42 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     OutPriors[[i]] <- progenyProb(donorGamProb, recurGamProb)
   }
   # backcross
-  if(n.gen.backcrossing == 0){
-    bcloop <- integer(0)
-  } else {
-    bcloop <- 1:n.gen.backcrossing
-  }
   for(gen in bcloop){
     # reestimate prior probs
+    OutPriorsLastGen <- OutPriors
+    OutPriors <- list()
+    length(OutPriors) <- dim(pldcombosExpand)[1]
+    for(i in 1:length(OutPriors)){
+      ### consider just estimating recurrent gametes once since this is repetitive
+      recurPld <- object$possiblePloidies[[pldcombosExpand[i,"recurrent"]]]
+      theseRecurGen <- likelyGen.rec[as.character(sum(recurPld)),]
+      recurGamProb <- gameteProb(makeGametes(theseRecurGen, recurPld), recurPld)
+      # get gamete prob for current population
+      currPld <- object$possiblePloidies[[pldcombosExpand[i,paste("BC", gen, sep = "")]]]
+      currGamProb <- gameteProbPop(OutPriorsLastGen[[i]], currPld)
+      # update genotype priors
+      OutPriors[[i]] <- progenyProb(recurGamProb, currGamProb)
+    }
   }
   # self
-  
+  if(n.gen.selfing == 0){
+    selfloop <- integer(0)
+  } else {
+    selfloop <- 1:n.gen.selfing
+  }
+  for(gen in selfloop){
+    # reestimate prior probs
+    OutPriorsLastGen <- OutPriors
+    OutPriors <- list()
+    length(OutPriors) <- dim(pldcombosExpand)[1]
+    for(i in 1:length(OutPriors)){
+      currPld <- object$possiblePloidies[[pldcombosExpand[i,"final"]]]
+      OutPriors[[i]] <- selfPop(OutPriorsLastGen[[i]], currPld)
+    }
+  }
+
   object$priorProb <- OutPriors
+  object$priorProbPloidies <- object$possiblePloidies[pldcombosExpand[,"final"]]
   return(object)
 }
 
