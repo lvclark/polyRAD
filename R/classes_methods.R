@@ -416,18 +416,16 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     return(outmat)
   }
   # get prior genotype probabilities for F1
-  F1priors <- list()
-  length(F1priors) <- dim(pldcombosExpand)[1]
-  donorGen <- GetLikelyGen(object, donorParent)
-  recurGen <- GetLikelyGen(object, recurrentParent)
+  OutPriors <- list()
+  length(OutPriors) <- dim(pldcombosExpand)[1]
   for(i in 1:length(F1priors)){
     donorPld <- object$possiblePloidies[[pldcombosExpand[i,"donor"]]]
     recurPld <- object$possiblePloidies[[pldcombosExpand[i,"recurrent"]]]
-    theseDonorGen <- donorGen[as.character(sum(donorPld)),]
-    theseRecurGen <- recurGen[as.character(sum(recurPld)),]
+    theseDonorGen <- likelyGen.don[as.character(sum(donorPld)),]
+    theseRecurGen <- likelyGen.rec[as.character(sum(recurPld)),]
     donorGamProb <- gameteProb(makeGametes(theseDonorGen, donorPld), donorPld)
     recurGamProb <- gameteProb(makeGametes(theseRecurGen, recurPld), recurPld)
-    F1priors[[i]] <- progenyProb(donorGamProb, recurGamProb)
+    OutPriors[[i]] <- progenyProb(donorGamProb, recurGamProb)
   }
   # backcross
   if(n.gen.backcrossing == 0){
@@ -440,7 +438,7 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
   }
   # self
   
-  object$priorProb <- F1priors
+  object$priorProb <- OutPriors
   return(object)
 }
 
