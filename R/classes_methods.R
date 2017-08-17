@@ -281,6 +281,7 @@ AddGenotypePriorProb_Mapping2Parents <- function(object, ...){
 AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     donorParent = GetDonorParent(object), 
     recurrentParent = GetRecurrentParent(object), n.gen.backcrossing = 0,
+    n.gen.intermating = 0,
     n.gen.selfing = 0, donorParentPloidies = object$possiblePloidies,
     recurrentParentPloidies = object$possiblePloidies){
   if(any(!donorParentPloidies %in% object$possiblePloidies) ||
@@ -505,7 +506,23 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
       OutPriors[[i]] <- progenyProb(recurGamProb, currGamProb)
     }
   }
-  # self
+  # intermate (random mating within the population)
+  if(n.gen.intermating == 0){
+    mateloop <- integer(0)
+  } else {
+    mateloop <- 1:n.gen.intermating
+  }
+  for(gen in mateloop){
+    OutPriorsLastGen <- OutPriors
+    OutPriors <- list()
+    length(OutPriors) <- dim(pldcombosExpand)[1]
+    for(i in 1:length(OutPriors)){
+      currPld <- object$possiblePloidies[[pldcombosExpand[i,"final"]]]
+      currGamProb <- gameteProbPop(OutPriorsLastGen[[i]], currPld)
+      OutPriors[[i]] <- progenyProb(currGamProb, currGamProb)
+    }
+  }
+  # self (everything in population is self-fertilized)
   if(n.gen.selfing == 0){
     selfloop <- integer(0)
   } else {

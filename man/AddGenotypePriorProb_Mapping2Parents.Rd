@@ -13,8 +13,9 @@ frequencies are estimated for a population of progeny and are added to the
 AddGenotypePriorProb_Mapping2Parents(object, ...)
 AddGenotypePriorProb_Mapping2Parents.RADdata(object,
     donorParent = GetDonorParent(object), 
-    recurrentParent = GetRecurrentParent(object), n.gen.backcrossing = 0,
-    n.gen.selfing = 0, donorParentPloidies = object$possiblePloidies,
+    recurrentParent = GetRecurrentParent(object), 
+    n.gen.backcrossing = 0, n.gen.intermating = 0, n.gen.selfing = 0,
+    donorParentPloidies = object$possiblePloidies,
     recurrentParentPloidies = object$possiblePloidies)
 }
 \arguments{
@@ -35,6 +36,14 @@ recurrent parent.}
 \item{n.gen.backcrossing}{
 An integer, zero or greater, indicating how many generations of backcrossing
 to the recurrent parent were performed.
+}
+\item{n.gen.intermating}{
+An integer, zero or greater, indicating how many generations of intermating
+within the population were performed.  (Values above one should not have
+an effect on the genotype priors that are output, \emph{i.e.} 
+genotype probabilities after one generation of random mating are identical
+to genotype probabilities after >1 generation of random mating, assuming no
+genetic drift or selection).
 }
 \item{n.gen.selfing}{
 An integer, zero or greater, indicating how many generations of selfing were
@@ -62,9 +71,17 @@ The most likely genotypes for the two parents are estimated using
 \code{\link{GetLikelyGen}}.  For each ploidy being examined, F1 genotype
 probabilities are then calculated.
 
-If both selfing and backcrossing were performed, selfing is assumed to have 
-been done after backcrossing.  Genotype probabilities are updated for each
-backcrossing generation, then each selfing generation.
+Genotype probabilities are updated for each backcrossing generation, then each
+intermating generation, then each selfing generation.
+
+The default, with \code{n.gen.backcrossing = 0}, \code{n.gen.intermating = 0}
+and \code{n.gen.selfing = 0}, will simulate an F1 population.  A BC1F2
+population, for example, would have \code{n.gen.backcrossing = 1}, 
+\code{n.gen.intermating = 0} and \code{n.gen.selfing = 1}.  A typical F2 
+population would have \code{n.gen.selfing = 1} and the other two parameters
+set to zero.  However, in a self-incompatible species where many F1 are 
+intermated to produce the F2, one would instead use 
+\code{n.gen.intermating = 1} and set the other parameters to zero.
 }
 \value{
 A \code{"RADdata"} object identical to that passed to the function, but with
@@ -94,15 +111,23 @@ future by examining distribution of genotype likelihoods.
 %% ~~objects to See Also as \code{\link{help}}, ~~~
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+# load dataset and set some parameters
+data(exampleRAD_mapping)
+exampleRAD_mapping <- SetDonorParent(exampleRAD_mapping, "parent1")
+exampleRAD_mapping <- SetRecurrentParent(exampleRAD_mapping, "parent2")
+exampleRAD_mapping <- AddAlleleFreqMapping(exampleRAD_mapping,
+                                           expectedFreqs = c(0.25, 0.75),
+                                           allowedDeviation = 0.08)
+exampleRAD_mapping <- AddGenotypeLikelihood(exampleRAD_mapping)
 
-## The function is currently defined as
-function (object, ...) 
-{
-    UseMethod("AddGenotypePriorProb_Mapping2Parents", object)
-  }
+# examine the dataset
+exampleRAD_mapping
+exampleRAD_mapping$alleleFreq
+
+# estimate genotype priors for a BC1 population
+exampleRAD_mapping <- AddGenotypePriorProb_Mapping2Parents(exampleRAD_mapping,
+                                                      n.gen.backcrossing = 1)
+exampleRAD_mapping$priorProb
 }
 \keyword{ methods }
 \keyword{ distribution }
