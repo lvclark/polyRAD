@@ -69,7 +69,7 @@ the same matrix but with locus names as column names.}
 \item{depthSamplingPermutations }{An integer matrix with taxa in rows and 
 alleles in columns.  It is calculated as \eqn{locDepth choose alleleDepth}.
 This is used as a coefficient for likelihood estimations done by other
-\pkg{polyRAD} functions.}
+\pkg{polyRAD} functions (\emph{i.e.} \code{\link{AddGenotypeLikelihood}}).}
 \item{depthRatio }{A numeric matrix with taxa in rows and alleles in columns.
 Calculated as \eqn{alleleDepth / locDepth}.  Used by other \pkg{polyRAD}
 functions for rough estimation of genotypes and allele frequency.}
