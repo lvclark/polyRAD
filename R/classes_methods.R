@@ -544,7 +544,7 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
                                      dimnames(object$alleleDepth)[[2]])
   }
 
-  object$priorProb <- OutPriors ## need to add dimnames to each matrix ###
+  object$priorProb <- OutPriors
   object$priorProbPloidies <- object$possiblePloidies[pldcombosExpand[,"final"]]
   return(object)
 }
