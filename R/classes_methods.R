@@ -244,16 +244,23 @@ AddGenotypeLikelihood.RADdata <- function(object, ...){
 }
 
 # for a given taxon, return the most likely genotypes (based on likelihoods only)
-GetLikelyGen <- function(object, taxon){
+GetLikelyGen <- function(object, taxon, minLikelihoodRatio = 10){
   UseMethod("GetLikelyGen", object)
 }
-GetLikelyGen.RADdata <- function(object, taxon){
+GetLikelyGen.RADdata <- function(object, taxon, minLikelihoodRatio = 10){
   if(length(taxon) != 1){
     stop("Only one taxon can be passed to GetLikelyGen.")
   }
   taxind <- match(taxon, GetTaxa(object))
   if(is.na(taxind)){
     stop("taxon not found in object.")
+  }
+  if(length(minLikelihoodRatio) != 1 || is.na(minLikelihoodRatio) ||
+     !is.numeric(minLikelihoodRatio)){
+    stop("A single numeric value is needed for minLikelihoodRatio.")
+  }
+  if(minLikelihoodRatio < 1){
+    warning("minimumLikelihoodRatio less than 1 does not make sense.")
   }
   if(is.null(object$genotypeLikelihood)){
     cat("Genotype likelihoods not found.  Estimating.", sep = "\n")
@@ -268,7 +275,17 @@ GetLikelyGen.RADdata <- function(object, taxon){
                                    dimnames(object$alleleDepth)[[2]]))
   for(i in 1:npld){
     nonNaAlleles <- which(!is.na(object$genotypeLikelihood[[i]][1,taxind,]))
+    # get the most likely genotype
     outmat[i,nonNaAlleles] <- apply(object$genotypeLikelihood[[i]][,taxind,nonNaAlleles], 2, which.max) - 1
+    # remove genotypes that don't meet the likelihood ratio threshold
+    if(minLikelihoodRatio > 1){
+      myrat <- apply(object$genotypeLikelihood[[i]][,taxind,nonNaAlleles], 2, 
+                     function(x){
+                       xSrt <- sort(x, decreasing = TRUE)
+                       return(xSrt[1]/xSrt[2])
+                     })
+      outmat[i,nonNaAlleles[myrat < minLikelihoodRatio]] <- NA_integer_
+    }
   }
   return(outmat)
 }
