@@ -16,7 +16,8 @@ AddGenotypePriorProb_Mapping2Parents.RADdata(object,
     recurrentParent = GetRecurrentParent(object), 
     n.gen.backcrossing = 0, n.gen.intermating = 0, n.gen.selfing = 0,
     donorParentPloidies = object$possiblePloidies,
-    recurrentParentPloidies = object$possiblePloidies)
+    recurrentParentPloidies = object$possiblePloidies,
+    minLikelihoodRatio = 10)
 }
 \arguments{
   \item{object}{
@@ -59,6 +60,11 @@ parent.  \code{2} indicates diploid, \code{4} indicates autotetraploid,
 A list in the same format as \code{donorParentPloidies} indicating 
 inheritance modes that could be observed among loci in the recurrent
 parent.
+}
+\item{minLikelihoodRatio}{
+The minimum likelihood ratio for determining parental genotypes with 
+confidence, to be passed to \code{\link{GetLikelyGen}} for both
+parental taxa.
 }
 }
 \details{

@@ -300,7 +300,8 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     recurrentParent = GetRecurrentParent(object), n.gen.backcrossing = 0,
     n.gen.intermating = 0,
     n.gen.selfing = 0, donorParentPloidies = object$possiblePloidies,
-    recurrentParentPloidies = object$possiblePloidies){
+    recurrentParentPloidies = object$possiblePloidies,
+    minLikelihoodRatio = 10){
   if(any(!donorParentPloidies %in% object$possiblePloidies) ||
      any(!recurrentParentPloidies %in% object$possiblePloidies)){
     # make sure we have all parental ploidies so we can get likelihoods 
@@ -326,8 +327,10 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
   pldtot.don <- pldtot[pldtot %in% sapply(donorParentPloidies, sum)]
   pldtot.rec <- pldtot[pldtot %in% sapply(recurrentParentPloidies, sum)]
   nAlleles <- dim(object$alleleDepth)[2]
-  likelyGen.don <- GetLikelyGen(object, donorParent)[as.character(pldtot.don),,drop = FALSE]
-  likelyGen.rec <- GetLikelyGen(object, recurrentParent)[as.character(pldtot.rec),,drop = FALSE]
+  likelyGen.don <- GetLikelyGen(object, donorParent, 
+                                minLikelihoodRatio = minLikelihoodRatio)[as.character(pldtot.don),,drop = FALSE]
+  likelyGen.rec <- GetLikelyGen(object, recurrentParent,
+                                minLikelihoodRatio = minLikelihoodRatio)[as.character(pldtot.rec),,drop = FALSE]
   # combinations of parent ploidies that match list of progeny ploidies
   pldcombos <- matrix(NA, nrow = 0, ncol = 2, 
                       dimnames = list(NULL,c("donor","recurrent")))
@@ -408,13 +411,13 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
   # independently.  Rows indicate gametes, with values indicating how many
   # copies of the allele that gamete has.
   makeGametes <- function(alCopy, ploidy, rnd = ploidy[1]/2){
-    if(rnd %% 1 != 0 || ploidy < 2){
+    if(rnd %% 1 != 0 || ploidy[1] < 2){
       stop("Even numbered ploidy needed to simulate gametes.")
     }
     if(length(unique(ploidy)) != 1){
       stop("Currently all subgenome ploidies must be equal.")
     }
-    if(any(alCopy > sum(ploidy))){
+    if(any(alCopy > sum(ploidy), na.rm = TRUE)){
       stop("Cannot have alCopy greater than ploidy.")
     }
     if(length(ploidy) > 1){ # allopolyploids
@@ -435,7 +438,12 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
           thisIsoGametes[rep(1:nGamNew, times = nGamCurr),]
       }
     } else { # autopolyploids
-      thisAl <- sapply(alCopy, function(x) c(rep(0L, ploidy - x), rep(1L, x)))
+      thisAl <- sapply(alCopy, function(x){
+        if(is.na(x)){
+          rep(NA, ploidy)
+        } else {
+          c(rep(0L, ploidy - x), rep(1L, x))
+        }})
       if(rnd > 1){
         # recursively add alleles to gametes for polyploid
         nReps <- factorial(ploidy-1)/factorial(ploidy - rnd)
@@ -564,6 +572,36 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
   object$priorProb <- OutPriors
   object$priorProbPloidies <- object$possiblePloidies[pldcombosExpand[,"final"]]
   return(object)
+}
+
+AddPloidyLikelihood <- function(object, ...){
+  UseMethod("AddPloidyLikelihoods", object)
+}
+AddPloidyLikelihood.RADdata <- function(object, ...){
+  object$priorProb
+  object$priorProbPloidies
+  
+  taxa <- GetTaxa(object)
+  if(!is.null(attr(object, "donorParent"))){
+    taxa <- taxa[taxa != GetDonorParent(object)]
+  }
+  if(!is.null(attr(object, "recurrentParent"))){
+    taxa <- taxa[taxa != GetRecurrentParent(object)]
+  }
+  taxa <- taxa[!taxa %in% GetBlankTaxa(object)]
+  
+  likgen <- lapply(taxa, function(x) GetLikelyGen(object, x))
+  for(i in 1:dim(likgen[[1]][1])){
+    thesegen <- sapply(likgen, function(x) x[i,])
+    thisploidy <- as.integer(dimnames(likgen[[1]])[[1]][i])
+    countstable <- matrix(0L, nrow = thisploidy + 1, ncol = dim(thesegen)[1],
+                          dimnames = list(as.character(0:thisploidy),
+                                          dimnames(thesegen)[[1]]))
+    for(j in 0:thisploidy){
+      countstable[j + 1, ] <- rowSums(thesegen == j, na.rm = TRUE)
+    }
+    # then do chi-squared test
+  }
 }
 
 #### Accessors ####
