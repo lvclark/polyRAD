@@ -279,10 +279,12 @@ GetLikelyGen.RADdata <- function(object, taxon, minLikelihoodRatio = 10){
     outmat[i,nonNaAlleles] <- apply(object$genotypeLikelihood[[i]][,taxind,nonNaAlleles], 2, which.max) - 1
     # remove genotypes that don't meet the likelihood ratio threshold
     if(minLikelihoodRatio > 1){
+      # get likelihood ratios
       myrat <- apply(object$genotypeLikelihood[[i]][,taxind,nonNaAlleles], 2, 
                      function(x){
-                       xSrt <- sort(x, decreasing = TRUE)
-                       return(xSrt[1]/xSrt[2])
+                       xmxind <- which.max(x)
+                       xsecond <- max(x[-xmxind])
+                       return(x[xmxind]/xsecond)
                      })
       outmat[i,nonNaAlleles[myrat < minLikelihoodRatio]] <- NA_integer_
     }
@@ -575,12 +577,11 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
 }
 
 AddPloidyLikelihood <- function(object, ...){
-  UseMethod("AddPloidyLikelihoods", object)
+  UseMethod("AddPloidyLikelihood", object)
 }
-AddPloidyLikelihood.RADdata <- function(object, ...){
-  object$priorProb
-  object$priorProbPloidies
-  
+AddPloidyLikelihood.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object), 
+                                        minLikelihoodRatio = 50, ...){
+
   taxa <- GetTaxa(object)
   if(!is.null(attr(object, "donorParent"))){
     taxa <- taxa[taxa != GetDonorParent(object)]
@@ -589,19 +590,37 @@ AddPloidyLikelihood.RADdata <- function(object, ...){
     taxa <- taxa[taxa != GetRecurrentParent(object)]
   }
   taxa <- taxa[!taxa %in% GetBlankTaxa(object)]
+  taxa <- taxa[!taxa %in% excludeTaxa]
   
-  likgen <- lapply(taxa, function(x) GetLikelyGen(object, x))
-  for(i in 1:dim(likgen[[1]][1])){
-    thesegen <- sapply(likgen, function(x) x[i,])
-    thisploidy <- as.integer(dimnames(likgen[[1]])[[1]][i])
+  nAlleles <- dim(object$alleleDepth)[2]
+  
+  likgen <- lapply(taxa, function(x) GetLikelyGen(object, x,
+                                                  minLikelihoodRatio = minLikelihoodRatio))
+  object$ploidyLikelihood <- matrix(nrow = length(object$priorProb),
+                                    ncol = nAlleles,
+                                    dimnames = list(NULL, dimnames(object$alleleDepth)[[2]]))
+  for(i in 1:length(object$priorProb)){
+    thisploidy <- dim(object$priorProb[[i]])[1] - 1
+    thesegen <- sapply(likgen, function(x) x[as.character(thisploidy),])
     countstable <- matrix(0L, nrow = thisploidy + 1, ncol = dim(thesegen)[1],
                           dimnames = list(as.character(0:thisploidy),
                                           dimnames(thesegen)[[1]]))
     for(j in 0:thisploidy){
       countstable[j + 1, ] <- rowSums(thesegen == j, na.rm = TRUE)
     }
-    # then do chi-squared test
+    # get ploidy likelihood
+    thislikehd <- sapply(1:nAlleles, function(x){
+      if(any(is.na(object$priorProb[[i]][,x]))){
+        NA
+      } else {
+        dmultinom(countstable[,x], 
+                  prob = object$priorProb[[i]][,x])
+      }
+    })
+    object$ploidyLikelihood[i,] <- thislikehd
+    # then do chi-squared test?
   }
+  return(object)
 }
 
 #### Accessors ####
