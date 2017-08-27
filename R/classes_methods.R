@@ -627,6 +627,42 @@ AddPloidyLikelihood.RADdata <- function(object, excludeTaxa = GetBlankTaxa(objec
   return(object)
 }
 
+AddPriorTimesLikelihood <- function(object, ...){
+  UseMethod("AddPriorTimesLikelihood", object)
+}
+AddPriorTimesLikelihood.RADdata <- function(object, ...){
+  if(is.null(object$priorProb)){
+    stop("Genotype prior probabilities must be added first.")
+  }
+  if(is.null(object$genotypeLikelihood)){
+    stop("Genotype likelihoods must be added first.")
+  }
+  ploidytotpriors <- sapply(object$priorProb, function(x) dim(x)[1] - 1)
+  ploidytotlikeli <- sapply(object$genotypeLikelihood, function(x) dim(x)[1] - 1)
+  
+  results <- list()
+  length(results) <- length(object$priorProb)
+  
+  for(i in 1:length(object$priorProb)){
+    j <- which(ploidytotlikeli == ploidytotpriors[i])
+    stopifnot(length(j) == 1)
+    if(attr(object, "priorType") == "population"){
+      # expand priors out by individuals
+      thispriorarr <- array(object$priorProb[[i]], 
+                            dim = c(dim(object$priorProb[[i]])[1], 1, 
+                                    dim(object$priorProb[[i]])[2]))[,rep(1, length(GetTaxa(object))),]
+      dimnames(thispriorarr) <- dimnames(object$genotypeLikelihoods)[[j]]
+    } else {
+      thispriorarr <- object$priorProb[[i]]
+    }
+    stopifnot(identical(dim(thispriorarr), dim(object$genotypeLikelihood[[j]])))
+    results[[i]] <- thispriorarr * object$genotypeLikelihood[[j]]
+  }
+  
+  object$priorTimesLikelihood <- results
+  return(object)
+}
+
 #### Accessors ####
 GetTaxa <- function(object, ...){
   UseMethod("GetTaxa", object)
