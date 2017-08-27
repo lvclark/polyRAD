@@ -663,6 +663,23 @@ AddPriorTimesLikelihood.RADdata <- function(object, ...){
   return(object)
 }
 
+AddGenotypePosteriorProb <- function(object, ...){
+  UseMethod("AddGenotypePosteriorProb", object)
+}
+AddGenotypePosteriorProb.RADdata <- function(object, ...){
+  if(is.null(object$priorTimesLikelihood)){
+    object <- AddPriorTimesLikelihood(object)
+  }
+  object$posteriorProb <- list()
+  length(object$posteriorProb) <- length(object$priorTimesLikelihood)
+  for(i in 1:length(object$posteriorProb)){
+    totPriorTimesLikeli <- colSums(object$priorTimesLikelihood[[i]])
+    object$posteriorProb[[i]] <- sweep(object$priorTimesLikelihood[[i]], c(2,3),
+                                       totPriorTimesLikeli, FUN = "/")
+  }
+  return(object)
+}
+
 #### Accessors ####
 GetTaxa <- function(object, ...){
   UseMethod("GetTaxa", object)
