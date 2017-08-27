@@ -573,6 +573,8 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
 
   object$priorProb <- OutPriors
   object$priorProbPloidies <- object$possiblePloidies[pldcombosExpand[,"final"]]
+  attr(object, "priorType") <- "population" 
+  # --> indicates prior probs are estimated for whole pop, not by taxa
   return(object)
 }
 
@@ -580,8 +582,10 @@ AddPloidyLikelihood <- function(object, ...){
   UseMethod("AddPloidyLikelihood", object)
 }
 AddPloidyLikelihood.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object), 
-                                        minLikelihoodRatio = 50, ...){
-
+                                        minLikelihoodRatio = 50){
+  if(attr(object, "priorType") != "population"){
+    stop("AddPloidyLikelihood not yet defined for priors estimated on a per-taxon basis.")
+  }
   taxa <- GetTaxa(object)
   if(!is.null(attr(object, "donorParent"))){
     taxa <- taxa[taxa != GetDonorParent(object)]
