@@ -680,6 +680,55 @@ AddGenotypePosteriorProb.RADdata <- function(object, ...){
   return(object)
 }
 
+GetWeightedMeanGenotypes <- function(object, ...){
+  UseMethod("GetWeightedMeanGenotypes", object)
+}
+GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
+                                             omit1allelePerLocus = TRUE){
+  # maybe include an argument for selecting a specific ploidy rather than
+  # letting the function pick what seems to be best?
+  if(is.null(object$posteriorProb)){
+    stop("Need to estimate genotype posterior probabilities first.")
+  }
+  if(is.null(object$ploidyLikelihood)){
+    stop("Need to estimate ploidy likelihoods first.")
+  }
+
+  altokeep <- 1:dim(object$alleleDepth)[2]
+  if(omit1allelePerLocus){
+    # make allele subset, to remove mathematical redundancy in dataset
+    mymatch <- match(1:max(object$alleles2loc), object$alleles2loc)
+    altokeep <- altokeep[-mymatch]
+  }  
+  
+  # pick which ploidy to use for each allele
+  bestploidies <- apply(object$ploidyLikelihood[,altokeep, drop = FALSE], 2, 
+                        function(x){
+                          if(all(is.na(x))){
+                            return(0)
+                          } else {
+                            return(which.max(x))
+                          }})
+  
+  # set up emtpy matrix to contain results
+  wmgeno <- matrix(mean(c(minval, maxval)), nrow = length(GetTaxa(object)),
+                   ncol = length(altokeep),
+                   dimnames = list(GetTaxa(object),
+                                   dimnames(object$alleleDepth)[[2]][altokeep]))
+  # loop through ploidies
+  plforloop <- sort(unique(bestploidies))
+  plforloop <- plforloop[plforloop != 0]
+  for(i in plforloop){
+    # values to represent each allele copy number
+    thesegenval <- seq(minval, maxval, length.out = dim(object$posteriorProb[[i]])[1])
+    # get values to return
+    wmgeno[,bestploidies == i] <- apply(object$posteriorProb[[i]][,,altokeep[bestploidies == i]],
+                                        2:3, function(x) sum(x * thesegenval))
+  }
+  
+  return(wmgeno)
+}
+
 #### Accessors ####
 GetTaxa <- function(object, ...){
   UseMethod("GetTaxa", object)
