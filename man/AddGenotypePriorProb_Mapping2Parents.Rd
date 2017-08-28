@@ -11,13 +11,13 @@ frequencies are estimated for a population of progeny and are added to the
 }
 \usage{
 AddGenotypePriorProb_Mapping2Parents(object, ...)
-AddGenotypePriorProb_Mapping2Parents.RADdata(object,
+\method{AddGenotypePriorProb_Mapping2Parents}{RADdata}(object,
     donorParent = GetDonorParent(object), 
     recurrentParent = GetRecurrentParent(object), 
     n.gen.backcrossing = 0, n.gen.intermating = 0, n.gen.selfing = 0,
     donorParentPloidies = object$possiblePloidies,
     recurrentParentPloidies = object$possiblePloidies,
-    minLikelihoodRatio = 10)
+    minLikelihoodRatio = 10, \dots)
 }
 \arguments{
   \item{object}{

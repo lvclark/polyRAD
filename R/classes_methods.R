@@ -135,7 +135,7 @@ AddAlleleFreqMapping.RADdata <- function(object,
                                          allowedDeviation = 0.05,
                                          excludeTaxa = c(GetDonorParent(object),
                                                          GetRecurrentParent(object),
-                                                         GetBlankTaxa(object))){#,
+                                                         GetBlankTaxa(object)), ...){#,
 #                                         deleteLociOutsideFreqRange = FALSE){
   if(min(dist(expectedFreqs, method = "manhattan"))/2 < allowedDeviation){
     stop("allowedDeviation is too large given intervals within expectedFreqs")
@@ -155,9 +155,9 @@ AddAlleleFreqMapping.RADdata <- function(object,
   }
   
   # fill in any missing allele frequencies for partially completed loci
-  incompleteLoci <- unique(object$allele2loc[is.na(outFreq)])
+  incompleteLoci <- unique(object$alleles2loc[is.na(outFreq)])
   for(L in incompleteLoci){
-    theseal <- which(allele2loc == L)
+    theseal <- which(object$alleles2loc == L)
     if(sum(is.na(outFreq[theseal])) == 1){
       subtot <- sum(outFreq[theseal], na.rm = TRUE)
       outFreq[theseal[is.na(outFreq[theseal])]] <- 1 - subtot
@@ -303,7 +303,7 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     n.gen.intermating = 0,
     n.gen.selfing = 0, donorParentPloidies = object$possiblePloidies,
     recurrentParentPloidies = object$possiblePloidies,
-    minLikelihoodRatio = 10){
+    minLikelihoodRatio = 10, ...){
   if(any(!donorParentPloidies %in% object$possiblePloidies) ||
      any(!recurrentParentPloidies %in% object$possiblePloidies)){
     # make sure we have all parental ploidies so we can get likelihoods 
@@ -582,7 +582,7 @@ AddPloidyLikelihood <- function(object, ...){
   UseMethod("AddPloidyLikelihood", object)
 }
 AddPloidyLikelihood.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object), 
-                                        minLikelihoodRatio = 50){
+                                        minLikelihoodRatio = 50, ...){
   if(attr(object, "priorType") != "population"){
     stop("AddPloidyLikelihood not yet defined for priors estimated on a per-taxon basis.")
   }
@@ -684,7 +684,7 @@ GetWeightedMeanGenotypes <- function(object, ...){
   UseMethod("GetWeightedMeanGenotypes", object)
 }
 GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
-                                             omit1allelePerLocus = TRUE){
+                                             omit1allelePerLocus = TRUE, ...){
   # maybe include an argument for selecting a specific ploidy rather than
   # letting the function pick what seems to be best?
   if(is.null(object$posteriorProb)){

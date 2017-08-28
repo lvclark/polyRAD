@@ -13,8 +13,8 @@ and stores the probability in the \code{$ploidyLikelihood} slot of the
 }
 \usage{
 AddPloidyLikelihood(object, ...)
-AddPloidyLikelihood.RADdata(object, excludeTaxa = GetBlankTaxa(object), 
-                            minLikelihoodRatio = 50)
+\method{AddPloidyLikelihood}{RADdata}(object, excludeTaxa = GetBlankTaxa(object), 
+                            minLikelihoodRatio = 50, \dots)
 }
 \arguments{
   \item{object}{

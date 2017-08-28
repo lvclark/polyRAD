@@ -13,8 +13,8 @@ numerical genotype values for each taxon and allele.
 }
 \usage{
 GetWeightedMeanGenotypes(object, ...)
-GetWeightedMeanGenotypes.RADdata(object, minval = 0, maxval = 1, 
-                                 omit1allelePerLocus = TRUE)
+\method{GetWeightedMeanGenotypes}{RADdata}(object, minval = 0, maxval = 1, 
+                         omit1allelePerLocus = TRUE, \dots)
 }
 \arguments{
   \item{object}{

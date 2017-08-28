@@ -10,11 +10,11 @@ a fixed set of allele frequencies are possible.
 }
 \usage{
 AddAlleleFreqMapping(object, ...)
-AddAlleleFreqMapping.RADdata(object, expectedFreqs = seq(0, 1, 0.25),
-                             allowedDeviation = 0.05,
-                             excludeTaxa = c(GetDonorParent(object),
-                                             GetRecurrentParent(object),
-                                             GetBlankTaxa(object)))
+\method{AddAlleleFreqMapping}{RADdata}(object, expectedFreqs = seq(0, 1, 0.25),
+                     allowedDeviation = 0.05,
+                     excludeTaxa = c(GetDonorParent(object),
+                                     GetRecurrentParent(object),
+                                     GetBlankTaxa(object)), \dots)
 }
 
 \arguments{
