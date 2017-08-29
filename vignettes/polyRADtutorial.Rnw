@@ -35,7 +35,7 @@ course of analysis.
 \section{Estimating genotype probabilities in a mapping population}
 
 In this example, we'll import some data from an F1 mapping population
-of \emph{Miscanthus sinensis} that was output by the 
+of \emph{Miscanthus sinensis} that were output by the 
 \href{https://doi.org/10.1371/journal.pgen.1003215}{UNEAK} pipeline.
 These data are from a study by Liu \emph{et al.} 
 (2015; \href{http://dx.doi.org/10.1111/gcbb.12275}{doi:10.1111/gcbb.12275};
