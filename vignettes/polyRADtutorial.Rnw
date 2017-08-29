@@ -11,6 +11,24 @@
 
 \maketitle
 
+\section{Introduction}
+
+polyRAD is an R package that assists with genotype calling from DNA sequence
+datasets such as genotyping-by-sequencing (GBS) or restriction site-associated
+DNA sequencing (RAD) in polyploids and diploids.  Genotype likelihoods are 
+estimated from allelic read
+depth, genotype prior probabilities are estimated from population parameters,
+and then genotype posterior probabilities are estimated from likelihoods and
+prior probabilities.  Posterior probabilities can be used directly in 
+downstream analysis, converted to weighted mean genotypes for analyses
+of additive genetic effects, or used for export of the most probable genotypes
+for analyses that require discrete genotypic data.
+
+Analyses in polyRAD center around objects of an S3 class called "RADdata".
+A single "RADdata" object contains the entire dataset of read depth and 
+locus information, as well as parameters that are estimated during the
+course of analysis.
+
 \section{Estimating genotype probabilities in a mapping population}
 
 In this example, we'll import some data from an F1 mapping population
