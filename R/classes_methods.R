@@ -757,8 +757,8 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
   if(is.null(object$posteriorProb)){
     stop("Need to estimate genotype posterior probabilities first.")
   }
-  if(is.null(object$ploidyLikelihood)){
-    stop("Need to estimate ploidy likelihoods first.")
+  if(is.null(object$ploidyChiSq)){
+    stop("Need to estimate ploidy chi-squared first.")
   }
 
   altokeep <- 1:dim(object$alleleDepth)[2]
@@ -769,12 +769,12 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
   }  
   
   # pick which ploidy to use for each allele
-  bestploidies <- apply(object$ploidyLikelihood[,altokeep, drop = FALSE], 2, 
+  bestploidies <- apply(object$ploidyChiSq[,altokeep, drop = FALSE], 2, 
                         function(x){
                           if(all(is.na(x))){
                             return(0)
                           } else {
-                            return(which.max(x))
+                            return(which.min(x))
                           }})
   
   # set up emtpy matrix to contain results
