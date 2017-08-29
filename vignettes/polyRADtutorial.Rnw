@@ -1,3 +1,6 @@
+% \VignetteIndexEntry{polyRAD tutorial}
+% \VignettDepends{polyRAD}
+
 \documentclass{article}
 
 \usepackage{hyperref}
@@ -24,8 +27,8 @@ downstream analysis, converted to weighted mean genotypes for analyses
 of additive genetic effects, or used for export of the most probable genotypes
 for analyses that require discrete genotypic data.
 
-Analyses in polyRAD center around objects of an S3 class called "RADdata".
-A single "RADdata" object contains the entire dataset of read depth and 
+Analyses in polyRAD center around objects of an S3 class called ``RADdata''.
+A single ``RADdata'' object contains the entire dataset of read depth and 
 locus information, as well as parameters that are estimated during the
 course of analysis.
 
@@ -37,7 +40,7 @@ of \emph{Miscanthus sinensis} that was output by the
 These data are from a study by Liu \emph{et al.} 
 (2015; \href{http://dx.doi.org/10.1111/gcbb.12275}{doi:10.1111/gcbb.12275};
 data available at \url{http://hdl.handle.net/2142/79522}), and can be
-found in the ``vignettes'' folder of the polyRAD installation.
+found in the ``doc'' folder of the polyRAD installation.
 \emph{Miscanthus} is an ancient tetraploid that has undergone diploidization.
 Given the ability of the UNEAK pipeline to filter paralogs, we expect most
 loci to behave in a diploid fashion, but some may behave in an allotetraploid
@@ -143,27 +146,66 @@ heterozygous.  However, if TP29 is behaving in an allotetraploid
 fashion, we expect that both parents are homozygous at differing 
 paralogous loci, resulting in no segregation.
 
-Now we want to get ploidy likelihoods for each locus, \emph{i.e.} the
-probability of seeing the observed distribution of genotypes under
-the expected genotype frequencies for a given ploidy.  This is performed
-using only high-confidence genotypes (again adjustable with 
-\texttt{minLikelihoodRatio}).
+Now we want to determine which ploidy is the best fit for each locus.
+This is done by comparing genotype prior probabilities to
+genotype likelihoods and estimating a $\chi^2$ statistic.  Lower
+values indicate a better fit.
 
 <<>>=
-mydata <- AddPloidyLikelihood(mydata, 
-                              excludeTaxa = c("Kaskade-Justin", "Zebrinus-Justin",
-                                              "IGR-2011-001", "p196-150A-c", 
-                                              "p877-348-b"),
-                              minLikelihoodRatio = 100)
-mydata$ploidyLikelihood[,1:10]
+mydata <- AddPloidyChiSq(mydata, 
+                         excludeTaxa = c("Kaskade-Justin", "Zebrinus-Justin",
+                                         "IGR-2011-001", "p196-150A-c", 
+                                         "p877-348-b"))
+mydata$ploidyChiSq[,1:10]
 @
+
+We can make a plot to get an overall sense of how well the markers
+fit the diploid versus tetraploid model.
+
+<<fig=TRUE>>=
+plot(mydata$ploidyChiSq[1,], mydata$ploidyChiSq[2,], 
+     xlab = "Chi-squared for diploid model",
+     ylab = "Chi-squared for tetraploid model")
+abline(a = 0, b = 1, col = "red")
+@
+
+Alleles above the red line fit the diploid model better, and alleles
+below the red line fit the tetraploid model better.
+
+Now we'll add the posterior genotype probabilities.  These are still
+estimated separately for each ploidy.
 
 <<>>=
 mydata <- AddGenotypePosteriorProb(mydata)
+mydata$posteriorProb[[1]][,3,1:10]
+mydata$posteriorProb[[2]][,3,1:10]
 @
+
+Now we can export the results for use in downstream analysis.  The function
+below selects the best-fit ploidy for each allele based on the results
+in \texttt{mydata\$ploidyChiSq}, and for each taxon outputs a continuous,
+numerical genotype that is the mean of all possible genotypes weighted
+by genotype posterior probabilities.  By default, one allele per locus
+is discarded in order to avoid mathematical singularities in downstream
+analysis.  The continuous genotypes also range from zero to one by default,
+which can be changed with the \texttt{minval} and \texttt{maxval} arguments.
 
 <<>>=
 mywm <- GetWeightedMeanGenotypes(mydata)
+mywm[3:6, 1:10]
+@
+
+Note that the parent weighted mean genotypes are not necessarily correct,
+since they were estimated using the genotype priors for the progeny.
+We can view parent genotypes with \texttt{GetLikelyGen}, which was used
+internally by \texttt{AddGenotypePriorProb\_Mapping2Parents} to estimate
+the parent genotypes.
+
+<<>>=
+kaskadeGen <- GetLikelyGen(mydata, "Kaskade-Justin")
+zebrinusGen <- GetLikelyGen(mydata, "Zebrinus-Justin")
+kaskadeGen[,1:10]
+zebrinusGen[,1:10]
 @
 
 
