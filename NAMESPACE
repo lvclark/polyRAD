@@ -6,7 +6,7 @@ GetLocDepth,  GetLoci,  GetRecurrentParent,  GetTaxa,
 GetWeightedMeanGenotypes,  RADdata, readHMC, SetBlankTaxa, 
 SetContamRate,  SetDonorParent,  SetRecurrentParent)
 
-importFrom("stats", "dist", "dmultinom")
+importFrom("stats", "dist", "dmultinom", "pchisq")
 
 S3method(print, RADdata)
 S3method(AddAlleleFreqHWE, RADdata)
