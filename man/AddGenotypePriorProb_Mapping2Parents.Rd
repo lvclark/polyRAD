@@ -114,7 +114,7 @@ future by examining distribution of genotype likelihoods.
 }
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{AddGenotypeLikelihood}}
 }
 \examples{
 # load dataset and set some parameters

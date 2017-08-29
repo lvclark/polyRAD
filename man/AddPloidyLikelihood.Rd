@@ -50,7 +50,7 @@ Lindsay V. Clark
 }
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{AddPloidyChiSq}}
 }
 \examples{
 ##---- Should be DIRECTLY executable !! ----

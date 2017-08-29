@@ -627,6 +627,73 @@ AddPloidyLikelihood.RADdata <- function(object, excludeTaxa = GetBlankTaxa(objec
   return(object)
 }
 
+AddPloidyChiSq <- function(object, ...){
+  UseMethod("AddPloidyChiSq", object)
+}
+AddPloidyChiSq.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object),
+                                   ...){
+  taxa <- GetTaxa(object)
+  if(!is.null(attr(object, "donorParent"))){
+    taxa <- taxa[taxa != GetDonorParent(object)]
+  }
+  if(!is.null(attr(object, "recurrentParent"))){
+    taxa <- taxa[taxa != GetRecurrentParent(object)]
+  }
+  taxa <- taxa[!taxa %in% GetBlankTaxa(object)]
+  taxa <- taxa[!taxa %in% excludeTaxa]
+  
+  if(is.null(object$priorProb)){
+    stop("Prior genotype probabilities must be estimated first.")
+  }
+  if(attr(object, "priorType") != "population"){
+    stop("AddPloidyChiSq not yet defined for priors estimated on a per-taxon basis.")
+  }
+  if(is.null(object$genotypeLikelihood)){
+    object <- AddGenotypeLikelihood(object)
+  }
+  
+  nAlleles <- dim(object$alleleDepth)[2]
+  object$ploidyChiSq <- matrix(NA, nrow = length(object$priorProb),
+                               ncol = nAlleles,
+                               dimnames = list(NULL, dimnames(object$alleleDepth)[[2]]))
+  object$ploidyChiSqP <- matrix(NA, nrow = length(object$priorProb),
+                                ncol = nAlleles,
+                                dimnames = list(NULL, dimnames(object$alleleDepth)[[2]]))
+  
+  # get weighted genotype tallies from genotype likelihoods
+  gental <- list()
+  length(gental) <- length(object$genotypeLikelihood)
+  for(i in 1:length(gental)){
+    # likelihood total for each individual and locus at this ploidy
+    totlik <- colSums(object$genotypeLikelihood[[i]][,taxa,])
+    # normalize likelihoods by total for each individual and locus
+    normlik <- sweep(object$genotypeLikelihood[[i]][,taxa,],
+                     2:3, totlik, FUN = "/")
+    # get population proportion of genotype likelihoods for allele and copy number
+    gental[[i]] <- apply(normlik, c(1,3), mean)
+  }
+  
+  # loop through ploidies
+  for(i in 1:length(object$priorProb)){
+    thisploidy <- dim(object$priorProb[[i]])[1] - 1
+    whichlik <- which(sapply(object$genotypeLikelihood, 
+                             function(x) dim(x)[1] - 1) == thisploidy)
+    stopifnot(length(whichlik) == 1)
+    # estimate the components that are summed to make chi square
+    chisqcomp <- (gental[[whichlik]] - object$priorProb[[i]])^2/
+      object$priorProb[[i]] * length(taxa)
+    # degrees of freedom
+    theseDF <- colSums(object$priorProb[[i]] != 0) - 1
+    # chi-squared statistic
+    thesechisq <- apply(chisqcomp, 2, function(x) sum(x[x != Inf]))
+    object$ploidyChiSq[i,] <- thesechisq
+    # p-values
+    object$ploidyChiSqP[i,] <- pchisq(thesechisq, theseDF, lower.tail = FALSE)
+  }
+  
+  return(object)
+}
+
 AddPriorTimesLikelihood <- function(object, ...){
   UseMethod("AddPriorTimesLikelihood", object)
 }
