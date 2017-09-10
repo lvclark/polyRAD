@@ -426,7 +426,7 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
       thisAl <- matrix(0L, nrow = 1, ncol = length(alCopy))
       for(pl in ploidy){
         # get allele copies for this isolocus.  Currently simplified; 
-        # minimizes the numbe of isoloci to which an allele can belong.
+        # minimizes the number of isoloci to which an allele can belong.
         ### update in the future ###
         thisCopy <- alCopy
         thisCopy[thisCopy > pl] <- pl
