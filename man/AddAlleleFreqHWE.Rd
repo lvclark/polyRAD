@@ -4,16 +4,22 @@
 Estimate Allele Frequencies in a RADdata Object Assuming Hardy-Weinberg Equilibrium
 }
 \description{
-A simple estimator of allele frequencies in the dataset is performed based on
-read depth. The column means of \code{object$depthRatio} are calculated and
-added to \code{object} as the \code{alleleFreq} slot.
+Allele frequencies are estimated based on the best parameters available.
+\code{object$alleleFreqByTaxa} is used if available.  If \code{object$alleleFreqByTaxa}
+is null, \code{\link{GetWeightedMeanGenotypes}} is used, and if that isn't possible
+\code{object$depthRatio} is used.  From whichever of the three options is used, 
+column means are taken, the output of which is stored as \code{object$alleleFreq}.
 }
 \usage{
 AddAlleleFreqHWE(object, ...)
+\method{AddAlleleFreqHWE}{RADdata}(object, excludeTaxa = GetBlankTaxa(object), \dots)
 }
 \arguments{
   \item{object}{
 A \code{"\link{RADdata}"} object.
+}
+\item{excludeTaxa}{
+A character vector indicating taxa that should be excluded from the calculation.
 }
   \item{\dots}{
 Included to allow more arguments in the future, although none are currently used.

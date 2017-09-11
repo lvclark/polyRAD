@@ -81,3 +81,44 @@
   
   return(results)
 }
+
+# internal function to get best estimate of allele frequencies depending
+# on what parameters are available
+.alleleFreq <- function(object, type = "choose", taxaToKeep = GetTaxa(object)){
+  if(!"RADdata" %in% class(object)){
+    stop("RADdata object needed for .priorTimesLikelihood")
+  }
+  if(!type %in% c("choose", "individual frequency", "posterior prob",
+                  "depth ratio")){
+    stop("Type must be 'choose', 'individual frequency', 'posterior prob', or 'depth ratio'.")
+  }
+  if(type == "individual frequency" && is.null(object$alleleFreqByTaxa)){
+    stop("Need alleleFreqByTaxa if type = 'individual frequency'.")
+  }
+  if(type == "posterior prob" && 
+     (is.null(object$posteriorProb) || is.null(object$ploidyChiSq))){
+    stop("Need posteriorProb and ploidyChiSq if type = 'posterior prob'.")
+  }
+  
+  if(type %in% c("choose", "individual frequency") &&
+     !is.null(object$alleleFreqByInd)){
+    outFreq <- colMeans(object$alleleFreqByTaxa[taxaToKeep,,drop = FALSE], 
+                        na.rm = TRUE)
+    attr(outFreq, "type") <- "individual frequency"
+  } else {
+    if(type %in% c("choose", "posterior prob") &&
+       !is.null(object$posteriorProb) && !is.null(object$ploidyChiSq)){
+      wmgeno <- GetWeightedMeanGenotypes(object, minval = 0, maxval = 1,
+                                         omit1allelePerLocus = FALSE)
+      outFreq <- colMeans(wmgeno[taxaToKeep,,drop = FALSE], na.rm = TRUE)
+      attr(outFreq, "type") <- "posterior prob"
+    } else {
+      if(type %in% c("choose", "depth ratio")){
+        outFreq <- colMeans(object$depthRatio[taxaToKeep,,drop = FALSE],
+                            na.rm = TRUE)
+        attr(outFreq, "type") <- "depth ratio"
+      }
+    }
+  }
+  return(outFreq)
+}

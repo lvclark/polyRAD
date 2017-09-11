@@ -146,10 +146,11 @@ AddAlleleFreqMapping.RADdata <- function(object,
   for(ext in excludeTaxa[!excludeTaxa %in% GetTaxa(object)]){
     warning(paste(ext, "not found in taxa list."))
   }
-  taxaToKeep <- !GetTaxa(object) %in% excludeTaxa
-  meanRat <- colMeans(object$depthRatio[taxaToKeep,], na.rm = TRUE)
+  taxaToKeep <- GetTaxa(object)[!GetTaxa(object) %in% excludeTaxa]
+  meanRat <- .alleleFreq(object, type = "choose", taxaToKeep = taxaToKeep)
   outFreq <- rep(NA, length(meanRat))
   names(outFreq) <- names(meanRat)
+  attr(outFreq, "type") <- attr(meanRat, "type")
   for(f in expectedFreqs){
     outFreq[which(meanRat >= f - allowedDeviation & meanRat < f + allowedDeviation)] <- f
   }
@@ -182,9 +183,11 @@ AddAlleleFreqMapping.RADdata <- function(object,
 AddAlleleFreqHWE <- function(object, ...){
   UseMethod("AddAlleleFreqHWE", object)
 }
-AddAlleleFreqHWE.RADdata <- function(object, ...){
-  meanRat <- colMeans(object$depthRatio, na.rm = TRUE)
-  object$alleleFreq <- meanRat
+AddAlleleFreqHWE.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object),
+                                     ...){
+  taxaToKeep <- GetTaxa(object)[!GetTaxa(object) %in% excludeTaxa]
+  object$alleleFreq <- .alleleFreq(object, type = "choose", 
+                                   taxaToKeep = taxaToKeep)
   attr(object, "alleleFreqType") <- "HWE"
   return(object)
 }

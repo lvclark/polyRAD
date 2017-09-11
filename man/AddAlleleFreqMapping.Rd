@@ -22,7 +22,7 @@ AddAlleleFreqMapping(object, ...)
 A \code{"\link{RADdata}"} object.  The donor and recurrent parent should have
 been assigned with \code{\link{SetDonorParent}} and 
 \code{\link{SetRecurrentParent}}, respectively.  If this is not a backcross
-population, it does not matter which is the donor or recurent parent.
+population, it does not matter which is the donor or recurrent parent.
 }
 \item{expectedFreqs}{
 A numeric vector listing all expected allele frequencies in the mapping
@@ -43,7 +43,10 @@ Arguments to be passed to the method for \code{"RADdata"}.
 }
 \details{
 Allele frequencies are first estimated as the column means of 
-\code{object$depthRatio}, excluding any taxa listed in \code{excludeTaxa}.
+\code{object$depthRatio} (unless posterior genotype probabilities and ploidy
+chi-squared values have already been calculated, in which case 
+\code{\link{GetWeightedMeanGeno}} is run and the column means of its output are
+taken), excluding any taxa listed in \code{excludeTaxa}.
 These are then categorized based on which, if any, expected allele frequency
 they match with, based on the intervals described by \code{expectedFreqs} and
 \code{allowedDeviation}.  If an allele frequency does not fall within any of
