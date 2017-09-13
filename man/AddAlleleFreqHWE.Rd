@@ -35,7 +35,7 @@ Lindsay V. Clark
 }
 
 \seealso{
-\code{\link{AddAlleleFreqMapping}}
+\code{\link{AddAlleleFreqMapping}}, \code{\link{AddGenotypePriorProb_HWE}}
 }
 \examples{
 # load in an example dataset

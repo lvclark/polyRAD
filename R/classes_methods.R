@@ -581,6 +581,26 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
   return(object)
 }
 
+AddGenotypePriorProb_HWE <- function(object, ...){
+  UseMethod("AddGenotypePriorProb_HWE", object)
+}
+AddGenotypePriorProb_HWE.RADdata <- function(object, ...){
+  if(is.null(object$alleleFreq) || attr(object, "alleleFreqType") != "HWE"){
+    stop("Allele frequencies not estimated under HWE.")
+  }
+  priors <- list()
+  length(priors) <- length(object$possiblePloidies)
+  
+  for(i in 1:length(priors)){
+    priors[[i]] <- .HWEpriors(object$alleleFreq, object$possiblePloidies[[i]])
+  }
+  
+  object$priorProb <- priors
+  object$priorProbPloidies <- object$possiblePloidies
+  attr(object, "priorType") <- "population"
+  return(object)
+}
+
 AddPloidyLikelihood <- function(object, ...){
   UseMethod("AddPloidyLikelihood", object)
 }
