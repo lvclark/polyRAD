@@ -795,6 +795,28 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
   return(wmgeno)
 }
 
+AddPCA <- function(object, ...){
+  UseMethod("AddPCA", object)
+}
+# some key additional arguments: nPcs is the number of PC axes to return
+AddPCA.RADdata <- function(object, nPcs = 20, ...){
+  # matrix for input to PCA; depth ratios or posterior probs
+  if(is.null(object$posteriorProb) || is.null(object$ploidyChiSq)){
+    genmat <- object$depthRatio
+  } else {
+    genmat <- GetWeightedMeanGenotypes(object, omit1allelePerLocus = FALSE)
+  }
+  
+  # replace NaN with NA
+  genmat[is.na(genmat)] <- NA
+  
+  # run principal components analysis
+  pc <- pcaMethods::pca(genmat, method = "ppca", nPcs = nPcs, ...)
+  object$PCA <- pc@scores
+  
+  return(object)
+}
+
 #### Accessors ####
 GetTaxa <- function(object, ...){
   UseMethod("GetTaxa", object)
