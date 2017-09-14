@@ -746,6 +746,7 @@ AddGenotypePosteriorProb.RADdata <- function(object, ...){
   return(object)
 }
 
+
 GetWeightedMeanGenotypes <- function(object, ...){
   UseMethod("GetWeightedMeanGenotypes", object)
 }
@@ -763,7 +764,7 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
   altokeep <- 1:dim(object$alleleDepth)[2]
   if(omit1allelePerLocus){
     # make allele subset, to remove mathematical redundancy in dataset
-    mymatch <- match(1:max(object$alleles2loc), object$alleles2loc)
+    mymatch <- OneAllelePerMarker(object)
     altokeep <- altokeep[-mymatch]
   }  
   
@@ -802,9 +803,9 @@ AddPCA <- function(object, ...){
 AddPCA.RADdata <- function(object, nPcs = 20, ...){
   # matrix for input to PCA; depth ratios or posterior probs
   if(is.null(object$posteriorProb) || is.null(object$ploidyChiSq)){
-    genmat <- object$depthRatio
+    genmat <- object$depthRatio[,-OneAllelePerMarker(object)]
   } else {
-    genmat <- GetWeightedMeanGenotypes(object, omit1allelePerLocus = FALSE)
+    genmat <- GetWeightedMeanGenotypes(object, omit1allelePerLocus = TRUE)
   }
   
   # replace NaN with NA
@@ -814,6 +815,38 @@ AddPCA.RADdata <- function(object, nPcs = 20, ...){
   pc <- pcaMethods::pca(genmat, method = "ppca", nPcs = nPcs, ...)
   object$PCA <- pc@scores
   
+  return(object)
+}
+
+AddAlleleFreqByTaxa <- function(object, ...){
+  UseMethod("AddAlleleFreqByTaxa")
+}
+AddAlleleFreqByTaxa.RADdata <- function(object, minfreq = 0.0001, ...){
+  if(is.null(object$PCA)){
+    stop("Need to run AddPCA first.")
+  }
+  if(is.null(object$posteriorProb) || is.null(object$ploidyChiSq)){
+    genmat <- object$depthRatio
+    genmat[is.na(genmat)] <- NA
+    PCcoef <- matrix(NA, nrow = dim(object$PCA)[2] + 1, 
+                     ncol = dim(genmat)[2])
+    for(i in 1:dim(genmat)[2]){
+      PCcoef[,i] <- lm(genmat[,i] ~ object$PCA)$coefficients
+    }
+  } else {
+    genmat <- GetWeightedMeanGenotypes(object, omit1allelePerLocus = FALSE,
+                                       minval = 0, maxval = 1)
+    # regress estimated genotypes on PC axes
+    PCcoef <- lm(genmat ~ object$PCA)$coefficients
+  }
+  
+  # predict allele frequencies from PC axes
+  predAl <- object$PCA %*% PCcoef[-1,] + 
+    matrix(PCcoef[1,], byrow = TRUE, nrow = attr(object, "nTaxa"), 
+           ncol = dim(object$alleleDepth)[2])
+  
+  dimnames(predAl) <- list(GetTaxa(object), dimnames(object$alleleDepth)[[2]])
+  object$alleleFreqByTaxa <- predAl
   return(object)
 }
 
@@ -929,4 +962,15 @@ GetBlankTaxa.RADdata <- function(object, ...){
     bt <- character(0)
   }
   return(bt)
+}
+
+# some basic utilities
+
+OneAllelePerMarker <- function(object, ...){
+  UseMethod("OneAllelePerMarker", object)
+}
+OneAllelePerMarker.RADdata <- function(object, ...){
+  mymatch <- match(1:max(object$alleles2loc), object$alleles2loc)
+  mymatch <- na.omit(mymatch)
+  return(mymatch)
 }

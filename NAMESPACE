@@ -1,15 +1,18 @@
-export(AddAlleleFreqHWE,  AddAlleleFreqMapping,  AddGenotypeLikelihood,  
+export(AddAlleleFreqByTaxa, AddAlleleFreqHWE, AddAlleleFreqMapping,
+       AddGenotypeLikelihood,  
 AddGenotypePosteriorProb,  AddGenotypePriorProb_HWE,
 AddGenotypePriorProb_Mapping2Parents, AddPCA,
 AddPloidyChiSq, AddPloidyLikelihood,  AddPriorTimesLikelihood,  
 GetBlankTaxa,  GetContamRate,  GetDonorParent,  GetLikelyGen, 
 GetLocDepth,  GetLoci,  GetRecurrentParent,  GetTaxa, 
-GetWeightedMeanGenotypes, IterateHWE, RADdata, readHMC, SetBlankTaxa, 
+GetWeightedMeanGenotypes, IterateHWE, OneAllelePerMarker,
+RADdata, readHMC, SetBlankTaxa, 
 SetContamRate,  SetDonorParent,  SetRecurrentParent)
 
 importFrom("stats", "dist", "dmultinom", "pchisq")
 
 S3method(print, RADdata)
+S3method(AddAlleleFreqByTaxa, RADdata)
 S3method(AddAlleleFreqHWE, RADdata)
 S3method(AddAlleleFreqMapping, RADdata)
 S3method(AddGenotypeLikelihood, RADdata)
@@ -29,6 +32,7 @@ S3method(GetLoci, RADdata)
 S3method(GetRecurrentParent, RADdata)
 S3method(GetTaxa, RADdata)
 S3method(GetWeightedMeanGenotypes, RADdata)
+S3method(OneAllelePerMarker, RADdata)
 S3method(SetBlankTaxa, RADdata)
 S3method(SetContamRate, RADdata)
 S3method(SetDonorParent, RADdata)
