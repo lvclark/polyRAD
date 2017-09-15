@@ -1,61 +1,79 @@
 \name{AddAlleleFreqByTaxa}
 \alias{AddAlleleFreqByTaxa}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-%%  ~~function to do ... ~~
+Estimate Local Allele Frequencies for Each Taxon Based on Population Structure
 }
 \description{
-%%  ~~ A concise (1-5 lines) description of what the function does. ~~
+This function estimates allele frequencies per taxon, rather than for the whole
+population.  The best estimated genotypes (either \code{object$depthRatio} or
+\code{GetWeightedMeanGenotypes(object)}) are regressed against principal 
+coordinate axes.  The regression coefficients are then in turn used to 
+predict allele frequencies from PC axes.  Allele frequencies outside of a 
+user-defined range are then adjusted so that they fall within that range.
 }
 \usage{
 AddAlleleFreqByTaxa(object, ...)
+\method{AddAlleleFreqByTaxa}{RADdata}(object, minfreq = 0.0001, \dots)
 }
-%- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{object}{
-%%     ~~Describe \code{object} here~~
+A \code{"\link{RADdata}"} object.  \code{\link{AddPCA}} should have already
+been run.
+}
+\item{minfreq}{
+The minimum allowable allele frequency to be output.  The maximum allowable
+allele frequency will be calculated as \code{1 - minfreq}.
 }
   \item{\dots}{
-%%     ~~Describe \code{\dots} here~~
+Additional arguments (none implemented).
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+For every allele, all PC axes stored in \code{object$PCA} are used for 
+generating regression coefficients and making predictions, regardless of whether
+they are significantly associated with the allele.
+
+\code{object$depthRatio} has missing data for loci with no reads; these missing
+data are omitted on a per-allele basis when calculating regression coefficients.
+However, allele frequencies are output for all taxa at all alleles, because
+there are no missing data in the PC axes.  The output of 
+\code{\link{GetWeightedMeanGenotypes}} has no missing data, so missing data are
+not an issue when calculating regression coefficients using that method.
+
+After predicting allele frequencies from the regression coefficients, the
+function loops through all loci and taxa to adjust allele frequencies if necessary.
+This is needed because otherwise some allele frequencies will be below zero or
+above one (typically in subpopulations where alleles are near fixation), 
+which interferes with prior genotype probability estimation.  For a 
+given taxon and locus, any allele frequencies below \code{minfreq} are adjusted
+to be equal to \code{minfreq}, and any allele frequencies above \code{1 - minfreq}
+are adjusted to be \code{1 - minfreq}.  Remaining allele frequencies are adjusted
+so that all allele frequencies for the taxon and locus sum to one.
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-}
-\references{
-%% ~put references to the literature/web site here ~
-}
-\author{
-%%  ~~who you are~~
-}
-\note{
-%%  ~~further notes~~
+A \code{"RADdata"} object identical to the one passed to the function, but with
+a matrix of allele frequencies added to the \code{$alleleFreqByTaxa} slot.  Taxa
+are in rows and alleles in columns.
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
+\author{
+Lindsay V. Clark
+}
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{AddGenotypePriorProb_ByTaxa}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+# load data
+data(exampleRAD)
+# do PCA
+exampleRAD <- AddPCA(exampleRAD, nPcsInit = 3)
 
-## The function is currently defined as
-function (object, ...) 
-{
-    UseMethod("AddAlleleFreqByTaxa")
-  }
+# get allele frequencies
+exampleRAD <- AddAlleleFreqByTaxa(exampleRAD)
+
+exampleRAD$alleleFreqByTaxa[1:10,]
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }% use one of  RShowDoc("KEYWORDS")
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+
+\keyword{ regression }
+\keyword{ methods }

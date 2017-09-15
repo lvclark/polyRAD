@@ -4,6 +4,8 @@
 \alias{GetLocDepth}
 \alias{GetContamRate}
 \alias{SetContamRate}
+\alias{nTaxa}
+\alias{nAlleles}
 \title{
 Accessor Functions for RADdata Objects
 }
@@ -19,6 +21,8 @@ GetLoci(object, ...)
 GetLocDepth(object, ...)
 GetContamRate(object, ...)
 SetContamRate(object, value, ...)
+nTaxa(object, ...)
+nAlleles(object, ...)
 }
 \arguments{
   \item{object}{
@@ -37,8 +41,10 @@ For \code{GetTaxa} and \code{GetLoci}, a character vector listing taxa names
 or loci names, respectively.  For \code{GetLocDepth}, a named matrix with
 taxa in rows and loci in columns, giving the total read depth for each taxon
 and locus.  For \code{GetContamRate}, a number indicating the expected 
-contamination rate that is stored in the object.  for \code{SetContamRate}, a
+contamination rate that is stored in the object.  For \code{SetContamRate}, a
 \code{"RADdata"} object with an updated contamination rate.
+For \code{nTaxa}, the number of taxa in the object.  For \code{nAlleles}, the
+number of alleles across all loci in the object.
 }
 \author{
 Lindsay V. Clark
@@ -55,6 +61,8 @@ GetLocDepth(exampleRAD)
 GetContamRate(exampleRAD)
 exampleRAD <- SetContamRate(exampleRAD, 0.0000001)
 GetContamRate(exampleRAD)
+nTaxa(exampleRAD)
+nAlleles(exampleRAD)
 }
 
 \keyword{ methods }

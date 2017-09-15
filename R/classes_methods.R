@@ -74,7 +74,7 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
 # print method for RADdata (just some summary statistics) ####
 print.RADdata <- function(x, ...){
   cat("## RADdata object ##", 
-      paste(attr(x, "nTaxa"), "taxa and", attr(x, "nLoci"), "loci"),
+      paste(nTaxa(x), "taxa and", attr(x, "nLoci"), "loci"),
       paste(sum(x$locDepth), "total reads"), 
       paste("Assumed sample cross-contamination rate of", 
             attr(x, "contamRate")),
@@ -271,7 +271,7 @@ GetLikelyGen.RADdata <- function(object, taxon, minLikelihoodRatio = 10){
   }
   npld <- length(object$genotypeLikelihood)
   ploidies <- sapply(object$genotypeLikelihood, function(x) dim(x)[1] - 1)
-  nAllele <- dim(object$alleleDepth)[2]
+  nAllele <- nAlleles(object)
   
   outmat <- matrix(NA_integer_, nrow = npld, ncol = nAllele,
                    dimnames = list(as.character(ploidies), 
@@ -331,7 +331,7 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
   pldtot <- sapply(object$genotypeLikelihood, function(x) dim(x)[1] - 1)
   pldtot.don <- pldtot[pldtot %in% sapply(donorParentPloidies, sum)]
   pldtot.rec <- pldtot[pldtot %in% sapply(recurrentParentPloidies, sum)]
-  nAlleles <- dim(object$alleleDepth)[2]
+  nAlleles <- nAlleles(object)
   likelyGen.don <- GetLikelyGen(object, donorParent, 
                                 minLikelihoodRatio = minLikelihoodRatio)[as.character(pldtot.don),,drop = FALSE]
   likelyGen.rec <- GetLikelyGen(object, recurrentParent,
@@ -619,7 +619,7 @@ AddPloidyLikelihood.RADdata <- function(object, excludeTaxa = GetBlankTaxa(objec
   taxa <- taxa[!taxa %in% GetBlankTaxa(object)]
   taxa <- taxa[!taxa %in% excludeTaxa]
   
-  nAlleles <- dim(object$alleleDepth)[2]
+  nAlleles <- nAlleles(object)
   
   likgen <- lapply(taxa, function(x) GetLikelyGen(object, x,
                                                   minLikelihoodRatio = minLikelihoodRatio))
@@ -675,7 +675,7 @@ AddPloidyChiSq.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object),
     object <- AddGenotypeLikelihood(object)
   }
   
-  nAlleles <- dim(object$alleleDepth)[2]
+  nAlleles <- nAlleles(object)
   object$ploidyChiSq <- matrix(NA, nrow = length(object$priorProb),
                                ncol = nAlleles,
                                dimnames = list(NULL, dimnames(object$alleleDepth)[[2]]))
@@ -761,7 +761,7 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
     stop("Need to estimate ploidy chi-squared first.")
   }
 
-  altokeep <- 1:dim(object$alleleDepth)[2]
+  altokeep <- 1:nAlleles(object)
   if(omit1allelePerLocus){
     # make allele subset, to remove mathematical redundancy in dataset
     mymatch <- OneAllelePerMarker(object)
@@ -832,6 +832,12 @@ AddAlleleFreqByTaxa.RADdata <- function(object, minfreq = 0.0001, ...){
   if(is.null(object$PCA)){
     stop("Need to run AddPCA first.")
   }
+  if(minfreq <= 0){
+    stop("minfreq must be greater than zero.")
+  }
+  if(minfreq >= 0.5){
+    stop("minfreq must be less than 0.5 (typically much less).")
+  }
   if(is.null(object$posteriorProb) || is.null(object$ploidyChiSq)){
     genmat <- object$depthRatio
     genmat[is.na(genmat)] <- NA
@@ -849,8 +855,31 @@ AddAlleleFreqByTaxa.RADdata <- function(object, minfreq = 0.0001, ...){
   
   # predict allele frequencies from PC axes
   predAl <- object$PCA %*% PCcoef[-1,] + 
-    matrix(PCcoef[1,], byrow = TRUE, nrow = attr(object, "nTaxa"), 
-           ncol = dim(object$alleleDepth)[2])
+    matrix(PCcoef[1,], byrow = TRUE, nrow = nTaxa(object), 
+           ncol = nAlleles(object))
+  
+  # adjust allele frequencies to possible values
+  for(loc in sort(unique(object$alleles2loc))){
+    thesecol <- which(object$alleles2loc == loc) # columns for this locus
+    for(taxa in 1:nTaxa(object)){
+      thesefreq <- predAl[taxa,thesecol]
+      while(any(thesefreq < minfreq)){
+        oldfreq <- thesefreq
+        toolow <- thesefreq < minfreq
+        thesefreq[toolow] <- minfreq
+        adjust <- sum(thesefreq - oldfreq)/sum(!toolow)
+        thesefreq[!toolow] <- thesefreq[!toolow] - adjust
+      }
+      while(any(thesefreq > (1 - minfreq))){
+        oldfreq <- thesefreq
+        toohigh <- thesefreq > 1 - minfreq
+        thesefreq[toohigh] <- 1 - minfreq
+        adjust <- sum(oldfreq - thesefreq)/sum(!toohigh)
+        thesefreq[!toohigh] <- thesefreq[!toohigh] + adjust
+      }
+      predAl[taxa,thesecol] <- thesefreq
+    }
+  }
   
   dimnames(predAl) <- list(GetTaxa(object), dimnames(object$alleleDepth)[[2]])
   object$alleleFreqByTaxa <- predAl
@@ -864,11 +893,23 @@ GetTaxa <- function(object, ...){
 GetTaxa.RADdata <- function(object, ...){
   return(attr(object, "taxa"))
 }
+nTaxa <- function(object, ...){
+  UseMethod("nTaxa", object)
+}
+nTaxa.RADdata <- function(object, ...){
+  return(attr(object, "nTaxa"))
+}
 GetLoci <- function(object, ...){
   UseMethod("GetLoci", object)
 }
 GetLoci.RADdata <- function(object, ...){
   return(row.names(object$locTable))
+}
+nAlleles <- function(object, ...){
+  UseMethod("nAlleles", object)
+}
+nAlleles.RADdata <- function(object, ...){
+  return(dim(object$alleleDepth)[2])
 }
 GetLocDepth <- function(object, ...){
   UseMethod("GetLocDepth", object)
