@@ -1,5 +1,6 @@
 \name{AddAlleleFreqByTaxa}
 \alias{AddAlleleFreqByTaxa}
+\alias{AddAlleleFreqByTaxa.RADdata}
 \title{
 Estimate Local Allele Frequencies for Each Taxon Based on Population Structure
 }

@@ -1,5 +1,6 @@
 \name{AddPCA}
 \alias{AddPCA}
+\alias{AddPCA.RADdata}
 \title{
 Perform Principal Components Analysis on \dQuote{RADdata} Object
 }

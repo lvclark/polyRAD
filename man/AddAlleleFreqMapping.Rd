@@ -45,7 +45,7 @@ Arguments to be passed to the method for \code{"RADdata"}.
 Allele frequencies are first estimated as the column means of 
 \code{object$depthRatio} (unless posterior genotype probabilities and ploidy
 chi-squared values have already been calculated, in which case 
-\code{\link{GetWeightedMeanGeno}} is run and the column means of its output are
+\code{\link{GetWeightedMeanGenotypes}} is run and the column means of its output are
 taken), excluding any taxa listed in \code{excludeTaxa}.
 These are then categorized based on which, if any, expected allele frequency
 they match with, based on the intervals described by \code{expectedFreqs} and

@@ -11,7 +11,7 @@ GetWeightedMeanGenotypes, IterateHWE, nTaxa, nAlleles,
 OneAllelePerMarker, RADdata, readHMC, SetBlankTaxa, 
 SetContamRate, SetDonorParent, SetRecurrentParent)
 
-importFrom("stats", "dist", "dmultinom", "pchisq")
+importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit")
 
 S3method(print, RADdata)
 S3method(AddAlleleFreqByTaxa, RADdata)

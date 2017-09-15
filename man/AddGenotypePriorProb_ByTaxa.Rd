@@ -31,16 +31,16 @@ allele copy number in the first dimension, taxa in the second dimension, and
 alleles in the third dimension.  The values in the array are prior genotype
 probabilities.  Additionally, \code{object$possiblePloidies} is copied to
 \code{object$priorProbPloidies}, and \code{"taxon"} is recorded in the 
-\code{"priorType""} attribute.
+\code{"priorType"} attribute.
 }
 
 \author{
 Lindsay V. Clark
 }
 
-\seealso{\code{
+\seealso{
 \code{\link{AddGenotypePriorProb_HWE}}, \code{\link{AddGenotypePriorProb_Mapping2Parents}},
-\link{AddGenotypeLikelihood}}
+\code{\link{AddGenotypeLikelihood}}
 }
 \examples{
 # load data

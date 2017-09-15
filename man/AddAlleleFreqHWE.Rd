@@ -1,5 +1,6 @@
 \name{AddAlleleFreqHWE}
 \alias{AddAlleleFreqHWE}
+\alias{AddAlleleFreqHWE.RADdata}
 \title{
 Estimate Allele Frequencies in a RADdata Object Assuming Hardy-Weinberg Equilibrium
 }

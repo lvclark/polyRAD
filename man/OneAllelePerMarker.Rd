@@ -31,7 +31,7 @@ Lindsay V. Clark
 }
 
 \seealso{
-\code{\link{Accessors}}
+\code{\link{GetTaxa}} for a list of accessors.
 }
 \examples{
 data(exampleRAD)
