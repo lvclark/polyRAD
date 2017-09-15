@@ -11,14 +11,21 @@ The PCA scores are then stored in the \code{$PCA} slot of the
 }
 \usage{
 AddPCA(object, ...)
-\method{AddPCA}{RADdata}(object, nPcs = 20, \dots)
+\method{AddPCA}{RADdata}(object, nPcsInit = 50, maxR2changeratio = 0.05, \dots)
 }
 \arguments{
   \item{object}{
 A \code{"\link{RADdata}"} object.
 }
-\item{nPcs}{
-The number of principal component axes to return.
+\item{nPcsInit}{
+The number of principal component axes to initially calculate.
+}
+\item{maxR2changeratio}{
+This number determines how many principal component axes are retained.  The 
+difference in \eqn{R^2}{R-squared} values between the first and second axes 
+is multiplied by \code{maxR2changeratio}.  The last axis retained is the first
+axis after which the \eqn{R^2}{R-squared} value changes by less than this value.
+Lower values of \code{maxR2changeratio} will result in more axes being retained.
 }
   \item{\dots}{
 Additional arguments to be passed to the \code{pca} function from the
@@ -47,7 +54,7 @@ Lindsay V. Clark
 # load data
 data(exampleRAD)
 # do PCA
-exampleRAD <- AddPCA(exampleRAD, nPcs = 3)
+exampleRAD <- AddPCA(exampleRAD, nPcsInit = 3)
 
 plot(exampleRAD$PCA[,1], exampleRAD$PCA[,2])
 }

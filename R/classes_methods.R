@@ -800,7 +800,7 @@ AddPCA <- function(object, ...){
   UseMethod("AddPCA", object)
 }
 # some key additional arguments: nPcs is the number of PC axes to return
-AddPCA.RADdata <- function(object, nPcs = 20, ...){
+AddPCA.RADdata <- function(object, nPcsInit = 50, maxR2changeratio = 0.05, ...){
   # matrix for input to PCA; depth ratios or posterior probs
   if(is.null(object$posteriorProb) || is.null(object$ploidyChiSq)){
     genmat <- object$depthRatio[,-OneAllelePerMarker(object)]
@@ -812,8 +812,15 @@ AddPCA.RADdata <- function(object, nPcs = 20, ...){
   genmat[is.na(genmat)] <- NA
   
   # run principal components analysis
-  pc <- pcaMethods::pca(genmat, method = "ppca", nPcs = nPcs, ...)
+  pc <- pcaMethods::pca(genmat, method = "ppca", nPcs = nPcsInit, ...)
+  # get rate of change in R2 values
+  roc <- pc@R2[1:(nPcsInit - 1)] - pc@R2[2:nPcsInit]
+  cutoff <- which(roc < roc[1] * maxR2changeratio)
+  
   object$PCA <- pc@scores
+  if(length(cutoff) > 0){
+    object$PCA <- object$PCA[,1:cutoff[1]]
+  }
   
   return(object)
 }
