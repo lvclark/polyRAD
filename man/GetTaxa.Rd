@@ -6,6 +6,7 @@
 \alias{SetContamRate}
 \alias{nTaxa}
 \alias{nAlleles}
+\alias{GetAlleleNames}
 \title{
 Accessor Functions for RADdata Objects
 }
@@ -23,6 +24,7 @@ GetContamRate(object, ...)
 SetContamRate(object, value, ...)
 nTaxa(object, ...)
 nAlleles(object, ...)
+GetAlleleNames(object, ...)
 }
 \arguments{
   \item{object}{
@@ -44,7 +46,8 @@ and locus.  For \code{GetContamRate}, a number indicating the expected
 contamination rate that is stored in the object.  For \code{SetContamRate}, a
 \code{"RADdata"} object with an updated contamination rate.
 For \code{nTaxa}, the number of taxa in the object.  For \code{nAlleles}, the
-number of alleles across all loci in the object.
+number of alleles across all loci in the object.  For \code{GetAlleleNames},
+the names of all alleles.
 }
 \author{
 Lindsay V. Clark
@@ -63,6 +66,7 @@ exampleRAD <- SetContamRate(exampleRAD, 0.0000001)
 GetContamRate(exampleRAD)
 nTaxa(exampleRAD)
 nAlleles(exampleRAD)
+GetAlleleNames(exampleRAD)
 }
 
 \keyword{ methods }

@@ -233,8 +233,8 @@ AddGenotypeLikelihood.RADdata <- function(object, ...){
     object$genotypeLikelihood[[i]] <- array(0, dim = c(ploidies[i]+1, 
                                                   dim(object$alleleDepth)),
                                        dimnames = list(as.character(0:ploidies[i]),
-                                                       attr(object, "taxa"),
-                                                       dimnames(object$alleleDepth)[[2]]))
+                                                       GetTaxa(object),
+                                                       GetAlleleNames(object)))
     for(j in 1:(ploidies[i]+1)){
       object$genotypeLikelihood[[i]][j,,] <- 
         object$depthSamplingPermutations * 
@@ -275,7 +275,7 @@ GetLikelyGen.RADdata <- function(object, taxon, minLikelihoodRatio = 10){
   
   outmat <- matrix(NA_integer_, nrow = npld, ncol = nAllele,
                    dimnames = list(as.character(ploidies), 
-                                   dimnames(object$alleleDepth)[[2]]))
+                                   GetAlleleNames(object)))
   for(i in 1:npld){
     nonNaAlleles <- which(!is.na(object$genotypeLikelihood[[i]][1,taxind,]))
     # get the most likely genotype
@@ -571,7 +571,7 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
   
   for(i in 1:length(OutPriors)){
     dimnames(OutPriors[[i]]) <- list(as.character(0:(dim(OutPriors[[i]])[1] - 1)),
-                                     dimnames(object$alleleDepth)[[2]])
+                                     GetAlleleNames(object))
   }
 
   object$priorProb <- OutPriors
@@ -625,7 +625,7 @@ AddPloidyLikelihood.RADdata <- function(object, excludeTaxa = GetBlankTaxa(objec
                                                   minLikelihoodRatio = minLikelihoodRatio))
   object$ploidyLikelihood <- matrix(nrow = length(object$priorProb),
                                     ncol = nAlleles,
-                                    dimnames = list(NULL, dimnames(object$alleleDepth)[[2]]))
+                                    dimnames = list(NULL, GetAlleleNames(object)))
   for(i in 1:length(object$priorProb)){
     thisploidy <- dim(object$priorProb[[i]])[1] - 1
     thesegen <- sapply(likgen, function(x) x[as.character(thisploidy),])
@@ -675,13 +675,13 @@ AddPloidyChiSq.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object),
     object <- AddGenotypeLikelihood(object)
   }
   
-  nAlleles <- nAlleles(object)
+  nAllele <- nAlleles(object)
   object$ploidyChiSq <- matrix(NA, nrow = length(object$priorProb),
-                               ncol = nAlleles,
-                               dimnames = list(NULL, dimnames(object$alleleDepth)[[2]]))
+                               ncol = nAllele,
+                               dimnames = list(NULL, GetAlleleNames(object)))
   object$ploidyChiSqP <- matrix(NA, nrow = length(object$priorProb),
-                                ncol = nAlleles,
-                                dimnames = list(NULL, dimnames(object$alleleDepth)[[2]]))
+                                ncol = nAllele,
+                                dimnames = list(NULL, GetAlleleNames(object)))
   
   # get weighted genotype tallies from genotype likelihoods
   gental <- list()
@@ -781,7 +781,7 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
   wmgeno <- matrix(mean(c(minval, maxval)), nrow = length(GetTaxa(object)),
                    ncol = length(altokeep),
                    dimnames = list(GetTaxa(object),
-                                   dimnames(object$alleleDepth)[[2]][altokeep]))
+                                   GetAlleleNames(object)[altokeep]))
   # loop through ploidies
   plforloop <- sort(unique(bestploidies))
   plforloop <- plforloop[plforloop != 0]
@@ -881,7 +881,7 @@ AddAlleleFreqByTaxa.RADdata <- function(object, minfreq = 0.0001, ...){
     }
   }
   
-  dimnames(predAl) <- list(GetTaxa(object), dimnames(object$alleleDepth)[[2]])
+  dimnames(predAl) <- list(GetTaxa(object), GetAlleleNames(object))
   object$alleleFreqByTaxa <- predAl
   return(object)
 }
@@ -910,6 +910,12 @@ nAlleles <- function(object, ...){
 }
 nAlleles.RADdata <- function(object, ...){
   return(dim(object$alleleDepth)[2])
+}
+GetAlleleNames <- function(object, ...){
+  UseMethod("GetAlleles", object)
+}
+GetAlleleNames.RADdata <- function(object, ...){
+  return(dimnames(object$alleleDepth)[[2]])
 }
 GetLocDepth <- function(object, ...){
   UseMethod("GetLocDepth", object)
