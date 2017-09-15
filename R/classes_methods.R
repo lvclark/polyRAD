@@ -886,6 +886,35 @@ AddAlleleFreqByTaxa.RADdata <- function(object, minfreq = 0.0001, ...){
   return(object)
 }
 
+AddGenotypePriorProb_ByTaxa <- function(object, ...){
+  UseMethod("AddGenotypePriorProb_ByTaxa", object)
+}
+AddGenotypePriorProb_ByTaxa.RADdata <- function(object, ...){
+  if(is.null(object$alleleFreqByTaxa)){
+    stop("Need to run AddAlleleFreqByTaxa first.")
+  }
+  priors <- list()
+  length(priors) <- length(object$possiblePloidies)
+  
+  for(i in 1:length(priors)){
+    pldtot <- sum(object$possiblePloidies[[i]])
+    priors[[i]] <- array(NA, dim = c(pldtot + 1,
+                                     nTaxa(object), nAlleles(object)),
+                         dimnames = list(as.character(0:pldtot),
+                                         GetTaxa(object),
+                                         GetAlleleNames(object)))
+    for(j in 1:nTaxa(object)){
+      priors[[i]][,j,] <- .HWEpriors(object$alleleFreqByTaxa[j,], 
+                                     object$possiblePloidies[[i]])
+    }
+  }
+  
+  object$priorProb <- priors
+  object$priorProbPloidies <- object$possiblePloidies
+  attr(object, "priorType") <- "taxon"
+  return(object)
+}
+
 #### Accessors ####
 GetTaxa <- function(object, ...){
   UseMethod("GetTaxa", object)
@@ -912,7 +941,7 @@ nAlleles.RADdata <- function(object, ...){
   return(dim(object$alleleDepth)[2])
 }
 GetAlleleNames <- function(object, ...){
-  UseMethod("GetAlleles", object)
+  UseMethod("GetAlleleNames", object)
 }
 GetAlleleNames.RADdata <- function(object, ...){
   return(dimnames(object$alleleDepth)[[2]])

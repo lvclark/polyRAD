@@ -41,7 +41,8 @@ Lindsay V. Clark
 
 
 \seealso{
-\code{\link{AddGenotypePriorProb_Mapping2Parents}}, \code{\link{AddGenotypeLikelihood}}
+\code{\link{AddGenotypePriorProb_Mapping2Parents}}, \code{\link{AddGenotypeLikelihood}},
+\code{\link{AddGenotypePriorProb_ByTaxa}}
 }
 \examples{
 # load in an example dataset
