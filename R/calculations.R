@@ -107,7 +107,7 @@
     attr(outFreq, "type") <- "individual frequency"
   } else {
     if(type %in% c("choose", "posterior prob") &&
-       !is.null(object$posteriorProb) && !is.null(object$ploidyChiSq)){
+       CanDoGetWeightedMeanGeno(object)){
       wmgeno <- GetWeightedMeanGenotypes(object, minval = 0, maxval = 1,
                                          omit1allelePerLocus = FALSE)
       outFreq <- colMeans(wmgeno[taxaToKeep,,drop = FALSE], na.rm = TRUE)

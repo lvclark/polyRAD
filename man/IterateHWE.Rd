@@ -1,17 +1,18 @@
 \name{IterateHWE}
 \alias{IterateHWE}
+\alias{IteratePopStruct}
 \title{
-Iteratively Estimate Population Parameters and Genotypes Under Hardy-Weinberg Equilibrium
+Iteratively Estimate Population Parameters and Genotypes In a Diversity Panel
 }
 \description{
-This is a wrapper function that iteratively runs \code{\link{AddAlleleFreqHWE}}, 
-\code{\link{AddGenotypePriorProb_HWE}}, \code{\link{AddGenotypeLikelihood}},
-\code{\link{AddPloidyChiSq}}, and \code{\link{AddGenotypePosteriorProb}} until
-allele frequencies stabilize to within a user-defined threshold.  Genotype
+These are wrapper function that iteratively run other \pkg{polyRAD} functions 
+until allele frequencies stabilize to within a user-defined threshold.  Genotype
 posterior probabilities can then be exported for downstream analysis.
 }
 \usage{
 IterateHWE(object, tol = 1e-08, excludeTaxa = GetBlankTaxa(object))
+IteratePopStruct(object, tol = 1e-02, excludeTaxa = GetBlankTaxa(object),
+                 nPcsInit = 50)
 }
 
 \arguments{
@@ -29,10 +30,26 @@ frequency estimates and chi-squared estimates.
 }
 }
 
+\details{
+For \code{IterateHWE}, the following functions are run iteratively,
+assuming Hardy-Weinberg Equilibrium:
+\code{\link{AddAlleleFreqHWE}}, 
+\code{\link{AddGenotypePriorProb_HWE}}, \code{\link{AddGenotypeLikelihood}},
+\code{\link{AddPloidyChiSq}}, and \code{\link{AddGenotypePosteriorProb}}.
+
+For \code{IteratePopStruct}, the following functions are run iteratively,
+modeling population structure:
+\code{\link{AddPCA}}, \code{\link{AddAlleleFreqByTaxa}}, 
+\code{\link{AddAlleleFreqHWE}}, \code{\link{AddGenotypePriorProb_ByTaxa}},
+\code{\link{AddGenotypeLikelihood}}, and \code{\link{AddGenotypePosteriorProb}}.
+}
+
 \value{
 A \code{"RADdata"} object identical to that passed to the function, but with
 \code{$alleleFreq}, \code{$priorProb}, \code{$genotypeLikelihood},
-\code{$ploidyChiSq}, and \code{$posteriorProb} slots added.
+and \code{$posteriorProb} slots added.  For \code{IterateHWE}, 
+\code{$ploidyChiSq}, is also added.  For \code{IteratePopStruct}, 
+\code{$alleleFreqByTaxa} is also added.
 }
 
 \author{
@@ -49,6 +66,18 @@ data(exampleRAD)
 
 # iteratively estimate parameters
 exampleRAD <- IterateHWE(exampleRAD)
+
+# export results
+GetWeightedMeanGenotypes(exampleRAD)
+
+# re-load to run pipeline assuming population structure
+data(exampleRAD)
+
+# for now, IteratePopStruct only works with one ploidy
+exampleRAD$possiblePloidies <- list(2L)
+
+# run pipeline
+exampleRAD <- IteratePopStruct(exampleRAD, nPcsInit = 3)
 
 # export results
 GetWeightedMeanGenotypes(exampleRAD)

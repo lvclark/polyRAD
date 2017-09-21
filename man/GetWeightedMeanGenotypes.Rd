@@ -19,7 +19,8 @@ GetWeightedMeanGenotypes(object, ...)
 \arguments{
   \item{object}{
 A \code{"\link{RADdata}"} object.  Posterior genotype probabilities should
-have been added with \code{\link{AddGenotypePosteriorProb}}, and 
+have been added with \code{\link{AddGenotypePosteriorProb}}, and if there is
+more than one possible ploidy,
 ploidy chi-squared values should have been added with 
 \code{\link{AddPloidyChiSq}}.
 }

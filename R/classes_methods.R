@@ -204,13 +204,7 @@ AddGenotypeLikelihood.RADdata <- function(object, ...){
         sep = "\n")
     object <- AddAlleleFreqHWE(object)
   }
-  if(is.matrix(object$alleleFreq)){
-    # If allele frequency was estimated seperately for each taxon, get mean
-    # across the whole sample, since contamination could come from any taxon.
-    alFreq <- colMeans(object$alleleFreq, na.rm = TRUE)
-  } else {
-    alFreq <- object$alleleFreq
-  }
+  alFreq <- object$alleleFreq
   
   # get ploidies, ignoring inheritance pattern
   ploidies <- sort(unique(sapply(object$possiblePloidies, sum)))
@@ -757,7 +751,7 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
   if(is.null(object$posteriorProb)){
     stop("Need to estimate genotype posterior probabilities first.")
   }
-  if(is.null(object$ploidyChiSq)){
+  if(!CanDoGetWeightedMeanGeno(object)){
     stop("Need to estimate ploidy chi-squared first.")
   }
 
@@ -769,14 +763,18 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
   }  
   
   # pick which ploidy to use for each allele
-  bestploidies <- apply(object$ploidyChiSq[,altokeep, drop = FALSE], 2, 
-                        function(x){
-                          if(all(is.na(x))){
-                            return(0)
-                          } else {
-                            return(which.min(x))
-                          }})
-  
+  if(is.null(object$ploidyChiSq)){
+    bestploidies <- rep(1, length(altokeep))
+  } else {
+    bestploidies <- apply(object$ploidyChiSq[,altokeep, drop = FALSE], 2, 
+                          function(x){
+                            if(all(is.na(x))){
+                              return(0)
+                            } else {
+                              return(which.min(x))
+                            }})
+  }
+
   # set up emtpy matrix to contain results
   wmgeno <- matrix(mean(c(minval, maxval)), nrow = length(GetTaxa(object)),
                    ncol = length(altokeep),
@@ -802,7 +800,7 @@ AddPCA <- function(object, ...){
 # some key additional arguments: nPcs is the number of PC axes to return
 AddPCA.RADdata <- function(object, nPcsInit = 50, maxR2changeratio = 0.05, ...){
   # matrix for input to PCA; depth ratios or posterior probs
-  if(is.null(object$posteriorProb) || is.null(object$ploidyChiSq)){
+  if(!CanDoGetWeightedMeanGeno(object)){
     genmat <- object$depthRatio[,-OneAllelePerMarker(object)]
   } else {
     genmat <- GetWeightedMeanGenotypes(object, omit1allelePerLocus = TRUE)
@@ -838,7 +836,7 @@ AddAlleleFreqByTaxa.RADdata <- function(object, minfreq = 0.0001, ...){
   if(minfreq >= 0.5){
     stop("minfreq must be less than 0.5 (typically much less).")
   }
-  if(is.null(object$posteriorProb) || is.null(object$ploidyChiSq)){
+  if(!CanDoGetWeightedMeanGeno(object)){
     genmat <- object$depthRatio
     genmat[is.na(genmat)] <- NA
     PCcoef <- matrix(NA, nrow = dim(object$PCA)[2] + 1, 
@@ -1056,4 +1054,11 @@ OneAllelePerMarker.RADdata <- function(object, ...){
   mymatch <- match(1:max(object$alleles2loc), object$alleles2loc)
   mymatch <- na.omit(mymatch)
   return(mymatch)
+}
+CanDoGetWeightedMeanGeno <- function(object, ...){
+  UseMethod("CanDoGetWeightedMeanGeno", object)
+}
+CanDoGetWeightedMeanGeno.RADdata <- function(object, ...){
+  return(!is.null(object$posteriorProb) && 
+           (!is.null(object$ploidyChiSq) || length(object$posteriorProb) == 1))
 }
