@@ -745,7 +745,8 @@ GetWeightedMeanGenotypes <- function(object, ...){
   UseMethod("GetWeightedMeanGenotypes", object)
 }
 GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
-                                             omit1allelePerLocus = TRUE, ...){
+                                             omit1allelePerLocus = TRUE, 
+                                             naIfZeroReads = FALSE, ...){
   # maybe include an argument for selecting a specific ploidy rather than
   # letting the function pick what seems to be best?
   if(is.null(object$posteriorProb)){
@@ -791,6 +792,10 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
                                         2:3, function(x) sum(x * thesegenval))
   }
   
+  if(naIfZeroReads){ # if there were zero reads for that locus, replace with NA
+    wmgeno[object$locDepth[,as.character(object$alleles2loc)[altokeep]] == 0] <- NA
+  }
+  
   return(wmgeno)
 }
 
@@ -803,7 +808,8 @@ AddPCA.RADdata <- function(object, nPcsInit = 50, maxR2changeratio = 0.05, ...){
   if(!CanDoGetWeightedMeanGeno(object)){
     genmat <- object$depthRatio[,-OneAllelePerMarker(object)]
   } else {
-    genmat <- GetWeightedMeanGenotypes(object, omit1allelePerLocus = TRUE)
+    genmat <- GetWeightedMeanGenotypes(object, omit1allelePerLocus = TRUE,
+                                       naIfZeroReads = FALSE)
   }
   
   # replace NaN with NA
@@ -839,16 +845,20 @@ AddAlleleFreqByTaxa.RADdata <- function(object, minfreq = 0.0001, ...){
   if(!CanDoGetWeightedMeanGeno(object)){
     genmat <- object$depthRatio
     genmat[is.na(genmat)] <- NA
+  } else {
+    genmat <- GetWeightedMeanGenotypes(object, omit1allelePerLocus = FALSE,
+                                       minval = 0, maxval = 1,
+                                       naIfZeroReads = FALSE)
+  }
+  if(sum(is.na(genmat)) == 0){
+    # regress estimated genotypes on PC axes
+    PCcoef <- lm(genmat ~ object$PCA)$coefficients
+  } else {
     PCcoef <- matrix(NA, nrow = dim(object$PCA)[2] + 1, 
                      ncol = dim(genmat)[2])
     for(i in 1:dim(genmat)[2]){
       PCcoef[,i] <- lm(genmat[,i] ~ object$PCA)$coefficients
     }
-  } else {
-    genmat <- GetWeightedMeanGenotypes(object, omit1allelePerLocus = FALSE,
-                                       minval = 0, maxval = 1)
-    # regress estimated genotypes on PC axes
-    PCcoef <- lm(genmat ~ object$PCA)$coefficients
   }
   
   # predict allele frequencies from PC axes

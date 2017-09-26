@@ -14,7 +14,8 @@ numerical genotype values for each taxon and allele.
 \usage{
 GetWeightedMeanGenotypes(object, ...)
 \method{GetWeightedMeanGenotypes}{RADdata}(object, minval = 0, maxval = 1, 
-                         omit1allelePerLocus = TRUE, \dots)
+                         omit1allelePerLocus = TRUE, 
+                         naIfZeroReads = FALSE, \dots)
 }
 \arguments{
   \item{object}{
@@ -43,6 +44,14 @@ prevent singularities for
 genome-wide association and genomic prediction.  The value for one
 allele can be predicted from the values from all other alleles at
 its locus.
+}
+\item{naIfZeroReads}{
+A logical indicating whether \code{NA} should be inserted into the 
+output matrix for any taxa and loci where the total read depth for
+the locus is zero.  If \code{FALSE}, the output for these genotypes is
+essentially the weighted mean across prior genotype probabilities, since
+prior and posterior genotype probabilities are equal when there are no
+reads.
 }
 }
 
