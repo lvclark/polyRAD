@@ -803,7 +803,11 @@ AddPCA <- function(object, ...){
   UseMethod("AddPCA", object)
 }
 # some key additional arguments: nPcs is the number of PC axes to return
-AddPCA.RADdata <- function(object, nPcsInit = 50, maxR2changeratio = 0.05, ...){
+AddPCA.RADdata <- function(object, nPcsInit = 50, maxR2changeratio = 0.05, 
+                           minPcsOut = 1, ...){
+  if(minPcsOut > nPcsInit){
+    stop("minPcsOut can not be greater than nPcsInit.")
+  }
   # matrix for input to PCA; depth ratios or posterior probs
   if(!CanDoGetWeightedMeanGeno(object)){
     genmat <- object$depthRatio[,-OneAllelePerMarker(object)]
@@ -820,12 +824,16 @@ AddPCA.RADdata <- function(object, nPcsInit = 50, maxR2changeratio = 0.05, ...){
   # get rate of change in R2 values
   roc <- pc@R2[1:(nPcsInit - 1)] - pc@R2[2:nPcsInit]
   cutoff <- which(roc < roc[1] * maxR2changeratio)
-  
-  object$PCA <- pc@scores
-  if(length(cutoff) > 0){
-    object$PCA <- object$PCA[,1:cutoff[1]]
+  if(length(cutoff) == 0){
+    cutoff <- nPcsInit
+  }
+  # make sure number of PCs meets minimum threshold
+  if(cutoff[1] < minPcsOut){
+    cutoff <- minPcsOut
   }
   
+  object$PCA <- pc@scores[,1:cutoff[1]]
+
   return(object)
 }
 

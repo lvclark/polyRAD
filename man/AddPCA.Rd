@@ -12,7 +12,8 @@ The PCA scores are then stored in the \code{$PCA} slot of the
 }
 \usage{
 AddPCA(object, ...)
-\method{AddPCA}{RADdata}(object, nPcsInit = 50, maxR2changeratio = 0.05, \dots)
+\method{AddPCA}{RADdata}(object, nPcsInit = 50, maxR2changeratio = 0.05, 
+                         minPcsOut = 1, \dots)
 }
 \arguments{
   \item{object}{
@@ -27,6 +28,10 @@ difference in \eqn{R^2}{R-squared} values between the first and second axes
 is multiplied by \code{maxR2changeratio}.  The last axis retained is the first
 axis after which the \eqn{R^2}{R-squared} value changes by less than this value.
 Lower values of \code{maxR2changeratio} will result in more axes being retained.
+}
+\item{minPcsOut}{
+The minimum number of PC axes to output, which can override 
+\code{maxR2changeratio}.
 }
   \item{\dots}{
 Additional arguments to be passed to the \code{pca} function from the
