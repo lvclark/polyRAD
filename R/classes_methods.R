@@ -662,9 +662,6 @@ AddPloidyChiSq.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object),
   if(is.null(object$priorProb)){
     stop("Prior genotype probabilities must be estimated first.")
   }
-  if(attr(object, "priorType") != "population"){
-    stop("AddPloidyChiSq not yet defined for priors estimated on a per-taxon basis.")
-  }
   if(is.null(object$genotypeLikelihood)){
     object <- AddGenotypeLikelihood(object)
   }
@@ -696,11 +693,18 @@ AddPloidyChiSq.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object),
     whichlik <- which(sapply(object$genotypeLikelihood, 
                              function(x) dim(x)[1] - 1) == thisploidy)
     stopifnot(length(whichlik) == 1)
+    # get priors
+    if(attr(object, "priorType") == "population"){
+      thesepriors <- object$priorProb[[i]]
+    } else {
+      # convert priors by taxon to population priors
+      thesepriors <- rowMeans(aperm(object$priorProb[[i]], c(1,3,2)), dims = 2)
+    }
     # estimate the components that are summed to make chi square
-    chisqcomp <- (gental[[whichlik]] - object$priorProb[[i]])^2/
-      object$priorProb[[i]] * length(taxa)
+    chisqcomp <- (gental[[whichlik]] - thesepriors)^2/
+      thesepriors * length(taxa)
     # degrees of freedom
-    theseDF <- colSums(object$priorProb[[i]] != 0) - 1
+    theseDF <- colSums(thesepriors != 0) - 1
     # chi-squared statistic
     thesechisq <- apply(chisqcomp, 2, function(x) sum(x[x != Inf]))
     object$ploidyChiSq[i,] <- thesechisq
