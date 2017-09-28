@@ -12,7 +12,7 @@ posterior probabilities can then be exported for downstream analysis.
 \usage{
 IterateHWE(object, tol = 1e-08, excludeTaxa = GetBlankTaxa(object))
 IteratePopStruct(object, tol = 1e-03, excludeTaxa = GetBlankTaxa(object),
-                 nPcsInit = 50)
+                 nPcsInit = 50, minfreq = 0.0001)
 }
 
 \arguments{
@@ -31,6 +31,10 @@ frequency estimates and chi-squared estimates.
 \item{nPcsInit}{
 An integer indicating the number of principal component axes to initially 
 estimate from \code{object$depthRatio}.  Passed to \code{\link{AddPCA}}.
+}
+\item{minfreq}{
+A number indicating the minimum allele frequency allowed.  Passed to
+\code{\link{AddAlleleFreqByTaxa}}.
 }
 }
 

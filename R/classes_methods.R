@@ -836,6 +836,11 @@ AddPCA.RADdata <- function(object, nPcsInit = 50, maxR2changeratio = 0.05,
   # replace NaN with NA
   genmat[is.na(genmat)] <- NA
   
+  # adjust number of PC axes if necessary
+  if(nPcsInit > dim(genmat)[2]){
+    nPcsInit <- dim(genmat)[2]
+  }
+  
   # run principal components analysis
   pc <- pcaMethods::pca(genmat, method = "ppca", nPcs = nPcsInit, ...)
   # get rate of change in R2 values
@@ -896,19 +901,22 @@ AddAlleleFreqByTaxa.RADdata <- function(object, minfreq = 0.0001, ...){
     thesecol <- which(object$alleles2loc == loc) # columns for this locus
     for(taxa in 1:nTaxa(object)){
       thesefreq <- predAl[taxa,thesecol]
+      thesefreq <- thesefreq/sum(thesefreq) # must sum to 1
       while(any(thesefreq < minfreq)){
         oldfreq <- thesefreq
         toolow <- thesefreq < minfreq
         thesefreq[toolow] <- minfreq
-        adjust <- sum(thesefreq - oldfreq)/sum(!toolow)
-        thesefreq[!toolow] <- thesefreq[!toolow] - adjust
+        canadjust <- thesefreq > minfreq
+        adjust <- sum(thesefreq - oldfreq)/sum(canadjust)
+        thesefreq[canadjust] <- thesefreq[canadjust] - adjust
       }
       while(any(thesefreq > (1 - minfreq))){
         oldfreq <- thesefreq
         toohigh <- thesefreq > 1 - minfreq
         thesefreq[toohigh] <- 1 - minfreq
-        adjust <- sum(oldfreq - thesefreq)/sum(!toohigh)
-        thesefreq[!toohigh] <- thesefreq[!toohigh] + adjust
+        canadjust <- thesefreq < 1 - minfreq
+        adjust <- sum(oldfreq - thesefreq)/sum(canadjust)
+        thesefreq[canadjust] <- thesefreq[canadjust] + adjust
       }
       predAl[taxa,thesecol] <- thesefreq
     }

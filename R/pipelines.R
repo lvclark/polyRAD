@@ -34,7 +34,7 @@ IterateHWE <- function(object, tol = 1e-8, excludeTaxa = GetBlankTaxa(object)){
 
 IteratePopStruct <- function(object, tol = 1e-3, 
                              excludeTaxa = GetBlankTaxa(object),
-                             nPcsInit = 50){
+                             nPcsInit = 50, minfreq = 0.0001){
   if(!"RADdata" %in% class(object)){
     stop("RADdata object needed.")
   }
@@ -66,7 +66,7 @@ IteratePopStruct <- function(object, tol = 1e-3,
       # -> reasoning for PC number constraints: 
       #     tend to get more accuracy with more PCs,
       #     number of PCs going up and down prevents convergence of algorithm
-    object <- AddAlleleFreqByTaxa(object)
+    object <- AddAlleleFreqByTaxa(object, minfreq = minfreq)
     nIter <- nIter + 1
     meanDiff <- mean(abs(oldAlFreq - object$alleleFreqByTaxa), na.rm = TRUE)
     cat(paste("Mean difference in allele frequencies of", meanDiff), sep = "\n")
