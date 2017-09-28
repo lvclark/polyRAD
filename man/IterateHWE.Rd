@@ -28,6 +28,10 @@ numbers will lead to fewer iterations.
 A character vector indicating names of taxa that should be excluded from allele 
 frequency estimates and chi-squared estimates.
 }
+\item{nPcsInit}{
+An integer indicating the number of principal component axes to initially 
+estimate from \code{object$depthRatio}.  Passed to \code{\link{AddPCA}}.
+}
 }
 
 \details{
@@ -42,6 +46,9 @@ modeling population structure:
 \code{\link{AddPCA}}, \code{\link{AddAlleleFreqByTaxa}}, 
 \code{\link{AddAlleleFreqHWE}}, \code{\link{AddGenotypePriorProb_ByTaxa}},
 \code{\link{AddGenotypeLikelihood}}, and \code{\link{AddGenotypePosteriorProb}}.
+After the first PCA analysis, the number of principal component axes is not
+allowed to decrease, and can only increase by one from one round to the next,
+in order to help the algorithm converge.
 }
 
 \value{
