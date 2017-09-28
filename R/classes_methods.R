@@ -746,7 +746,8 @@ GetWeightedMeanGenotypes <- function(object, ...){
 }
 GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
                                              omit1allelePerLocus = TRUE, 
-                                             naIfZeroReads = FALSE, ...){
+                                             naIfZeroReads = FALSE, 
+                                             onePloidyPerAllele = FALSE, ...){
   # maybe include an argument for selecting a specific ploidy rather than
   # letting the function pick what seems to be best?
   if(is.null(object$posteriorProb)){
@@ -763,33 +764,49 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
     altokeep <- altokeep[-mymatch]
   }  
   
-  # pick which ploidy to use for each allele
+  nPloidies <- length(object$priorProb)
+  
+  # get weights for ploidies to use for each allele
   if(is.null(object$ploidyChiSq)){
-    bestploidies <- rep(1, length(altokeep))
+    ploidyweights <- matrix(1, nrow = 1, ncol = length(altokeep))
   } else {
-    bestploidies <- apply(object$ploidyChiSq[,altokeep, drop = FALSE], 2, 
-                          function(x){
-                            if(all(is.na(x))){
-                              return(0)
-                            } else {
-                              return(which.min(x))
-                            }})
+    nPloidies <- dim(object$ploidyChiSq)[1]
+    if(onePloidyPerAllele){
+      ploidyweights <- matrix(0, nrow = nPloidies,
+                              ncol = length(altokeep))
+      bestploidies <- apply(object$ploidyChiSq[,altokeep, drop = FALSE], 2, 
+                            function(x){
+                              if(all(is.na(x))){
+                                   return(0)
+                                 } else {
+                                   return(which.min(x))
+                                 }})
+      for(i in 1:nPloidies){
+        ploidyweights[i,bestploidies == i] <- 1
+      }
+    } else {
+      chisqInverse <- 1/object$ploidyChiSq[,altokeep, drop = FALSE]
+      ploidyweights <- sweep(chisqInverse, 2, colSums(chisqInverse), "/")
+    }
+    ploidyweights[is.na(ploidyweights)] <- 0
   }
 
   # set up emtpy matrix to contain results
-  wmgeno <- matrix(mean(c(minval, maxval)), nrow = length(GetTaxa(object)),
+  wmgeno <- matrix(0, nrow = nTaxa(object),
                    ncol = length(altokeep),
                    dimnames = list(GetTaxa(object),
                                    GetAlleleNames(object)[altokeep]))
   # loop through ploidies
-  plforloop <- sort(unique(bestploidies))
-  plforloop <- plforloop[plforloop != 0]
-  for(i in plforloop){
+  for(i in 1:nPloidies){
     # values to represent each allele copy number
     thesegenval <- seq(minval, maxval, length.out = dim(object$posteriorProb[[i]])[1])
-    # get values to return
-    wmgeno[,bestploidies == i] <- apply(object$posteriorProb[[i]][,,altokeep[bestploidies == i]],
-                                        2:3, function(x) sum(x * thesegenval))
+    # weighted mean genotypes for this ploidy
+    thesewm <- rowSums(aperm(sweep(object$posteriorProb[[i]][,,altokeep],
+                                   1, thesegenval, "*"), 
+                             c(2,3,1)), 
+                       dims = 2)
+    # multiply by weight for this ploidy and add to total
+    wmgeno <- wmgeno + sweep(thesewm, 2, ploidyweights[i,], "*")
   }
   
   if(naIfZeroReads){ # if there were zero reads for that locus, replace with NA

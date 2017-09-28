@@ -5,17 +5,19 @@
 Export Numeric Genotype Values Weighted by Posterior Probabilities
 }
 \description{
-For each allele in a \code{"\link{RADdata}"} object, this function
-selects the best-fitting ploidy from the \code{$ploidyChiSq} slot, 
-and exports numerical genotype values calculated from the posterior
-genotype probabilities for that ploidy.  A matrix is returned with
+This function calculates numerical genotype values, weighted by 
+posterior genotype probabilities.  If the \code{"\link{RADdata}"} 
+object includes more than one possible inheritance mode, the 
+\code{$ploidyChiSq} slot is used for selecting or weighting 
+inheritance modes for each allele.  A matrix is returned with
 numerical genotype values for each taxon and allele.
 }
 \usage{
 GetWeightedMeanGenotypes(object, ...)
 \method{GetWeightedMeanGenotypes}{RADdata}(object, minval = 0, maxval = 1, 
                          omit1allelePerLocus = TRUE, 
-                         naIfZeroReads = FALSE, \dots)
+                         naIfZeroReads = FALSE, 
+                         onePloidyPerAllele = FALSE, \dots)
 }
 \arguments{
   \item{object}{
@@ -53,6 +55,34 @@ essentially the weighted mean across prior genotype probabilities, since
 prior and posterior genotype probabilities are equal when there are no
 reads.
 }
+\item{onePloidyPerAllele}{
+Logical.  If \code{TRUE}, for each allele the inheritance mode with the
+lowest \eqn{\chi ^ 2}{chi-squared} value is selected and is assumed to be
+the true inheritance mode.  If \code{FALSE}, inheritance modes are weighted
+by inverse \eqn{\chi ^ 2}{chi-squared} values for each allele, and mean
+genotypes that have been weighted across inheritance modes are returned.
+}
+}
+
+\details{
+For each inheritance mode \eqn{m}, taxon \eqn{t}, allele \eqn{a}, allele copy number 
+\eqn{i}, total ploidy \eqn{k}, and posterior genotype probability \eqn{p_{i,t,a,m}},
+weighted mean genotype \eqn{g_{t,a,m}} is estimated as:
+
+\deqn{g_{t,a,m} = \sum_{i = 0}^k p_{i,t,a,m} * \frac{i}{k}}{g_{t,a,m} = \sum_{i = 0}^k p_{i,t,a,m} * i/k}
+
+When there are multiple inheritance modes and \code{onePloidyPerAllele = FALSE},
+the weighted genotype is estimated as:
+
+\deqn{g_{t,a} = \sum_m [ g_{t,a,m} * \frac{1}{\chi^2_{m,a}} / \sum_m \frac{1}{\chi^2_{m,a}}]}{
+\sum_m [ g_{t,a,m} * 1/\chi^2_{m,a} / \sum_m 1/\chi^2_{m,a}]
+}
+
+When there are multiple inheritance modes and \code{onePloidyPerAllele = TRUE},
+the genotype is simply the one corresponding to the inheritance mode with the minimum
+\eqn{\chi ^2}{chi-squared} value:
+
+\deqn{g_{t,a} = g_{t,a,m} | \min_m{\chi^2_{m,a}}}
 }
 
 \value{
