@@ -8,8 +8,8 @@ CanDoGetWeightedMeanGeno, GetAlleleNames,
 GetBlankTaxa, GetContamRate, GetDonorParent, GetLikelyGen, 
 GetLocDepth, GetLoci, GetRecurrentParent, GetTaxa, 
 GetWeightedMeanGenotypes, IterateHWE, IteratePopStruct,
-nTaxa, nAlleles,
-OneAllelePerMarker, RADdata, readHMC, SetBlankTaxa, 
+nTaxa, nAlleles, OneAllelePerMarker, 
+PipelineMapping2Parents, RADdata, readHMC, SetBlankTaxa, 
 SetContamRate, SetDonorParent, SetRecurrentParent)
 
 importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit")
