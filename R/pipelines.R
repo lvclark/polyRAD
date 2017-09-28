@@ -59,8 +59,8 @@ IteratePopStruct <- function(object, tol = 1e-3,
     object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePriorProb_ByTaxa(object)
     object <- AddGenotypeLikelihood(object)
+    object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePosteriorProb(object)
-    # later insert object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
     object <- AddPCA(object, nPcsInit = dim(object$PCA)[2] + 1,
                      minPcsOut = dim(object$PCA)[2])
       # -> reasoning for PC number constraints: 

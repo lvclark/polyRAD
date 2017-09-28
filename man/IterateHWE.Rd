@@ -49,7 +49,8 @@ For \code{IteratePopStruct}, the following functions are run iteratively,
 modeling population structure:
 \code{\link{AddPCA}}, \code{\link{AddAlleleFreqByTaxa}}, 
 \code{\link{AddAlleleFreqHWE}}, \code{\link{AddGenotypePriorProb_ByTaxa}},
-\code{\link{AddGenotypeLikelihood}}, and \code{\link{AddGenotypePosteriorProb}}.
+\code{\link{AddGenotypeLikelihood}}, \code{\link{AddPloidyChiSq}}, and
+\code{\link{AddGenotypePosteriorProb}}.
 After the first PCA analysis, the number of principal component axes is not
 allowed to decrease, and can only increase by one from one round to the next,
 in order to help the algorithm converge.
@@ -83,9 +84,6 @@ GetWeightedMeanGenotypes(exampleRAD)
 
 # re-load to run pipeline assuming population structure
 data(exampleRAD)
-
-# for now, IteratePopStruct only works with one ploidy
-exampleRAD$possiblePloidies <- list(2L)
 
 # run pipeline
 exampleRAD <- IteratePopStruct(exampleRAD, nPcsInit = 3)
