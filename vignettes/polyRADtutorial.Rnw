@@ -76,7 +76,7 @@ mydata <- SetRecurrentParent(mydata, "Zebrinus-Justin")
 @
 
 Now we can run the pipeline.
-We'll specify that we don't want to include the parents or double haploid
+We'll specify that we don't want to include the parents or doubled haploid
 lines in the estimation of allele frequencies or evaluation of genotype
 freqnecies (\texttt{excludeTaxa} argument). The
 \texttt{allowedDeviation} argument indicates how different the apparent
@@ -129,8 +129,8 @@ three copies.
 The prior genotype probabilities (expected genotype distributions) are also
 stored in the object for each possible ploidy.  These distributions are estimated based
 on the most likely parent genotypes.  Low confidence parent genotypes
-can be ignored by increasing the \code{minLikelihoodRatio} argument to
-\code{PipelineMapping2Parents}.
+can be ignored by increasing the \texttt{minLikelihoodRatio} argument to
+\texttt{PipelineMapping2Parents}.
 
 <<>>=
 mydata$priorProb[[1]][,1:10]
@@ -210,6 +210,86 @@ zebrinusGenSubset <- sweep(zebrinusGen[,-OneAllelePerMarker(mydata)],
                           1, c(2,4), "/")
 kaskadeGenSubset[,1:10]
 zebrinusGenSubset[,1:10]
+@
+
+\section{Estimating genotype probabilities in a diversity panel}
+
+Pipelines in polyRAD for processing a diversity panel (i.e. a germplasm
+collection, a set of samples collected in the wild, or a panel for
+genome-wide association analysis or genomic prediction) use iterative
+algorithms.  Essentially, allele frequencies are re-estimated with each
+iteration until convergence is reached.
+
+Here we'll import a RAD-seq dataset from a large collection of wild and
+ornamental \textit{Miscanthus} from Clark \textit{et al.} (2014;
+\href{http://hdl.handle.net/10.1093/aob/mcu084}{doi:10.1093/aob/mcu084},
+data available at \url{http://hdl.handle.net/2142/49963}).
+
+<<>>=
+mydata <- readHMC("HapMapMsiSubset1.hmc.txt",
+                  possiblePloidies = list(2, c(2,2)))
+@
+
+We can iteratively estimate genotype probabilities assuming 
+Hardy-Weinberg equilibrium.  The argument \texttt{tol} is set to a higher
+value than the default here in order to help the tutorial run more quickly.
+
+<<>>=
+mydataHWE <- IterateHWE(mydata, tol = 1e-3)
+@
+
+Let's take a look at allele frequencies:
+
+<<fig=TRUE>>=
+hist(mydataHWE$alleleFreq, breaks = 20)
+@
+
+There are bumps around 0.4 and 0.6, which may be artefactual due to paralogs
+in the dataset.
+
+We can do a different genotype probability estimation that models population
+structure and variation in allele frequencies among populations.  We don't
+need to specify populations, since principal components analysis is used to
+assess population structure assuming an isolation-by-distance model, with
+gradients of gene flow across many groups of individuals.  This dataset 
+includes a very broad sampling of \textit{Miscanthus} across Asia, so it
+is very appropriate to model population structure in this case.
+
+<<>>=
+mydataPopStruct <- IteratePopStruct(mydata)
+@
+
+The allele frequency bumps have somewhat gone away:
+
+<<fig=TRUE>>=
+hist(mydataPopStruct$alleleFreq, breaks = 20)
+@
+
+Here's some of the population structure that was used for modeling
+allele frequencies:
+
+<<fig=TRUE>>=
+plot(mydataPopStruct$PCA[,1], mydataPopStruct$PCA[,2],
+     xlab = "PC axis 1", ylab = "PC axis 2")
+@
+
+And here's an example of allele frequency varying across the environment.
+Allele frequencies were estimated for each taxon, and are stored in the
+\texttt{\$alleleFreqByTaxa} slot.
+
+<<fig=TRUE>>=
+myallele <- 11
+freqcol <- rainbow(101)[round(mydataPopStruct$alleleFreqByTaxa[,myallele] * 100) + 1]
+plot(mydataPopStruct$PCA[,1], mydataPopStruct$PCA[,2],
+     xlab = "PC axis 1", ylab = "PC axis 2", pch = 21,
+     bg = freqcol)
+@
+
+As before, we can export the weighted mean genotypes for downstream analysis.
+
+<<>>=
+wmgenoPopStruct <- GetWeightedMeanGenotypes(mydataPopStruct)
+wmgenoPopStruct[1:10,1:5]
 @
 
 
