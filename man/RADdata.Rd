@@ -93,7 +93,7 @@ Lindsay V. Clark
 }
 
 \seealso{
-\code{\link{readHMC}}
+\code{\link{readHMC}}, \code{\link{readTagDigger}}
 }
 \examples{
 # create the dataset

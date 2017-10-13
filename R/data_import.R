@@ -70,3 +70,70 @@ readHMC <- function(file, includeLoci=NULL, shortIndNames=TRUE,
                  contamRate = contamRate,
                  alleleNucleotides = alleleNucleotides))
 }
+
+# function to import read counts from TagDigger
+readTagDigger <- function(countfile, includeLoci = NULL, 
+                          possiblePloidies = list(2), contamRate = 0.001, 
+                          dbfile = NULL, dbColumnsToKeep = NULL,
+                          dbChrCol = "Chr", dbPosCol = "Pos",
+                          dbNameCol = "Marker name"){
+  # read marker database, if applicable
+  if(!is.null(dbfile)){
+    mydb <- read.csv(dbfile, header = TRUE, stringsAsFactors = FALSE,
+                     row.names = make.names(dbNameCol))
+    if(!is.null(dbColumnsToKeep)){ # only retain subset of markers
+      mydb <- mydb[, make.names(dbColumnsToKeep)]
+    }
+    if(!all(make.names(c(dbChrCol, dbPosCol)) %in% names(mydb))){
+      stop(paste(dbChrCol, "and", dbPosCol, "not found in column names of", 
+                 dbfile))
+    }
+    names(mydb)[match(make.names(dbChrCol), names(mydb))] <- "Chr"
+    names(mydb)[match(make.names(dbPosCol), names(mydb))] <- "Pos"
+    # subset by loci
+    if(!is.null(includeLoci)){
+      mydb <- mydb[row.names(mydb) %in% includeLoci,]
+    }
+    if(dim(mydb)[1] == 0) stop("includeLoci and mydb don't match")
+  }
+  # read the counts
+  mycounts <- as.matrix(read.csv(countfile, row.names = 1, header = TRUE))
+  
+  # extract marker names 
+  mrkrNamesByAl <- sapply(strsplit(dimnames(mycounts)[[2]], split = "_"),
+                          function(x) x[1])
+  # subset by loci
+  if(!is.null(includeLoci)){
+    alToKeep <- mrkrNamesByAl %fin% includeLoci
+    if(sum(alToKeep) == 0) stop("countsfile and includeLoci don't match")
+    mrkrNamesByAl <- mrkrNamesByAl[alToKeep]
+    mycounts <- mycounts[, alToKeep]
+  }
+  # make locTable if still necessary
+  if(is.null(dbfile)){
+    mydb <- data.frame(row.names = unique(mrkrNamesByAl))
+  }
+  # get locTable indices for counts matrix columns
+  alleles2loc <- fmatch(mrkrNamesByAl, row.names(mydb))
+  # error if there isn't a match in marker names between the two files
+  if(any(is.na(alleles2loc))){
+    cat(paste("Some markers in", file, "not found in", dbfile), sep = "\n")
+    sadMarkers <- unique(mrkrNamesByAl[is.na(alleles2loc)])
+    maxMrkrToPrint <- 10
+    cat(sadMarkers[1:max(c(maxMrkrToPrint, length(sadMarkers)))], sep = "\n")
+    if(length(sadMarkers) > maxMrkrToPrint){
+      cat("...", sep = "\n")
+    }
+    stop(paste("Some markers in", file, "not found in", dbfile))
+  }
+  
+  # get variable nucleotides for tags
+  myNT <- sapply(strsplit(dimnames(mycounts)[[2]], split = "_"),
+                 function(x) x[2])
+  
+  
+  # make RADdata object
+  return(RADdata(mycounts, alleles2loc, mydb, possiblePloidies, contamRate,
+                 myNT))
+}
+

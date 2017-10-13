@@ -62,7 +62,7 @@ archived versions of TASSEL.
 }
 
 \seealso{
-%% add other functions here for reading data
+\code{\link{readTagDigger}}
 }
 \examples{
 # for this example we'll create dummy files rather than using real ones

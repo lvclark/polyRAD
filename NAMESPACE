@@ -9,8 +9,8 @@ GetBlankTaxa, GetContamRate, GetDonorParent, GetLikelyGen,
 GetLocDepth, GetLoci, GetRecurrentParent, GetTaxa, 
 GetWeightedMeanGenotypes, IterateHWE, IteratePopStruct,
 nTaxa, nAlleles, OneAllelePerMarker, 
-PipelineMapping2Parents, RADdata, readHMC, SetBlankTaxa, 
-SetContamRate, SetDonorParent, SetRecurrentParent)
+PipelineMapping2Parents, RADdata, readHMC, readTagDigger,
+SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent)
 
 importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit")
 
