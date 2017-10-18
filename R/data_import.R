@@ -92,15 +92,29 @@ readTagDigger <- function(countfile, includeLoci = NULL,
     names(mydb)[match(make.names(dbPosCol), names(mydb))] <- "Pos"
     # subset by loci
     if(!is.null(includeLoci)){
-      mydb <- mydb[row.names(mydb) %in% includeLoci,]
+      mydb <- mydb[row.names(mydb) %fin% includeLoci,]
     }
     if(dim(mydb)[1] == 0) stop("includeLoci and mydb don't match")
   }
   # read the counts
-  mycounts <- as.matrix(read.csv(countfile, row.names = 1, header = TRUE))
+#  mycounts <- as.matrix(read.csv(countfile, row.names = 1, header = TRUE))
+  # use scan; more code but a lot less processing time
+  mycon <- file(countfile, open = 'r')
+  myheader <- scan(mycon, what = "", nlines = 1, sep = ",")
+  alleles <- testheader[-1]
+  nalleles <- length(alleles)
+  whatlist <- list(0L)[rep(1, nalleles)]
+  names(whatlist) <- alleles
+  whatlist <- c(list(Taxa = ""), whatlist)
+  mydata <- scan(mycon, what = whatlist, sep = ",")
+  close(mycon)
+  taxa <- mydata[[1]]
+  mydata <- mydata[-1]
+  mycounts <- matrix(unlist(mydata), nrow = length(taxa), ncol = nalleles,
+                  dimnames = list(taxa, alleles))
   
   # extract marker names 
-  mrkrNamesByAl <- sapply(strsplit(dimnames(mycounts)[[2]], split = "_"),
+  mrkrNamesByAl <- sapply(strsplit(alleles, split = "_"),
                           function(x) x[1])
   # subset by loci
   if(!is.null(includeLoci)){
