@@ -90,15 +90,20 @@ Lindsay V. Clark
 the Zhang lab website.
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{GetWeightedMeanGenotypes}})
 }
 \examples{
+# load example dataset
+data(exampleRAD)
+# get genotype posterior probabilities
+exampleRAD <- IterateHWE(exampleRAD)
 
+# export to GAPIT
+exampleGAPIT <- ExportGAPIT(exampleRAD)
+# export to rrBLUP
+example_rrBLUP_A <- Export_rrBLUP_Amat(exampleRAD)
+example_rrBLUP_GWAS <- Export_rrBLUP_GWAS(exampleRAD)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }% use one of  RShowDoc("KEYWORDS")
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+
+\keyword{ manip }

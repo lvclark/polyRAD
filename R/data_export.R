@@ -18,7 +18,7 @@
     alindex <- object$alleles2loc
   }
   
-  if(all(c("Chr", "Pos") %in% names(object$Loctable))){
+  if(all(c("Chr", "Pos") %in% names(object$locTable))){
     loctable <- object$locTable[alindex,c("Chr", "Pos")]
     # sort the genotypes by chromosome and position
     alOrder <- order(loctable$Chr, loctable$Pos)
