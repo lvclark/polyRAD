@@ -49,6 +49,15 @@ a matrix added to the \code{$PCA} slot.  This matrix contains PCA scores, with
 taxa in rows, and PC axes in columns.
 }
 
+\note{
+If you see the error 
+
+\code{Error in if (rel_ch < threshold & count > 5) \{ : 
+  missing value where TRUE/FALSE needed}
+  
+try lowering \code{nPcsInit}.
+}
+
 \author{
 Lindsay V. Clark
 }

@@ -64,6 +64,15 @@ and \code{$posteriorProb} slots added.  For \code{IterateHWE},
 \code{$alleleFreqByTaxa} is also added.
 }
 
+\note{
+If you see the error 
+
+\code{Error in if (rel_ch < threshold & count > 5) \{ : 
+  missing value where TRUE/FALSE needed}
+  
+try lowering \code{nPcsInit}.
+}
+
 \author{
 Lindsay V. Clark
 }
