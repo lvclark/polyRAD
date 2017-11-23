@@ -101,7 +101,7 @@ readTagDigger <- function(countfile, includeLoci = NULL,
   # use scan; more code but a lot less processing time
   mycon <- file(countfile, open = 'r')
   myheader <- scan(mycon, what = "", nlines = 1, sep = ",")
-  alleles <- testheader[-1]
+  alleles <- myheader[-1]
   nalleles <- length(alleles)
   whatlist <- list(0L)[rep(1, nalleles)]
   names(whatlist) <- alleles
@@ -128,7 +128,7 @@ readTagDigger <- function(countfile, includeLoci = NULL,
     mydb <- data.frame(row.names = unique(mrkrNamesByAl))
   }
   # get locTable indices for counts matrix columns
-  alleles2loc <- fmatch(mrkrNamesByAl, row.names(mydb))
+  alleles2loc <- fastmatch::fmatch(mrkrNamesByAl, row.names(mydb))
   # error if there isn't a match in marker names between the two files
   if(any(is.na(alleles2loc))){
     cat(paste("Some markers in", file, "not found in", dbfile), sep = "\n")

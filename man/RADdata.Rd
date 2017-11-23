@@ -50,9 +50,9 @@ indicating the DNA sequence for that allele.  Typically only the sequence at
 variable sites is provided.
 }
 }
-\details{
+%\details{
 %%  ~~ If necessary, more details than the description above ~~
-}
+%}
 \value{
 An object of the S3 class \dQuote{RADdata}.  The following slots are available
 using the \code{$} operator:
