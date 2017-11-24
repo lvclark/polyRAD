@@ -13,7 +13,7 @@ nTaxa, nAlleles, OneAllelePerMarker,
 PipelineMapping2Parents, RADdata, readHMC, readTagDigger,
 SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent)
 
-importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit")
+importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom")
 importFrom("utils", "read.csv")
 importFrom("fastmatch", "%fin%")
 

@@ -53,6 +53,12 @@ array with number of allele copies in the first dimension, taxa in the second di
 and alleles in the third dimension.
 }
 
+\note{
+For samples with very high read depth (>1000 reads at a locus), the function may
+run much more slowly, since an alternative algorithm must be used for likelihood
+estimation.
+}
+
 \author{
 Lindsay V. Clark
 }

@@ -57,8 +57,9 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
                        dimnames = list(taxa, as.character(unique(alleles2loc))))
   }
   
-  # get number of permutations of order in which each allele could have been sampled from total depth from that locus
   expandedLocDepth <- locDepth[,as.character(alleles2loc), drop = FALSE]
+  
+  # get number of permutations of order in which each allele could have been sampled from total depth from that locus
   depthSamplingPermutations <- choose(expandedLocDepth, alleleDepth)
   # for each allele and taxon, get proportion of reads for that locus
   depthRatio <- alleleDepth/expandedLocDepth
@@ -238,6 +239,19 @@ AddGenotypeLikelihood.RADdata <- function(object, ...){
         object$depthSamplingPermutations * 
           t(apply(object$alleleDepth, 1, function(x) alleleProb[j,] ^ x) * 
             apply(object$antiAlleleDepth, 1, function(x) antiAlleleProb[j,] ^ x))
+      # when depth is too high, use dbinom instead.
+      toRecalculate <- which(is.na(object$genotypeLikelihood[[i]][j,,]) |
+                               object$genotypeLikelihood[[i]][j,,] == Inf,
+                             arr.ind = TRUE)
+      if(dim(toRecalculate)[1] == 0) next
+      for(k in 1:dim(toRecalculate)[1]){
+        taxon <- toRecalculate[k,1]
+        allele <- toRecalculate[k,2]
+        object$genotypeLikelihood[[i]][j,taxon,allele] <-
+          dbinom(object$alleleDepth[taxon,allele],
+                 object$locDepth[taxon, as.character(object$alleles2loc[allele])],
+                 alleleProb[j,allele])
+      }
     }
   }
   
