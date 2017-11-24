@@ -245,12 +245,33 @@ AddGenotypeLikelihood.RADdata <- function(object, ...){
                              arr.ind = TRUE)
       if(dim(toRecalculate)[1] == 0) next
       for(k in 1:dim(toRecalculate)[1]){
+        # note repetitive code below
         taxon <- toRecalculate[k,1]
         allele <- toRecalculate[k,2]
         object$genotypeLikelihood[[i]][j,taxon,allele] <-
           dbinom(object$alleleDepth[taxon,allele],
                  object$locDepth[taxon, as.character(object$alleles2loc[allele])],
                  alleleProb[j,allele])
+      }
+    }
+    # fix likelihoods where all are zero
+    totlik <- colSums(object$genotypeLikelihood[[i]])
+    toRecalculate <- which(totlik == 0, arr.ind = TRUE)
+    if(dim(toRecalculate)[1] > 0){
+      for(k in 1:dim(toRecalculate)[1]){
+        for(j in 1:(ploidies[i] + 1)){
+          # note repetitive code from just above
+          taxon <- toRecalculate[k,1]
+          allele <- toRecalculate[k,2]
+          object$genotypeLikelihood[[i]][j,taxon,allele] <-
+            dbinom(object$alleleDepth[taxon,allele],
+                   object$locDepth[taxon, as.character(object$alleles2loc[allele])],
+                   alleleProb[j,allele])
+        }
+        # for rare cases where likelihood still not estimated, set to one
+        if(sum(object$genotypeLikelihood[[i]][, taxon, allele]) == 0){
+          object$genotypeLikelihood[[i]][, taxon, allele] <- 1
+        }
       }
     }
   }
