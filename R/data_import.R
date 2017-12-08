@@ -151,3 +151,132 @@ readTagDigger <- function(countfile, includeLoci = NULL,
                  myNT))
 }
 
+# function to consolidate loci imported from VCF back into tags.
+# Assume locTable is already sorted by chromosome and position.
+# A reference genome can be provided as FASTA or compressed, indexed FASTA
+# from Bioconductor in order to get nucleotides in between variable sites.
+# tol indicates how dissimilar read depth can be and still have two alleles
+# combined into a tag.
+consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotides,
+                            tagsize = 80, refgenome = NULL, tol = 0.01){
+  if(!all(c("Chr", "Pos") %in% names(locTable))){
+    stop("locTable needs Chr for chromosome and Pos for position")
+  }
+  
+  nLoc <- dim(locTable)[1] # number of loci to start
+  rowsByChr <- tapply(1:nLoc, locTable$Chr) # rows in locTable for each chromosome
+  nAl <- dim(alleleDepth)[2] # number of alleles to start
+  nInd <- dim(alleleDepth)[1] # number of individuals
+  
+  # preallocate objects to output
+  alleleDepthOut <- matrix(0L, nrow = nInd, ncol = nAl,
+                           dimnames = list(dimnames(alleleDepth)[[1]],
+                                           as.character(1:nAl)))
+  alleles2locOut <- integer(nAl)
+  alleleNucleotidesOut <- character(nAl)
+  locTableOut <- data.frame(row.names = as.character(1:nLoc),
+                            Chr = character(nLoc),
+                            Pos = integer(nLoc))
+  
+  # variables to keep track of which allele and locus we are on
+  currAlOut <- 1
+  currLocOut <- 1
+  
+  # loop through chromosomes
+  for(chrset in rowsByChr){
+    thisChrom <- locTable$Chr[chrset[1]] # current chromosome name
+    if(!identical(locTable$Pos[chrset], sort(locTable$Pos[chrset]))){
+      stop(paste(thisChrom, ": Loci must be sorted by position.", sep = ""))
+    }
+    currLocIn <- 1 # current locus number index WITHIN chrset
+    # data for this locus
+    lastDepth <- alleleDepth[, alleles2loc == chrset[1], drop = FALSE]
+    lastName <- row.names(locTable)[chrset[1]]
+    lastPos <- locTable$Pos[chrset[1]]
+    lastSeq <- alleleNucleotides[alleles2loc == chrset[1]]
+    
+    # loop through loci on this chromosome
+    for(currLocIn in 2:(length(chrset)+1)){
+      if(currLocIn <= length(chrset)){
+        # data for next locus
+        thisDepth <- alleleDepth[, alleles2loc == chrset[currLocIn], drop = FALSE]
+        thisName <- row.names(locTable)[chrset[currLocIn]]
+        thisPos <- locTable$Pos[chrset[currLocIn]]
+        thisSeq <- alleleNucleotides[alleles2loc == chrset[currLocIn]]
+      }
+
+      # get proportion difference in depth between these two loci
+      diff <- abs(rowSums(thisDepth) - rowSums(lastDepth)) / 
+        ((sum(thisDepth) + sum(lastDepth))/2)
+      
+      if(diff > tol || thisPos - lastPos + 1 > tagsize || currLocIn > length(chrset)){
+        ## If these are different loci (either due to counts or distance)
+        ## put the "last" data into the output, and make the new data the last.
+        
+        thisNAl <- dim(lastDepth)[2] # number of alleles for locus to output
+        thisAlOut <- (1:thisNAl) + currAlOut - 1 # indices for all alleles to output
+        
+        # add data to output objects
+        alleleDepthOut[,thisAlOut] <- lastDepth
+        dimnames(alleleDepthOut)[[2]][thisAlOut] <- dimnames(lastDepth)[[2]]
+        alleles2locOut[thisAlOut] <- currLocOut
+        alleleNucleotidesOut[thisAlOut] <- lastSeq
+        row.names(locTable)[currLocOut] <- lastName
+        locTable$Chr[currLocOut] <- thisChrom
+        locTable$Pos[currLocOut] <- lastPos
+        
+        # shift "this" locus to "last" locus
+        lastDepth <- thisDepth
+        lastName <- thisName
+        lastPos <- thisPos
+        lastSeq <- thisSeq
+        
+        # increment current allele and locus
+        currAlOut <- currAlOut + thisNAl
+        currLocOut <- currLocOut + 1
+      } else {
+        ## If these are the same locus, merge them.
+        
+        # matrix to indicate how alleles match up
+        alMatch <- matrix(NA_integer_, nrow = 0, ncol = 3,
+                          dimnames = list(NULL, c("new", "last", "this")))
+        # find individuals in "last" matrix that only have one allele
+        homozLast <- which(rowSums(lastDepth > 0) == 1)
+        for(alCol in 1:dim(lastDepth)[2]){
+          # homozygotes for this particular allele in "last" set
+          homozLastAl <- homozLast[lastDepth[homozLast,alCol] > 0]
+          # alleles in "this" set that have reads for those homozygotes
+          thisAlMatch <- which(colSums(thisDepth[homosLastAl,,drop=FALSE]) > 0)
+          # add them to match matrix
+          nNewMatches <- length(thisAlMatch)
+          if(nNewMatches > 0){
+            newmatch <- matrix(c(dim(alMatch)[1] + (1:nNewMatches),
+                                 rep(alCol, nNewMatches),
+                                 thisAlMatch), nrow = nNewMatches,
+                               ncol = 3)
+            alMatch <- rbind(alMatch, newmatch)
+          }
+        }
+        # find individuals in "this" matrix that only have one allele
+        homozThis <- which(rowSums(thisDepth > 0) == 1)
+        for(alCol in 1:dim(thisDepth)[2]){
+          # homozygotes for this particular allele in "this" set
+          homozThisAl <- homozThis[lastDepth[homozThis,alCol] > 0]
+          # alleles in "last" set that have reads for those homozygotes
+          lastAlMatch <- which(colSums(lastDepth[homosThisAl,,drop=FALSE]) > 0)
+          # add them to match matrix
+          nNewMatches <- length(lastAlMatch)
+          for(mtch in lastAlMatch){
+            # add new matches to match matrix only if they aren't there yet
+            if(sum(alMatch[,2] == mtch & alMatch[,3] == alCol) == 0){
+              alMatch <- rbind(alMatch, c(dim(alMatch)[1] + 1,
+                                          mtch, alCol))
+            }
+          }
+        }
+        # match any remaining alleles that don't have "homozygotes"
+      }
+    } # end of loop through loci
+  } # end of loop through chromosomes
+  # trim output to remove columns not used.
+}
