@@ -151,7 +151,8 @@ readTagDigger <- function(countfile, includeLoci = NULL,
                  myNT))
 }
 
-# function to consolidate loci imported from VCF back into tags.
+# Function to consolidate loci imported from VCF back into tags.
+# Essentially do phasing on the SNPs in the VCF to make haplotypes, using read depth.
 # Assume locTable is already sorted by chromosome and position.
 # A reference genome can be provided as FASTA or compressed, indexed FASTA
 # from Bioconductor in order to get nucleotides in between variable sites.
@@ -185,6 +186,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
   # loop through chromosomes
   for(chrset in rowsByChr){
     thisChrom <- locTable$Chr[chrset[1]] # current chromosome name
+    cat(paste("Phasing SNPs:", thisChrom), sep = "\n")
     if(!identical(locTable$Pos[chrset], sort(locTable$Pos[chrset]))){
       stop(paste(thisChrom, ": Loci must be sorted by position.", sep = ""))
     }
@@ -275,6 +277,53 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
           }
         }
         # match any remaining alleles that don't have "homozygotes"
+        lastUnmatched <- which(!1:dim(lastDepth)[2] %in% alMatch[,2])
+        for(alCol in lastUnmatched){
+          # one option -- just find counts most similar 
+          # (better ideas? look at individual genotypes and rule out known matches?)
+#          idTallies <- colSums(sweep(thisDepth, 1, lastDepth[,alCol], "-") == 0)
+#          thisAlMatch <- which.max(idTallies)
+#          alMatch <- rbind(alMatch, c(dim(alMatch)[1] + 1, alCol, thisAlMatch))
+          indWithAl <- which(lastDepth[,alCol] > 0)
+          for(ind in indWithAl){
+            lastCounts <- lastDepth[ind,]
+            thisCounts <- thisDepth[ind,]
+            for(newAl in alMatch[,1]){
+              if(lastCounts[alMatch[newAl,2]] > 0 &&
+                 thisCounts[alMatch[newAl,3]] > 0){
+                toSubtract <- min(c(lastCounts[alMatch[newAl,2]],
+                                    thisCounts[alMatch[newAl,3]]))
+                lastCounts[alMatch[newAl,2]] <- lastCounts[alMatch[newAl,2]] - toSubtract
+                thisCounts[alMatch[newAl,3]] <- thisCounts[alMatch[newAl,3]] - toSubtract
+              }
+            }
+            if(sum(lastCounts > 0) == 1){
+              thisAlMatch <- which(thisCounts > 0)
+              nNewMatches <- length(thisAlMatch)
+              if(nNewMatches == 0) next
+              alMatch <- rbind(alMatch, 
+                               matrix(c(dim(alMatch)[1] + (1:nNewMatches),
+                                        rep(alCol, nNewMatches),
+                                        thisAlMatch), nrow = nNewMatches,
+                                      ncol = 3))
+            } else {
+              if(sum(thisCounts > 0) == 1){
+                lastAlMatch <- which(lastCounts > 0)
+                nNewMatches <- length(lastAlMatch)
+                if(nNewMatches == 0) next
+                alMatch <- rbind(alMatch,
+                                 matrix(c(dim(alMatch)[1] + (1:nNewMatches),
+                                          lastAlMatch,
+                                          rep(which(thisCounts > 0), nNewMatches)),
+                                        nrow = nNewMatches, ncol = 3))
+              }
+            }
+          }
+        }
+        thisUnmatched <- which(!1:dim(thisDepth)[1] %in% alMatch[,3])
+        for(alCol in thisUnmatched){
+          
+        }
       }
     } # end of loop through loci
   } # end of loop through chromosomes
