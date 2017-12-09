@@ -2,3 +2,5 @@
 ^.gitignore$
 ^.gitattributes$
 ^README.md$
+^.*\.Rproj$
+^\.Rproj\.user$
