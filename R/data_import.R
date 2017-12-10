@@ -326,7 +326,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         if(endPosFromReference >= startPosFromReference){ ## add check that we have a reference
           # retrieve reference sequence and past onto end of lastSeq
         }
-        newSeq <- paste(lastSeq[alMatch[,1]], thisSeq[alMatch[,1]], sep = "")
+        newSeq <- paste(lastSeq[alMatch[,1]], thisSeq[alMatch[,2]], sep = "")
         
         # make new depth matrix
       }
