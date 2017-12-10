@@ -183,6 +183,75 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
   currAlOut <- 1
   currLocOut <- 1
   
+  # function for finding allele matches by looking for individuals with only one allele.
+  # only searches for homozygotes in marker 1; run this function in both directions.
+  findMatchesHomoz <- function(depth1, depth2){
+    # which individuals just have one allele for marker 1, 
+    # and equal depth for both markers.
+    homoz1 <- which(rowSums(depth1 > 0) == 1 & rowSums(depth1) == rowSums(depth2))
+    match1 <- integer(0) # to hold allele indices for marker 1
+    match2 <- integer(0) # to hold allele indices for marker 2
+    for(alCol in 1:dim(depth1)[2]){
+      # homozygotes for this particular allele in marker 1
+      homoz1Al <- homoz1[depth1[homoz1,alCol] > 0]
+      # alleles in marker 2 that have reads for those homozygotes
+      thisAlMatch <- which(colSums(depth2[homoz1Al,,drop=FALSE]) > 0)
+      # add them to match output
+      nNewMatches <- length(thisAlMatch)
+      match1 <- c(match1, rep(alCol, nNewMatches))
+      match2 <- c(match2, thisAlMatch)
+    }
+    return(matrix(c(match1, match2), nrow = length(match1), ncol = 2))
+  }
+  
+  # function to identify remaining matches not found using homozygotes
+  findRemainingMatches <- function(depth1, depth2, alMatch){
+    # find individuals with more than one allele for both markers, 
+    # and equal depth for both markers.
+    notHomoz <- which(rowSums(depth1 > 0) > 1 & rowSums(depth2 > 0) > 1 &
+                        rowSums(depth1) == rowSums(depth2))
+    notdone <- TRUE
+    while(notdone){ # If there are unmatched alleles and progress is being 
+                    # made, it will keep going.
+      notdone <- FALSE
+      for(ind in notHomoz){
+        counts1 <- depth1[ind,] # counts for this individual
+        counts2 <- depth2[ind,]
+        # try to find allele combos that match, remove them from counts
+        for(m in 1:dim(alMatch)[1]){
+          al1 <- alMatch[m,1] # allele numbers for this pair
+          al2 <- alMatch[m,2]
+          if(counts1[al1] > 0 && counts2[al2] > 0){
+            toSubtract <- min(c(counts1[al1], counts2[al2]))
+            counts1[al1] <- counts1[al1] - toSubtract
+            counts2[al2] <- counts2[al2] - toSubtract
+          }
+        }
+        # if we have gotten it resolvable, add to match list
+        rem1 <- which(counts1 > 0)
+        rem2 <- which(counts2 > 0)
+        if(length(rem1) == 1 && length(rem2) > 0){
+          alMatch <- rbind(alMatch,
+                           matrix(c(rep(rem1, length(rem2)), rem2),
+                                  nrow = length(rem2), ncol = 2))
+          notdone <- TRUE
+        } else {
+          if(length(rem1) > 1 && length(rem2) == 1){
+            alMatch <- rbind(alMatch,
+                             matrix(c(rem1, rep(rem2, length(rem1))),
+                                    nrow = length(rem1), ncol = 2))
+            notdone <- TRUE
+          }
+        }
+      }
+      # check if all alleles in both markers have a match
+      if(all(1:dim(depth1)[2] %in% alMatch[,1]) &&
+         all(1:dim(depth2)[2] %in% alMatch[,2])) notdone <- FALSE
+    }
+    alMatch <- unique(alMatch, MARGIN = 1) # remove duplicate matches
+    return(alMatch)
+  }
+  
   # loop through chromosomes
   for(chrset in rowsByChr){
     thisChrom <- locTable$Chr[chrset[1]] # current chromosome name
@@ -240,90 +309,26 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         ## If these are the same locus, merge them.
         
         # matrix to indicate how alleles match up
-        alMatch <- matrix(NA_integer_, nrow = 0, ncol = 3,
-                          dimnames = list(NULL, c("new", "last", "this")))
+        alMatch <- matrix(NA_integer_, nrow = 0, ncol = 2,
+                          dimnames = list(NULL, c("last", "this")))
         # find individuals in "last" matrix that only have one allele
-        homozLast <- which(rowSums(lastDepth > 0) == 1)
-        for(alCol in 1:dim(lastDepth)[2]){
-          # homozygotes for this particular allele in "last" set
-          homozLastAl <- homozLast[lastDepth[homozLast,alCol] > 0]
-          # alleles in "this" set that have reads for those homozygotes
-          thisAlMatch <- which(colSums(thisDepth[homosLastAl,,drop=FALSE]) > 0)
-          # add them to match matrix
-          nNewMatches <- length(thisAlMatch)
-          if(nNewMatches > 0){
-            newmatch <- matrix(c(dim(alMatch)[1] + (1:nNewMatches),
-                                 rep(alCol, nNewMatches),
-                                 thisAlMatch), nrow = nNewMatches,
-                               ncol = 3)
-            alMatch <- rbind(alMatch, newmatch)
-          }
-        }
+        alMatch <- rbind(alMatch, findMatchesHomoz(lastDepth, thisDepth))
         # find individuals in "this" matrix that only have one allele
-        homozThis <- which(rowSums(thisDepth > 0) == 1)
-        for(alCol in 1:dim(thisDepth)[2]){
-          # homozygotes for this particular allele in "this" set
-          homozThisAl <- homozThis[lastDepth[homozThis,alCol] > 0]
-          # alleles in "last" set that have reads for those homozygotes
-          lastAlMatch <- which(colSums(lastDepth[homosThisAl,,drop=FALSE]) > 0)
-          # add them to match matrix
-          nNewMatches <- length(lastAlMatch)
-          for(mtch in lastAlMatch){
-            # add new matches to match matrix only if they aren't there yet
-            if(sum(alMatch[,2] == mtch & alMatch[,3] == alCol) == 0){
-              alMatch <- rbind(alMatch, c(dim(alMatch)[1] + 1,
-                                          mtch, alCol))
-            }
-          }
-        }
+        alMatch <- rbind(alMatch, findMatchesHomoz(thisDepth, lastDepth)[,2:1])
+        # reduce to unique set of matches
+        alMatch <- unique(alMatch, MARGIN = 1)
         # match any remaining alleles that don't have "homozygotes"
-        lastUnmatched <- which(!1:dim(lastDepth)[2] %in% alMatch[,2])
-        for(alCol in lastUnmatched){
-          # one option -- just find counts most similar 
-          # (better ideas? look at individual genotypes and rule out known matches?)
-#          idTallies <- colSums(sweep(thisDepth, 1, lastDepth[,alCol], "-") == 0)
-#          thisAlMatch <- which.max(idTallies)
-#          alMatch <- rbind(alMatch, c(dim(alMatch)[1] + 1, alCol, thisAlMatch))
-          indWithAl <- which(lastDepth[,alCol] > 0)
-          for(ind in indWithAl){
-            lastCounts <- lastDepth[ind,]
-            thisCounts <- thisDepth[ind,]
-            for(newAl in alMatch[,1]){
-              if(lastCounts[alMatch[newAl,2]] > 0 &&
-                 thisCounts[alMatch[newAl,3]] > 0){
-                toSubtract <- min(c(lastCounts[alMatch[newAl,2]],
-                                    thisCounts[alMatch[newAl,3]]))
-                lastCounts[alMatch[newAl,2]] <- lastCounts[alMatch[newAl,2]] - toSubtract
-                thisCounts[alMatch[newAl,3]] <- thisCounts[alMatch[newAl,3]] - toSubtract
-              }
-            }
-            if(sum(lastCounts > 0) == 1){
-              thisAlMatch <- which(thisCounts > 0)
-              nNewMatches <- length(thisAlMatch)
-              if(nNewMatches == 0) next
-              alMatch <- rbind(alMatch, 
-                               matrix(c(dim(alMatch)[1] + (1:nNewMatches),
-                                        rep(alCol, nNewMatches),
-                                        thisAlMatch), nrow = nNewMatches,
-                                      ncol = 3))
-            } else {
-              if(sum(thisCounts > 0) == 1){
-                lastAlMatch <- which(lastCounts > 0)
-                nNewMatches <- length(lastAlMatch)
-                if(nNewMatches == 0) next
-                alMatch <- rbind(alMatch,
-                                 matrix(c(dim(alMatch)[1] + (1:nNewMatches),
-                                          lastAlMatch,
-                                          rep(which(thisCounts > 0), nNewMatches)),
-                                        nrow = nNewMatches, ncol = 3))
-              }
-            }
-          }
+        alMatch <- findRemainingMatches(lastDepth, thisDepth, alMatch)
+        
+        # make new set of haplotype sequences
+        startPosFromReference <- lastPos + nchar(lastSeq[1])
+        endPosFromReference <- thisPos - 1
+        if(endPosFromReference >= startPosFromReference){ ## add check that we have a reference
+          # retrieve reference sequence and past onto end of lastSeq
         }
-        thisUnmatched <- which(!1:dim(thisDepth)[1] %in% alMatch[,3])
-        for(alCol in thisUnmatched){
-          
-        }
+        newSeq <- paste(lastSeq[alMatch[,1]], thisSeq[alMatch[,1]], sep = "")
+        
+        # make new depth matrix
       }
     } # end of loop through loci
   } # end of loop through chromosomes
