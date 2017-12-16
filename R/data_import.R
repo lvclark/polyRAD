@@ -183,6 +183,8 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
   currAlOut <- 1
   currLocOut <- 1
   
+  ### Internal functions for consolidateSNP ####
+  
   # function for finding allele matches by looking for individuals with only one allele.
   # only searches for homozygotes in marker 1; run this function in both directions.
   findMatchesHomoz <- function(depth1, depth2){
@@ -251,6 +253,69 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
     alMatch <- unique(alMatch, MARGIN = 1) # remove duplicate matches
     return(alMatch)
   }
+  
+  # Function to consolidate read depth across two markers being merged into one.
+  # depth1 and depth2 are read depth matrices for the two markers, respectively,
+  # with individuals in rows and alleles in columns.
+  # alMatch is a matrix with two columns, with one row for each new allele.  The
+  # values indicate the corresponding alleles for the first and second markers.
+  consolidateDepth <- function(depth1, depth2, alMatch){
+    # depth to output for the new marker
+    newdepth <- matrix(0L, nrows = dim(depth1)[1],
+                       nrol = dim(alMatch)[1])
+    # boolean to figure out if an allele has been processed yet
+    allelesDone <- rep(FALSE, dim(alMatch)[1])
+    # whether progress has been made
+    progress <- TRUE
+    
+    while(!all(allelesDone) && progress){
+      progress <- FALSE
+      # loop through alleles for the first marker
+      for(al1 in 1:dim(depth1)[2]){
+        # which new alleles match this original allele
+        newAl <- which(alMatch[,1] == al1 & !allelesDone)
+        # skip for now if this allele doesn't correspond to exactly one new, unprocessed allele
+        if(length(newAl) != 1) next
+        # find individuals with this allele
+        indWithAl <- which(depth1[,al1] > 0)
+        # add depth to output matrix
+        newdepth[indWithAl, newAl] <- depth1[indWithAl, al1]
+        # remove these counts from original matrices
+        al2 <- alMatch[newAl, 2]
+        depth2[indWithAl, al2] <- depth2[indWithAl, al2] - depth1[indWithAl, al1]
+        depth1[indWithAl, al1] <- 0L
+        # adjust new depth if depth2 was lower than depth1
+        d2neg <- depth2[indWithAl, al2] < 0
+        newdepth[indWithAl[d2neg], newAl] <- newdepth[indWithAl[d2neg], newAl] +
+          depth2[indWithAl[d2neg], al2]
+        
+        # mark allele as done
+        allelesDone[newAl] <- TRUE
+        progress <- TRUE
+      }
+      # do the same for the second marker
+      for(al2 in 1:dim(depth2)[2]){
+        newAl <- which(alMatch[,2] == al2 & !allelesDone)
+        if(length(newAl) != 1) next
+        indWithAl <- which(depth2[,al1] > 0)
+        newdepth[indWithAl, newAl] <- depth2[indWithAl, al2]
+        al1 <- alMatch[newAl, 1]
+        depth1[indWithAl, al1] <- depth1[indWithAl, al1] - depth2[indWithAl, al2]
+        depth2[indWithAl, al2] <- 0L
+        d1neg <- depth1[indWithAl, al1] < 0
+        newdepth[indWithAl[d1neg], newAl] <- newdepth[indWithAl[d1neg], newAl] +
+          depth1[indWithAl[d1neg], al1]
+        allelesDone[newAl] <- TRUE
+        progress <- TRUE
+      }
+    }
+    
+    # insert more code here for situations not yet resolved
+    
+    return(newdepth)
+  } # end of consolidateDepth internal function
+  
+  ### End internal functions for consolidateSNP ###
   
   # loop through chromosomes
   for(chrset in rowsByChr){
