@@ -8,5 +8,7 @@ Genotypes derived from genotyping-by-sequencing (GBS) and restriction site-assoc
 
 ## Funding
 
-This work is supported by the U.S. National Science Foundation, Advances in Biological Informatics, "Improved modeling of marker-trait associations in polypoid and diploid organisms using genotyping-by-sequencing with genotype uncertainty" (award number 
-[1661490](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1661490&HistoricalAwards=false)).
+This material is based upon work supported by the National Science Foundation under Grant No. 
+[1661490](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1661490&HistoricalAwards=false).  
+Any opinions, findings, and conclusions or recommendations expressed in this material are those 
+of the author(s) and do not necessarily reflect the views of the National Science Foundation.
