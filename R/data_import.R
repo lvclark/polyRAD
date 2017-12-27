@@ -288,6 +288,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         d2neg <- depth2[indWithAl, al2] < 0
         newdepth[indWithAl[d2neg], newAl] <- newdepth[indWithAl[d2neg], newAl] +
           depth2[indWithAl[d2neg], al2]
+        depth2[indWithAl[d2neg], al2] <- 0L
         
         # mark allele as done
         allelesDone[newAl] <- TRUE
@@ -305,17 +306,74 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         d1neg <- depth1[indWithAl, al1] < 0
         newdepth[indWithAl[d1neg], newAl] <- newdepth[indWithAl[d1neg], newAl] +
           depth1[indWithAl[d1neg], al1]
+        depth1[indWithAl[d1neg], al1] <- 0L
         allelesDone[newAl] <- TRUE
         progress <- TRUE
       }
     }
     
-    # insert more code here for situations not yet resolved
-    
+    # Find any individuals with reads remaining to assign.
+    # This should only come up if there is homoplasy or recombination within 
+    # tags, e.g. alleles AC, AD, BC, and BD all exist.
+    indRemaining <- which(rowSums(depth1) > 0 & rowSums(depth2) > 0)
+    alRemaining <- which(!allelesDone) # alleles that still need to be assigned
+    for(ind in indRemaining){
+      als1 <- which(depth1[ind,] > 0) # alleles for marker 1
+      als2 <- which(depth2[ind,] > 0) # alleles for marker 2
+      # new alleles that are possible matches
+      possAl <- alRemaining[alMatch[alRemaining, 1] %in% als1 & 
+                              alMatch[alRemaining, 2] %in% als2]
+      
+      progress <- TRUE
+      while(any(depth1[ind,] > 0) && any(depth2[ind,] > 0) && progress){
+        progress <- FALSE
+        for(al1 in als1){
+          if(depth1[ind, al1] <= 0) next
+          newAl <- possAl[alMatch[possAl, 1] == al1] # number for new allele(s)
+          if(length(newAl) == 1){
+            # Resolve cases where only one allele is possible based on 
+            # presence/absence.
+            al2 <- alMatch[newAl, 2]
+          } else {
+            # Try to find a match based on depth
+            al2 <- which(depth2[ind,] == depth1[ind, al1])
+            if(length(al2) != 1) next
+            newAl <- newAl[alMatch[newAl, 2] == al2]
+            if(length(newAl) != 1) next
+          }
+          newCount <- min(c(depth1[ind, al1], 
+                            depth2[ind, al2]))
+          newdepth[ind, newAl] <- newCount
+          depth1[ind, al1] <- depth1[ind, al1] - newCount
+          depth2[ind, al2] <- depth2[ind, al2] - newCount
+          possAl <- possAl[possAl != newAl]
+          progress <- TRUE
+        }
+        for(al2 in als2){ # same procedure with the second marker
+          if(depth2[ind, al2] <= 0) next
+          newAl <- possAl[alMatch[possAl, 2] == al2]
+          if(length(newAl) == 1){
+            al1 <- alMatch[newAl, 1]
+          } else {
+            al1 <- which(depth1[ind,] == depth2[ind, al2])
+            if(length(al1) != 1) next
+            newAl <- newAl[alMatch[newAl, 1] == al1]
+            if(length(newAl) != 1) next
+          }
+          newCount <- min(c(depth1[ind, al1], 
+                            depth2[ind, al2]))
+          newdepth[ind, newAl] <- newCount
+          depth1[ind, al1] <- depth1[ind, al1] - newCount
+          depth2[ind, al2] <- depth2[ind, al2] - newCount
+          possAl <- possAl[possAl != newAl]
+          progress <- TRUE
+        }
+      } # end of while loop for unresolved reads
+    } # end of loop through unresolved individuals
     return(newdepth)
   } # end of consolidateDepth internal function
   
-  ### End internal functions for consolidateSNP ###
+  ### End internal functions for consolidateSNP ####
   
   # loop through chromosomes
   for(chrset in rowsByChr){
@@ -324,7 +382,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
     if(!identical(locTable$Pos[chrset], sort(locTable$Pos[chrset]))){
       stop(paste(thisChrom, ": Loci must be sorted by position.", sep = ""))
     }
-    currLocIn <- 1 # current locus number index WITHIN chrset
+    currLocIn <- 1 # current locus number index WITHIN chrset (this chromosome)
     # data for this locus
     lastDepth <- alleleDepth[, alleles2loc == chrset[1], drop = FALSE]
     lastName <- row.names(locTable)[chrset[1]]
@@ -394,6 +452,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         newSeq <- paste(lastSeq[alMatch[,1]], thisSeq[alMatch[,2]], sep = "")
         
         # make new depth matrix
+        lastDepth <- consolidateDepth(lastDepth, thisDepth, alMatch)
       }
     } # end of loop through loci
   } # end of loop through chromosomes
