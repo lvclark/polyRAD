@@ -156,12 +156,33 @@ readTagDigger <- function(countfile, includeLoci = NULL,
 # Assume locTable is already sorted by chromosome and position.
 # A reference genome can be provided as FASTA or compressed, indexed FASTA
 # from Bioconductor in order to get nucleotides in between variable sites.
+# refgenome should either be an FaFile object or a path to a FASTA file for the genome
 # tol indicates how dissimilar read depth can be and still have two alleles
 # combined into a tag.
 consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotides,
                             tagsize = 80, refgenome = NULL, tol = 0.01){
   if(!all(c("Chr", "Pos") %in% names(locTable))){
     stop("locTable needs Chr for chromosome and Pos for position")
+  }
+  
+  # Set up reference genome if provided.  Make FaFile object.
+  if(!is.null(refgenome) && !is(refgenome, "FaFile")){
+    if(!is.character(refgenome)){
+      stop("refgenome must be character string or FaFile object.")
+    }
+    if(!file.exists(refgenome)){
+      stop(paste("File", refgenome, "not found."))
+    }
+    if(!file.exists(sprintf("%s.fai", refgenome))){
+      # index the fasta file if necessary
+      cat("Creating FASTA file index...", sep = "\n")
+      Rsamtools::indexFa(refgenome)
+    }
+    refgenome <- Rsamtools::FaFile(refgenome)
+  }
+  # get chromosome names in FASTA
+  if(!is.null(refgenome)){
+    FAchrnames <- GenomeInfoDb::seqnames(GenomeInfoDb::seqinfo(refgenome))
   }
   
   nLoc <- dim(locTable)[1] # number of loci to start
@@ -378,6 +399,20 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
   # loop through chromosomes
   for(chrset in rowsByChr){
     thisChrom <- locTable$Chr[chrset[1]] # current chromosome name
+    if(!is.null(refgenome)){ # matching chromosome name in ref. genome
+      if(thisChrom %in% FAchrnames){
+        thisFAchr <- thisChrom
+      } else {
+        thisFAchr <- grep(paste("(Chr|chr|CHR)(omosome|OMOSOME)?", thisChrom, sep = ""),
+                          FAchrnames, value = TRUE)
+      }
+      if(length(thisFAchr) == 0){
+        warning(paste("Couldn't match", thisChrom, "to reference genome."))
+      }
+      if(length(thisFAchr) > 1){
+        stop(paste(thisChrom, "matches multiple sequence names in reference genome."))
+      }
+    }
     cat(paste("Phasing SNPs:", thisChrom), sep = "\n")
     if(!identical(locTable$Pos[chrset], sort(locTable$Pos[chrset]))){
       stop(paste(thisChrom, ": Loci must be sorted by position.", sep = ""))
@@ -446,8 +481,15 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         # make new set of haplotype sequences
         startPosFromReference <- lastPos + nchar(lastSeq[1])
         endPosFromReference <- thisPos - 1
-        if(endPosFromReference >= startPosFromReference){ ## add check that we have a reference
+        if(endPosFromReference >= startPosFromReference &&
+           !is.null(refgenome) && length(thisFAchr) == 1){
           # retrieve reference sequence and past onto end of lastSeq
+          nonvarSeq <- Biostrings::getSeq(refgenome,
+                              GenomicRanges::GRanges(seqnames = thisFAchr,
+                                IRanges::IRanges(startPosFromReference,
+                                                 endPosFromReference),
+                                        strand = "+"))
+          lastSeq <- paste(lastSeq, nonvarSeq, sep = "")
         }
         newSeq <- paste(lastSeq[alMatch[,1]], thisSeq[alMatch[,2]], sep = "")
         
