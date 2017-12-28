@@ -282,8 +282,8 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
   # values indicate the corresponding alleles for the first and second markers.
   consolidateDepth <- function(depth1, depth2, alMatch){
     # depth to output for the new marker
-    newdepth <- matrix(0L, nrows = dim(depth1)[1],
-                       nrol = dim(alMatch)[1])
+    newdepth <- matrix(0L, nrow = dim(depth1)[1],
+                       ncol = dim(alMatch)[1])
     # boolean to figure out if an allele has been processed yet
     allelesDone <- rep(FALSE, dim(alMatch)[1])
     # whether progress has been made
@@ -491,7 +491,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
                                         strand = "+"))[[1]]
           lastSeq <- paste(lastSeq, nonvarSeq, sep = "")
         }
-        newSeq <- paste(lastSeq[alMatch[,1]], thisSeq[alMatch[,2]], sep = "")
+        lastSeq <- paste(lastSeq[alMatch[,1]], thisSeq[alMatch[,2]], sep = "")
         
         # make new depth matrix
         lastDepth <- consolidateDepth(lastDepth, thisDepth, alMatch)
@@ -500,3 +500,5 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
   } # end of loop through chromosomes
   # trim output to remove columns not used.
 }
+
+# 
