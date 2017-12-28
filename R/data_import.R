@@ -488,7 +488,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
                               GenomicRanges::GRanges(seqnames = thisFAchr,
                                 IRanges::IRanges(startPosFromReference,
                                                  endPosFromReference),
-                                        strand = "+"))
+                                        strand = "+"))[[1]]
           lastSeq <- paste(lastSeq, nonvarSeq, sep = "")
         }
         newSeq <- paste(lastSeq[alMatch[,1]], thisSeq[alMatch[,2]], sep = "")
