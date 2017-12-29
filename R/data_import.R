@@ -501,4 +501,98 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
   # trim output to remove columns not used.
 }
 
-# 
+# Function to make a function for filtering a VCF file.
+# Assumes TASSEL GBSv2 format. (Diploid GT is listed first for each genotype.)
+# The output function is used in the prefilters argument for 
+# VariantAnnotation::filterVcf.
+makeTasselVcfFilter <- function(min.ind.with.reads = 200,
+                                min.ind.with.minor.allele = 10){
+  function(lines){
+    # vector to indicate the number of individuals with reads for each line
+    ind.with.reads <- sapply(gregexpr("[[:blank:]][[:digit:]]/[[:digit:]]:",
+                                      lines), 
+                             function(x){
+                               if(x[1] == -1){
+                                 0
+                               } else {
+                                 length(x)
+                               }
+                             })
+    
+    # set up vector to indicate whether each line should be kept
+    result <- ind.with.reads >= min.ind.with.reads
+    # check on ind with minor allele
+    if(min.ind.with.minor.allele > 0){
+      ind.with.ref <- sapply(gregexpr("[[:blank:]](0/[[:digit:]]|[[:digit:]]/0):",
+                                      lines[result]), 
+                             function(x){
+                               if(x[1] == -1){
+                                 0
+                               } else {
+                                 length(x)
+                               }
+                             })
+      ind.with.alt <- sapply(gregexpr("[[:blank:]](1/[[:digit:]]|[[:digit:]]/1):",
+                                      lines[result]), 
+                             function(x){
+                               if(x[1] == -1){
+                                 0
+                               } else {
+                                 length(x)
+                               }
+                             })
+      result[result] <- ind.with.ref >= min.ind.with.minor.allele &
+        ind.with.alt >= min.ind.with.minor.allele
+    }
+    return(result)
+  }
+}
+
+# Function to import data from a VCF file.
+# Reads in VCF using BioConductor, then phases SNPs into haplotypes using 
+# consolidateSNPs.
+# samples is a character vector of the names of samples to retain.
+# filteredVCF is a file name where the filtered VCF, according to 
+# min.ind.with.reads and min.ind.with.minor.allele, is stored.
+# To read again, take the file name from filteredVCF and use it for file instead.
+# Set prefilter to FALSE if file is small enough not to do prefiltering.
+VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL, 
+                        tol = 0.01, al.depth.field = "AD", 
+                        min.ind.with.reads = 200, 
+                        min.ind.with.minor.allele = 10,
+                        samples = VariantAnnotation::samples(VariantAnnotation::scanVcfHeader(file)),
+                        filteredVCF = tempfile(), prefilter = TRUE){
+  
+  # pre-filter the file
+  if(min.ind.with.reads > 0 && min.ind.with.minor.allele > 0 && prefilter){
+    # compress if necessary
+    if(!grepl("\\.bgz$", file)){
+      if(file.exists(sprintf("%s.bgz", sub("\\.gz$", "", file)))){
+        file <- sprintf("%s.bgz", sub("\\.gz$", "", file))
+      } else {
+        cat(paste("Making compressed version of", file), sep = "\n")
+        file <- Rsamtools::bgzip(file)
+      }
+    }
+    # make index for file if necessary
+    if(!file.exists(paste(file, ".tbi", sep  = ""))){
+      cat(paste("Indexing", file), sep = "\n")
+      Rsamtools::indexTabix(file, format = "vcf")
+    }
+    # perform filtering
+    fr <- S4Vectors::FilterRules(list(makeTasselVcfFilter(min.ind.with.reads = min.ind.with.reads,
+                                      min.ind.with.minor.alleles = min.ind.with.minor.allele)))
+    VariantAnnotation::filterVcf(file, destination = filteredVCF,
+                                 prefilters = fr)
+  } else {
+    # don't filter the file
+    filteredVCF <- file
+  }
+  
+  # parameters for reading file
+  svparam <- VariantAnnotation::ScanVcfParam(geno = al.depth.field,
+                                             fixed = c("CHROM", "POS", "ID",
+                                                       "REF", "ALT"),
+                                             info = NA, samples = samples)
+  vcf <- VariantAnnotation::readVcf(file, param = svparam)
+}
