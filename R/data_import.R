@@ -235,46 +235,50 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
     # and equal depth for both markers.
     notHomoz <- which(rowSums(depth1 > 0) > 1 & rowSums(depth2 > 0) > 1 &
                         rowSums(depth1) == rowSums(depth2))
-    notdone <- TRUE
-    while(notdone){ # If there are unmatched alleles and progress is being 
-                    # made, it will keep going.
-      notdone <- FALSE
-      for(ind in notHomoz){
-        counts1 <- depth1[ind,] # counts for this individual
-        counts2 <- depth2[ind,]
-        # try to find allele combos that match, remove them from counts
-        for(m in 1:dim(alMatch)[1]){
-          al1 <- alMatch[m,1] # allele numbers for this pair
-          al2 <- alMatch[m,2]
-          ### need to fix this section to find right matches###
-          if(counts1[al1] > 0 && counts2[al2] > 0){
-            toSubtract <- min(c(counts1[al1], counts2[al2]))
-            counts1[al1] <- counts1[al1] - toSubtract
-            counts2[al2] <- counts2[al2] - toSubtract
-          }
-        }
-        # if we have gotten it resolvable, add to match list
-        rem1 <- which(counts1 > 0)
-        rem2 <- which(counts2 > 0)
-        if(length(rem1) == 1 && length(rem2) > 0){
-          alMatch <- rbind(alMatch,
-                           matrix(c(rep(rem1, length(rem2)), rem2),
-                                  nrow = length(rem2), ncol = 2))
-          notdone <- TRUE
-        } else {
-          if(length(rem1) > 1 && length(rem2) == 1){
-            alMatch <- rbind(alMatch,
-                             matrix(c(rem1, rep(rem2, length(rem1))),
-                                    nrow = length(rem1), ncol = 2))
-            notdone <- TRUE
-          }
+    # try consolidating read depth with existing new markers
+    cons <- consolidateDepth(depth1[notHomoz,, drop = FALSE], 
+                             depth2[notHomoz,, drop = FALSE], alMatch)
+    # find individuals that weren't fully matched
+    nm <- rowSums(cons) < rowSums(depth1[notHomoz,, drop = FALSE])
+    nmInd <- notHomoz[nm]
+    cons <- cons[nm,, drop = FALSE]
+    # add new alleles until we can match everything
+    progress <- TRUE
+    while(length(nmInd) > 0 && progress){
+      progress <- FALSE
+      # Temporary copies of depth matrices that we can subtract from
+      depth1T <- depth1[nmInd,, drop = FALSE]
+      depth2T <- depth2[nmInd,, drop = FALSE]
+      # loop through non-matched individuals
+      for(i in 1:length(nmInd)){
+        # loop through known new alleles for this ind.
+        for(newAl in which(cons[i,] > 0)){
+          # corresponding alleles in old markers
+          al1 <- alMatch[newAl, 1]
+          al2 <- alMatch[newAl, 2]
+          # remove reads for this allele
+          depth1T[i, al1] <- depth1T[i, al1] - cons[i, newAl]
+          depth2T[i, al2] <- depth2T[i, al2] - cons[i, newAl]
         }
       }
-      # check if all alleles in both markers have a match
-      if(all(1:dim(depth1)[2] %in% alMatch[,1]) &&
-         all(1:dim(depth2)[2] %in% alMatch[,2])) notdone <- FALSE
+      
+      # look for matches with what's left
+      newAlMatch <- unique(rbind(findMatchesHomoz(depth1T, depth2T),
+                                 findMatchesHomoz(depth2T, depth1T)[,2:1]))
+      # add these new matches to the list of new alleles
+      if(dim(newAlMatch)[1] > 0){
+        progress <- TRUE
+        alMatch <- unique(rbind(alMatch, newAlMatch))
+        
+        # retry consolidation
+        cons <- consolidateDepth(depth1[nmInd,, drop = FALSE], 
+                                 depth2[nmInd,, drop = FALSE], alMatch)
+        nm <- rowSums(cons) < rowSums(depth1[nmInd,, drop = FALSE])
+        nmInd <- nmInd[nm]
+        cons <- cons[nm,, drop = FALSE]
+      }
     }
-    alMatch <- unique(alMatch, MARGIN = 1) # remove duplicate matches
+
     return(alMatch)
   }
   
@@ -497,6 +501,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         lastSeq <- paste(lastSeq[alMatch[,1]], thisSeq[alMatch[,2]], sep = "")
         
         # make new depth matrix
+#        print(c(lastName, thisName)) # debug
         lastDepth <- consolidateDepth(lastDepth, thisDepth, alMatch)
         dimnames(lastDepth)[[2]] <- paste(lastName, lastSeq, sep = "_")
       }
@@ -597,7 +602,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   if(!identical(VariantAnnotation::vcfGeno(svparam), "AD")){
     warning("Allele depth field not set to AD.")
   }
-  if(is.na(VariantAnnotation::vcfSamples(svparam))){
+  if(is.na(VariantAnnotation::vcfSamples(svparam)[1])){
     stop("Samples needed in order to create RADdata object.  Omit samples from svparam to include all.")
   }
   
@@ -628,7 +633,21 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   currLoc <- 1
   
   # create Tabix file
-  tfile <- TabixFile(file, yieldSize = yieldSize, index = NA)
+  if(is.character(file) && !endsWith(file, ".bgz")){
+    if(file.exists(paste(file, ".bgz", sep = ""))){
+      file <- paste(file, ".bgz", sep = "")
+    } else {
+      message("Compressing file with bgzip.")
+      tempbgz <- tempfile(fileext = ".bgz") # temporary file for example
+      file <- bgzip(file, dest = tempbgz)
+      message(paste("Compressed VCF sent to", file))
+    }
+  }
+  if(is.character(file) && !file.exists(paste(file, ".tbi", sep = ""))){
+    message("Indexing VCF.")
+    indexTabix(file, format = "vcf")
+  }
+  tfile <- Rsamtools::TabixFile(file, yieldSize = yieldSize)
 
   # Read data one chunk at a time
   open(tfile)
