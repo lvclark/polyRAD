@@ -186,7 +186,8 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
   }
   
   nLoc <- dim(locTable)[1] # number of loci to start
-  rowsByChr <- tapply(1:nLoc, locTable$Chr) # rows in locTable for each chromosome
+  # rows in locTable for each chromosome
+  rowsByChr <- tapply(1:nLoc, locTable$Chr, function(x) x) 
   nAl <- dim(alleleDepth)[2] # number of alleles to start
   nInd <- dim(alleleDepth)[1] # number of individuals
   
@@ -198,7 +199,8 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
   alleleNucleotidesOut <- character(nAl)
   locTableOut <- data.frame(row.names = as.character(1:nLoc),
                             Chr = character(nLoc),
-                            Pos = integer(nLoc))
+                            Pos = integer(nLoc),
+                            stringsAsFactors = FALSE)
   
   # variables to keep track of which allele and locus we are on
   currAlOut <- 1
@@ -244,6 +246,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         for(m in 1:dim(alMatch)[1]){
           al1 <- alMatch[m,1] # allele numbers for this pair
           al2 <- alMatch[m,2]
+          ### need to fix this section to find right matches###
           if(counts1[al1] > 0 && counts2[al2] > 0){
             toSubtract <- min(c(counts1[al1], counts2[al2]))
             counts1[al1] <- counts1[al1] - toSubtract
@@ -319,7 +322,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
       for(al2 in 1:dim(depth2)[2]){
         newAl <- which(alMatch[,2] == al2 & !allelesDone)
         if(length(newAl) != 1) next
-        indWithAl <- which(depth2[,al1] > 0)
+        indWithAl <- which(depth2[,al2] > 0)
         newdepth[indWithAl, newAl] <- depth2[indWithAl, al2]
         al1 <- alMatch[newAl, 1]
         depth1[indWithAl, al1] <- depth1[indWithAl, al1] - depth2[indWithAl, al2]
@@ -413,7 +416,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         stop(paste(thisChrom, "matches multiple sequence names in reference genome."))
       }
     }
-    cat(paste("Phasing SNPs:", thisChrom), sep = "\n")
+    message(paste("Phasing SNPs:", thisChrom, "\n"))
     if(!identical(locTable$Pos[chrset], sort(locTable$Pos[chrset]))){
       stop(paste(thisChrom, ": Loci must be sorted by position.", sep = ""))
     }
@@ -435,7 +438,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
       }
 
       # get proportion difference in depth between these two loci
-      diff <- abs(rowSums(thisDepth) - rowSums(lastDepth)) / 
+      diff <- sum(abs(rowSums(thisDepth) - rowSums(lastDepth))) / 
         ((sum(thisDepth) + sum(lastDepth))/2)
       
       if(diff > tol || thisPos - lastPos + 1 > tagsize || currLocIn > length(chrset)){
@@ -450,9 +453,9 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         dimnames(alleleDepthOut)[[2]][thisAlOut] <- dimnames(lastDepth)[[2]]
         alleles2locOut[thisAlOut] <- currLocOut
         alleleNucleotidesOut[thisAlOut] <- lastSeq
-        row.names(locTable)[currLocOut] <- lastName
-        locTable$Chr[currLocOut] <- thisChrom
-        locTable$Pos[currLocOut] <- lastPos
+        row.names(locTableOut)[currLocOut] <- lastName
+        locTableOut$Chr[currLocOut] <- thisChrom
+        locTableOut$Pos[currLocOut] <- lastPos
         
         # shift "this" locus to "last" locus
         lastDepth <- thisDepth
@@ -495,10 +498,19 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         
         # make new depth matrix
         lastDepth <- consolidateDepth(lastDepth, thisDepth, alMatch)
+        dimnames(lastDepth)[[2]] <- paste(lastName, lastSeq, sep = "_")
       }
     } # end of loop through loci
   } # end of loop through chromosomes
   # trim output to remove columns not used.
+  alleleDepthOut <- alleleDepthOut[, 1:(currAlOut - 1)]
+  alleles2locOut <- alleles2locOut[1:(currAlOut - 1)]
+  alleleNucleotidesOut <- alleleNucleotidesOut[1:(currAlOut - 1)]
+  locTableOut <- locTableOut[1:(currLocOut - 1),]
+  
+  return(list(alleleDepth = alleleDepthOut, alleles2loc = alleles2locOut,
+              alleleNucleotides = alleleNucleotidesOut,
+              locTable = locTableOut))
 }
 
 # Function to make a function for filtering a VCF file.
@@ -551,22 +563,149 @@ MakeTasselVcfFilter <- function(min.ind.with.reads = 200,
 # Function to import data from a VCF file.
 # Reads in VCF using BioConductor, then phases SNPs into haplotypes using 
 # consolidateSNPs.
+# file can be a character string or a TabixFile.
 # samples is a character vector of the names of samples to retain.
-# filteredVCF is a file name where the filtered VCF, according to 
-# min.ind.with.reads and min.ind.with.minor.allele, is stored.
-# To read again, take the file name from filteredVCF and use it for file instead.
-# Set prefilter to FALSE if file is small enough not to do prefiltering.
+# svparam can generally be left as-is unless you have additional columns to 
+# import to locTable (from fixed or info) or if you have specific genomic
+# ranges to import with "which".
+# expectedAlleles and expectedLoci are for after SNP phasing and
+# consolidation to haplotypes.
 VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL, 
                         tol = 0.01, al.depth.field = "AD", 
                         min.ind.with.reads = 200, 
                         min.ind.with.minor.allele = 10,
-                        samples = VariantAnnotation::samples(VariantAnnotation::scanVcfHeader(file))
-                        ){
+                        samples = VariantAnnotation::samples(VariantAnnotation::scanVcfHeader(file)),
+                        svparam = VariantAnnotation::ScanVcfParam(fixed = "ALT",
+                                                                  info = NA, 
+                                                                  geno = al.depth.field,
+                                                                  samples = samples),
+                        yieldSize = 5000, expectedAlleles = 5e5, 
+                        expectedLoci = 1e5){
   
-  # parameters for reading file
-  svparam <- VariantAnnotation::ScanVcfParam(geno = al.depth.field,
-                                             fixed = c("CHROM", "POS", "ID",
-                                                       "REF", "ALT"),
-                                             info = NA, samples = samples)
-  vcf <- VariantAnnotation::readVcf(file, param = svparam)
+  # clean up parameters for import
+  if(is.na(VariantAnnotation::vcfFixed(svparam))){
+    VariantAnnotation::vcfFixed(svparam) <- "ALT"
+  }
+  if(length(VariantAnnotation::vcfFixed(svparam)) > 0 &&
+     !"ALT" %in% VariantAnnotation::vcfFixed(svparam)){
+    VariantAnnotation::vcfFixed(svparam) <- 
+      c(VariantAnnotation::vcfFixed(svparam), "ALT")
+  }
+  if(is.na(VariantAnnotation::vcfGeno(svparam))){
+    stop("geno field must be provided in svparam.")
+  }
+  if(!identical(VariantAnnotation::vcfGeno(svparam), "AD")){
+    warning("Allele depth field not set to AD.")
+  }
+  if(is.na(VariantAnnotation::vcfSamples(svparam))){
+    stop("Samples needed in order to create RADdata object.  Omit samples from svparam to include all.")
+  }
+  
+  # determine what extra columns to add to locTable
+  extracols <- c(VariantAnnotation::vcfFixed(svparam),
+                 VariantAnnotation::vcfInfo(svparam))
+  hdr <- VariantAnnotation::scanVcfHeader(file)
+  if(length(VariantAnnotation::vcfFixed(svparam)) == 0){
+    extracols <- c("QUAL", "FILTER", extracols)
+  }
+  if(length(VariantAnnotation::vcfInfo(svparam)) == 0){
+    extracols <- c(extracols, row.names(VariantAnnotation::info(hdr)))
+  }
+  extracols <- extracols[!extracols %in% c("CHROM", "POS", "ID", "REF", "ALT")]
+  extracols <- extracols[!is.na(extracols)]
+  # preallocate objects for constructing RADdata object
+  alleleDepth <- matrix(0L, nrow = length(samples), ncol = expectedAlleles,
+                        dimnames = list(samples, 1:expectedAlleles))
+  locTable <- data.frame(Chr = character(expectedLoci), 
+                         Pos = integer(expectedLoci),
+                         matrix(nrow = expectedLoci, ncol = length(extracols),
+                                dimnames = list(NULL, extracols)),
+                         stringsAsFactors = FALSE)
+  alleles2loc <- integer(expectedAlleles)
+  alleleNucleotides <- character(expectedAlleles)
+  # to track which allele we're on
+  currAl <- 1
+  currLoc <- 1
+  
+  # create Tabix file
+  tfile <- TabixFile(file, yieldSize = yieldSize, index = NA)
+
+  # Read data one chunk at a time
+  open(tfile)
+  while(nrow(vcf <- VariantAnnotation::readVcf(tfile, param = svparam))){
+    thisNloc <- nrow(vcf) # number of loci in this chunk
+    # reference alleles
+    thisRef <- as.character(VariantAnnotation::ref(vcf))
+    # alternative alleles
+    nAlt <- sapply(VariantAnnotation::alt(vcf), length) # n alt alleles per locus
+    thisNallele <- thisNloc + sum(nAlt) # n alleles in this chunk
+    thisAlt <- unlist(lapply(VariantAnnotation::alt(vcf), as.character))
+    # put reference and alternative alleles together into alleleNucleotides
+    thisAlleleNucleotides <- character(thisNallele)
+    alsums <- cumsum(nAlt + 1)
+    refpos <- c(1, alsums[-thisNloc] + 1)
+    thisAlleleNucleotides[refpos] <- thisRef
+    thisAlleleNucleotides[-refpos] <- thisAlt
+    # set up alleles2loc
+    thisAlleles2loc <- rep(1:thisNloc, times = nAlt + 1)
+    # set up locTable
+    thisLocTable <- data.frame(row.names = row.names(vcf),
+                               Chr = as.character(SummarizedExperiment::seqnames(vcf)),
+                               Pos = Biostrings::start(vcf),
+                               S4Vectors::mcols(vcf)[,extracols],
+                               stringsAsFactors = FALSE)
+    # set up depth matrix
+    thisAlDepth <- matrix(0L, nrow = length(samples), ncol = thisNallele,
+                          dimnames = list(samples, 
+                                          paste(row.names(vcf)[thisAlleles2loc],
+                                                thisAlleleNucleotides, sep = "_")))
+    # loop to fill depth matrix
+    keepLoc <- logical(thisNloc) # should loci be retained?
+    for(i in 1:thisNloc){
+      thiscol <- which(thisAlleles2loc == i) # allele columns for this locus
+      # make depth matrix for this locus
+      iDepth <- matrix(unlist(VariantAnnotation::geno(vcf)[[al.depth.field]][i,]),
+                       nrow = length(samples), ncol = nAlt[i] + 1, byrow = TRUE)
+      thisAlDepth[,thiscol] <- iDepth
+      # check if it passes filtering
+      if(sum(rowSums(iDepth) > 0) < min.ind.with.reads){
+        keepLoc[i] <- FALSE
+      } else {
+        indperal <- colSums(iDepth > 0)
+        keepLoc[i] <- sum(indperal >= min.ind.with.minor.allele) >= 2
+      }
+      # cut the locus if it does not pass filtering
+      if(!keepLoc[i]){
+        thisAlleleNucleotides <- thisAlleleNucleotides[-thiscol]
+        thisAlDepth <- thisAlDepth[, -thiscol]
+        thisAlleles2loc <- thisAlleles2loc[-thiscol]
+      }
+    }
+    # update locTable to reflect cut loci
+    thisLocTable <- thisLocTable[keepLoc,]
+    # update locus numbers
+    thisAlleles2loc <- rep(1:sum(keepLoc), times = table(thisAlleles2loc))
+    thisNloc <- sum(keepLoc)
+    thisNalleles <- length(thisAlleles2loc)
+    
+    # group SNPs into tags
+    if(phaseSNPs){
+      consTags <- consolidateSNPs(thisAlDepth, thisAlleles2loc, thisLocTable,
+                                  thisAlleleNucleotides, tagsize = tagsize,
+                                  refgenome = refgenome, tol = tol)
+      thisAlDepth <- consTags$alleleDepth
+      thisAlleles2loc <- consTags$alleles2loc
+      thisAlleleNucleotides <- consTags$alleleNucleotides
+      thisLocTable <- consTags$locTable
+      thisNloc <- dim(thisLocTable)[1]
+      thisNalleles <- length(thisAlleles2loc)
+    }
+    
+    # add data from this chunk to objects for whole dataset
+    #### add code here
+  }
+  close(tfile)
+
+  ### add code to build RADdata object
+  return(list(locTableVcf, depthVcf)) ### change to return RADdata object
 }
