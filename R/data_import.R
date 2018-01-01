@@ -579,6 +579,8 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
                         tol = 0.01, al.depth.field = "AD", 
                         min.ind.with.reads = 200, 
                         min.ind.with.minor.allele = 10,
+                        possiblePloidies = list(2),
+                        contamRate = 0.001,
                         samples = VariantAnnotation::samples(VariantAnnotation::scanVcfHeader(file)),
                         svparam = VariantAnnotation::ScanVcfParam(fixed = "ALT",
                                                                   info = NA, 
@@ -629,8 +631,8 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   alleles2loc <- integer(expectedAlleles)
   alleleNucleotides <- character(expectedAlleles)
   # to track which allele we're on
-  currAl <- 1
-  currLoc <- 1
+  currAl <- 0
+  currLoc <- 0
   
   # create Tabix file
   if(is.character(file) && !endsWith(file, ".bgz")){
@@ -705,10 +707,28 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
     # update locus numbers
     thisAlleles2loc <- rep(1:sum(keepLoc), times = table(thisAlleles2loc))
     thisNloc <- sum(keepLoc)
-    thisNalleles <- length(thisAlleles2loc)
+    thisNallele <- length(thisAlleles2loc)
     
     # group SNPs into tags
     if(phaseSNPs){
+      # add the last marker to the current set if appropriate
+      # (i.e. if the break between file chunks may have been within a tag)
+      if(currLoc > 0 && thisLocTable$Chr[1] == locTable$Chr[currLoc] &&
+         thisLocTable$Pos[1] - locTable$Pos[currLoc] < tagsize){
+        
+        thisLocTable <- rbind(locTable[currLoc,], thisLocTable)
+        oldAlCol <- which(alleles2loc == currLoc)
+        thisAlleleNucleotides <- c(alleleNucleotides[oldAlCol], 
+                                   thisAlleleNucleotides)
+        thisAlleles2loc <- c(rep(1, length(oldAlCol)),
+                             thisAlleles2loc + 1)
+        thisAlDepth <- cbind(alleleDepth[,oldAlCol],
+                             thisAlDepth)
+        currLoc <- currLoc - 1
+        currAl <- currAl - length(oldAlCol)
+      }
+      
+      # perform grouping + phasing
       consTags <- consolidateSNPs(thisAlDepth, thisAlleles2loc, thisLocTable,
                                   thisAlleleNucleotides, tagsize = tagsize,
                                   refgenome = refgenome, tol = tol)
@@ -717,14 +737,34 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
       thisAlleleNucleotides <- consTags$alleleNucleotides
       thisLocTable <- consTags$locTable
       thisNloc <- dim(thisLocTable)[1]
-      thisNalleles <- length(thisAlleles2loc)
+      thisNallele <- length(thisAlleles2loc)
     }
     
     # add data from this chunk to objects for whole dataset
-    #### add code here
+    thisAlCol <- (1:thisNallele) + currAl
+    alleleDepth[,thisAlCol] <- thisAlDepth
+    alleles2loc[thisAlCol] <- thisAlleles2loc + currLoc
+    alleleNucleotides[thisAlCol] <- thisAlleleNucleotides
+    locTable[(1:thisNloc) + currLoc, ] <- thisLocTable
+    # update position in the output
+    currAl <- currAl + thisNallele
+    currLoc <- currLoc + thisNloc
   }
   close(tfile)
+  
+  if(currAl == 0 || currLoc == 0){
+    stop("No loci passed the missing data and allele frequency thresholds.")
+  }
+  
+  # trim output
+  alleleDepth <- alleleDepth[, 1:currAl]
+  alleles2loc <- alleles2loc[, 1:currAl]
+  alleleNucleotides <- alleleNucleotides[, 1:currAl]
+  locTable <- locTable[, 1:currAl]
 
-  ### add code to build RADdata object
-  return(list(locTableVcf, depthVcf)) ### change to return RADdata object
+  #build RADdata object
+  radout <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
+                    contamRate, alleleNucleotides)
+  
+  return(radout)
 }
