@@ -1,6 +1,6 @@
 Package: polyRAD
-Version: 0.0
-Date: 2017-08-28
+Version: 0.1
+Date: 2019-01-02
 Title: Genotype Calling with Uncertainty from Sequencing Data in Polyploids and Diploids
 Authors@R: c(person("Lindsay V.", "Clark", email = "lvclark@illinois.edu",
                     role = c("aut", "cre")),
@@ -8,9 +8,9 @@ Authors@R: c(person("Lindsay V.", "Clark", email = "lvclark@illinois.edu",
 Author: Lindsay V. Clark [aut, cre],
   U.S. National Science Foundation [fnd]
 Maintainer: Lindsay V. Clark <lvclark@illinois.edu>
-Imports: fastmatch, pcaMethods
+Imports: fastmatch, pcaMethods, methods
 Suggests: rrBLUP, Rsamtools, GenomeInfoDb, Biostrings, GenomicRanges, VariantAnnotation,
-  SummarizedExperiment, S4Vectors
+  SummarizedExperiment, S4Vectors, IRanges
 Description: Read depth data from genotyping-by-sequencing (GBS) or restriction 
   site-associated DNA sequencing (RAD-seq) are imported and used to make Bayesian
   probability estimates of genotypes in polyploids or diploids.  The genotype 

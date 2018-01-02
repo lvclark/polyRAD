@@ -17,6 +17,7 @@ VCF2RADdata)
 importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom")
 importFrom("utils", "read.csv")
 importFrom("fastmatch", "%fin%")
+importFrom("methods", "is")
 
 S3method(print, RADdata)
 S3method(AddAlleleFreqByTaxa, RADdata)
