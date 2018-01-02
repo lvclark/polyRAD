@@ -669,9 +669,11 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
     # reference alleles
     thisRef <- as.character(VariantAnnotation::ref(vcf))
     # alternative alleles
-    nAlt <- sapply(VariantAnnotation::alt(vcf), length) # n alt alleles per locus
+    thisAltList <- lapply(VariantAnnotation::alt(vcf), as.character)
+    thisAltList <- lapply(thisAltList, function(x) x[x != ""]) # clean out ones w/o alt allele
+    nAlt <- sapply(thisAltList, length) # n alt alleles per locus
     thisNallele <- thisNloc + sum(nAlt) # n alleles in this chunk
-    thisAlt <- unlist(lapply(VariantAnnotation::alt(vcf), as.character))
+    thisAlt <- unlist(thisAltList)
     # put reference and alternative alleles together into alleleNucleotides
     thisAlleleNucleotides <- character(thisNallele)
     alsums <- cumsum(nAlt + 1)
@@ -687,20 +689,19 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
                                S4Vectors::mcols(vcf)[,extracols],
                                stringsAsFactors = FALSE)
     # set up depth matrix
-    thisAlDepth <- matrix(0L, nrow = length(samples), ncol = thisNallele,
+    thisAlDepth <- matrix(unlist(VariantAnnotation::geno(vcf)[[al.depth.field]]), 
+                          nrow = length(samples), ncol = thisNallele,
                           dimnames = list(samples, 
                                           paste(row.names(vcf)[thisAlleles2loc],
-                                                thisAlleleNucleotides, sep = "_")))
+                                                thisAlleleNucleotides, sep = "_")),
+                          byrow = TRUE)
     # loop to fill depth matrix
-    message("Extracting read depth and filtering markers...")
+    message("Filtering markers...")
     keepLoc <- logical(thisNloc) # should loci be retained?
     for(i in 1:thisNloc){
       thiscol <- which(thisAlleles2loc == i) # allele columns for this locus
-      # make depth matrix for this locus
-      iDepth <- matrix(unlist(VariantAnnotation::geno(vcf)[[al.depth.field]][i,]),
-                       nrow = length(samples), ncol = nAlt[i] + 1, byrow = TRUE)
-      thisAlDepth[,thiscol] <- iDepth
       # check if it passes filtering
+      iDepth <- thisAlDepth[,thiscol, drop = FALSE]
       if(sum(rowSums(iDepth) > 0) < min.ind.with.reads){
         keepLoc[i] <- FALSE
       } else {
