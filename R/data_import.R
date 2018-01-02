@@ -175,7 +175,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
     }
     if(!file.exists(sprintf("%s.fai", refgenome))){
       # index the fasta file if necessary
-      cat("Creating FASTA file index...", sep = "\n")
+      message("Creating FASTA file index...")
       Rsamtools::indexFa(refgenome)
     }
     refgenome <- Rsamtools::FaFile(refgenome)
@@ -203,8 +203,8 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
                             stringsAsFactors = FALSE)
   
   # variables to keep track of which allele and locus we are on
-  currAlOut <- 1
-  currLocOut <- 1
+  currAlOut <- 1L
+  currLocOut <- 1L
   
   ### Internal functions for consolidateSNP ####
   
@@ -450,7 +450,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         ## put the "last" data into the output, and make the new data the last.
         
         thisNAl <- dim(lastDepth)[2] # number of alleles for locus to output
-        thisAlOut <- (1:thisNAl) + currAlOut - 1 # indices for all alleles to output
+        thisAlOut <- (1:thisNAl) + currAlOut - 1L # indices for all alleles to output
         
         # add data to output objects
         alleleDepthOut[,thisAlOut] <- lastDepth
@@ -469,7 +469,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         
         # increment current allele and locus
         currAlOut <- currAlOut + thisNAl
-        currLocOut <- currLocOut + 1
+        currLocOut <- currLocOut + 1L
       } else {
         ## If these are the same locus, merge them.
         
@@ -607,6 +607,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   if(is.na(VariantAnnotation::vcfSamples(svparam)[1])){
     stop("Samples needed in order to create RADdata object.  Omit samples from svparam to include all.")
   }
+  samples <- VariantAnnotation::vcfSamples(svparam)
   
   # determine what extra columns to add to locTable
   extracols <- c(VariantAnnotation::vcfFixed(svparam),
@@ -623,7 +624,8 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   # preallocate objects for constructing RADdata object
   alleleDepth <- matrix(0L, nrow = length(samples), ncol = expectedAlleles,
                         dimnames = list(samples, 1:expectedAlleles))
-  locTable <- data.frame(Chr = character(expectedLoci), 
+  locTable <- data.frame(row.names = as.character(1:expectedLoci),
+                         Chr = character(expectedLoci), 
                          Pos = integer(expectedLoci),
                          matrix(nrow = expectedLoci, ncol = length(extracols),
                                 dimnames = list(NULL, extracols)),
@@ -631,8 +633,8 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   alleles2loc <- integer(expectedAlleles)
   alleleNucleotides <- character(expectedAlleles)
   # to track which allele we're on
-  currAl <- 0
-  currLoc <- 0
+  currAl <- 0L
+  currLoc <- 0L
   
   # create Tabix file
   if(is.character(file) && !endsWith(file, ".bgz")){
@@ -641,13 +643,13 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
     } else {
       message("Compressing file with bgzip.")
       tempbgz <- tempfile(fileext = ".bgz") # temporary file for example
-      file <- bgzip(file, dest = tempbgz)
+      file <- Rsamtools::bgzip(file, dest = tempbgz)
       message(paste("Compressed VCF sent to", file))
     }
   }
   if(is.character(file) && !file.exists(paste(file, ".tbi", sep = ""))){
     message("Indexing VCF.")
-    indexTabix(file, format = "vcf")
+    Rsamtools::indexTabix(file, format = "vcf")
   }
   tfile <- Rsamtools::TabixFile(file, yieldSize = yieldSize)
 
@@ -743,9 +745,11 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
     # add data from this chunk to objects for whole dataset
     thisAlCol <- (1:thisNallele) + currAl
     alleleDepth[,thisAlCol] <- thisAlDepth
+    dimnames(alleleDepth)[[2]][thisAlCol] <- dimnames(thisAlDepth)[[2]]
     alleles2loc[thisAlCol] <- thisAlleles2loc + currLoc
     alleleNucleotides[thisAlCol] <- thisAlleleNucleotides
     locTable[(1:thisNloc) + currLoc, ] <- thisLocTable
+    row.names(locTable)[(1:thisNloc) + currLoc] <- row.names(thisLocTable)
     # update position in the output
     currAl <- currAl + thisNallele
     currLoc <- currLoc + thisNloc
@@ -758,9 +762,11 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   
   # trim output
   alleleDepth <- alleleDepth[, 1:currAl]
-  alleles2loc <- alleles2loc[, 1:currAl]
-  alleleNucleotides <- alleleNucleotides[, 1:currAl]
-  locTable <- locTable[, 1:currAl]
+  alleles2loc <- alleles2loc[1:currAl]
+  alleleNucleotides <- alleleNucleotides[1:currAl]
+  locTable <- locTable[1:currLoc, ]
+  # indicate whether non-variable sites included in alleleNucleotides
+  attr(alleleNucleotides, "Variable_sites_only") <- is.null(refgenome)
 
   #build RADdata object
   radout <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,

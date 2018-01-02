@@ -9,9 +9,10 @@ Export_rrBLUP_Amat, Export_rrBLUP_GWAS, GetAlleleNames,
 GetBlankTaxa, GetContamRate, GetDonorParent, GetLikelyGen, 
 GetLocDepth, GetLoci, GetRecurrentParent, GetTaxa, 
 GetWeightedMeanGenotypes, IterateHWE, IteratePopStruct,
-nTaxa, nAlleles, OneAllelePerMarker, 
+MakeTasselVcfFilter, nTaxa, nAlleles, OneAllelePerMarker, 
 PipelineMapping2Parents, RADdata, readHMC, readTagDigger,
-SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent)
+SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent,
+VCF2RADdata)
 
 importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom")
 importFrom("utils", "read.csv")
