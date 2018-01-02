@@ -266,7 +266,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
       newAlMatch <- unique(rbind(findMatchesHomoz(depth1T, depth2T),
                                  findMatchesHomoz(depth2T, depth1T)[,2:1]))
       # add these new matches to the list of new alleles
-      if(dim(newAlMatch)[1] > 0){
+      if(dim(unique(rbind(alMatch, newAlMatch)))[1] > dim(alMatch)[1]){
         progress <- TRUE
         alMatch <- unique(rbind(alMatch, newAlMatch))
         
@@ -420,7 +420,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         stop(paste(thisChrom, "matches multiple sequence names in reference genome."))
       }
     }
-    message(paste("Phasing SNPs:", thisChrom, "\n"))
+    message(paste("Phasing", length(chrset), "SNPs on chromosome", thisChrom))
     if(!identical(locTable$Pos[chrset], sort(locTable$Pos[chrset]))){
       stop(paste(thisChrom, ": Loci must be sorted by position.", sep = ""))
     }
@@ -507,6 +507,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
       }
     } # end of loop through loci
   } # end of loop through chromosomes
+  
   # trim output to remove columns not used.
   alleleDepthOut <- alleleDepthOut[, 1:(currAlOut - 1)]
   alleles2locOut <- alleles2locOut[1:(currAlOut - 1)]
@@ -652,10 +653,18 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
     Rsamtools::indexTabix(file, format = "vcf")
   }
   tfile <- Rsamtools::TabixFile(file, yieldSize = yieldSize)
+  
+  # set up genome argument if needed
+  genome <- VariantAnnotation::seqinfo(hdr)
+  if(length(genome) == 0 && length(VariantAnnotation::vcfWhich(svparam)) > 0){
+    genome <- names(VariantAnnotation::vcfWhich(svparam))
+    names(genome) <- genome
+  }
 
   # Read data one chunk at a time
   open(tfile)
-  while(nrow(vcf <- VariantAnnotation::readVcf(tfile, param = svparam))){
+  while(nrow(vcf <- VariantAnnotation::readVcf(tfile, genome = genome, 
+                                               param = svparam))){
     thisNloc <- nrow(vcf) # number of loci in this chunk
     # reference alleles
     thisRef <- as.character(VariantAnnotation::ref(vcf))
@@ -683,6 +692,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
                                           paste(row.names(vcf)[thisAlleles2loc],
                                                 thisAlleleNucleotides, sep = "_")))
     # loop to fill depth matrix
+    message("Extracting read depth and filtering markers...")
     keepLoc <- logical(thisNloc) # should loci be retained?
     for(i in 1:thisNloc){
       thiscol <- which(thisAlleles2loc == i) # allele columns for this locus
@@ -726,7 +736,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
                              thisAlleles2loc + 1)
         thisAlDepth <- cbind(alleleDepth[,oldAlCol],
                              thisAlDepth)
-        currLoc <- currLoc - 1
+        currLoc <- currLoc - 1L
         currAl <- currAl - length(oldAlCol)
       }
       
@@ -753,12 +763,16 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
     # update position in the output
     currAl <- currAl + thisNallele
     currLoc <- currLoc + thisNloc
+    
+    # don't loop if we are using "which" in svparam
+    if(is.na(yieldSize)) break
   }
   close(tfile)
   
   if(currAl == 0 || currLoc == 0){
     stop("No loci passed the missing data and allele frequency thresholds.")
   }
+  message(paste(currLoc, "loci imported."))
   
   # trim output
   alleleDepth <- alleleDepth[, 1:currAl]
@@ -768,7 +782,8 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   # indicate whether non-variable sites included in alleleNucleotides
   attr(alleleNucleotides, "Variable_sites_only") <- is.null(refgenome)
 
-  #build RADdata object
+  # build RADdata object
+  message("Building RADdata object...")
   radout <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
                     contamRate, alleleNucleotides)
   

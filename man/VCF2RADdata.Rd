@@ -130,6 +130,14 @@ exampleVCF <- system.file("extdata", "Msi01genes.vcf", package = "polyRAD")
 
 # Read into RADdata object
 myRAD <- VCF2RADdata(exampleVCF, expectedLoci = 100, expectedAlleles = 500)
+
+# Example of subsetting by genomic region (first 200 kb on Chr01)
+require(VariantAnnotation)
+mysv <- ScanVcfParam(fixed = "ALT", info = NA, geno = "AD",
+                     samples = samples(scanVcfHeader(exampleVCF)),
+                     which = GRanges("01", IRanges(1, 200000)))
+myRAD2 <- VCF2RADdata(exampleVCF, expectedLoci = 100, expectedAlleles = 500,
+                      svparam = mysv, yieldSize = NA_integer_)
 }
 
 \keyword{ file }
