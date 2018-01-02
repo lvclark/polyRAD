@@ -695,7 +695,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
                                           paste(row.names(vcf)[thisAlleles2loc],
                                                 thisAlleleNucleotides, sep = "_")),
                           byrow = TRUE)
-    # loop to fill depth matrix
+    # loop to filter markers
     message("Filtering markers...")
     keepLoc <- logical(thisNloc) # should loci be retained?
     for(i in 1:thisNloc){
