@@ -695,26 +695,32 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
                                           paste(row.names(vcf)[thisAlleles2loc],
                                                 thisAlleleNucleotides, sep = "_")),
                           byrow = TRUE)
+    # how many individuals have each allele
+    indperal <- colSums(thisAlDepth > 0)
     # loop to filter markers
     message("Filtering markers...")
     keepLoc <- logical(thisNloc) # should loci be retained?
+    remAl <- integer(0) # list of alleles to be removed
+    iAl <- 0L # keep track of allele position for last locus
     for(i in 1:thisNloc){
-      thiscol <- which(thisAlleles2loc == i) # allele columns for this locus
+      thiscol <- 1:(nAlt[i] + 1L) + iAl # allele columns for this locus
       # check if it passes filtering
       iDepth <- thisAlDepth[,thiscol, drop = FALSE]
       if(sum(rowSums(iDepth) > 0) < min.ind.with.reads){
         keepLoc[i] <- FALSE
       } else {
-        indperal <- colSums(iDepth > 0)
-        keepLoc[i] <- sum(indperal >= min.ind.with.minor.allele) >= 2
+        keepLoc[i] <- sum(indperal[thiscol] >= min.ind.with.minor.allele) >= 2
       }
       # cut the locus if it does not pass filtering
       if(!keepLoc[i]){
-        thisAlleleNucleotides <- thisAlleleNucleotides[-thiscol]
-        thisAlDepth <- thisAlDepth[, -thiscol]
-        thisAlleles2loc <- thisAlleles2loc[-thiscol]
+        remAl <- c(remAl, thiscol)
       }
+      iAl <- iAl + nAlt[i] + 1L # update last allele index
     }
+    # remove cut alleles from allele objects
+    thisAlleleNucleotides <- thisAlleleNucleotides[-remAl]
+    thisAlDepth <- thisAlDepth[, -remAl]
+    thisAlleles2loc <- thisAlleles2loc[-remAl]
     # update locTable to reflect cut loci
     thisLocTable <- thisLocTable[keepLoc,]
     # update locus numbers
