@@ -789,6 +789,7 @@ GetWeightedMeanGenotypes <- function(object, ...){
 }
 GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
                                              omit1allelePerLocus = TRUE, 
+                                             omitCommonAllele = TRUE,
                                              naIfZeroReads = FALSE, 
                                              onePloidyPerAllele = FALSE, ...){
   # maybe include an argument for selecting a specific ploidy rather than
@@ -803,7 +804,7 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
   altokeep <- 1:nAlleles(object)
   if(omit1allelePerLocus){
     # make allele subset, to remove mathematical redundancy in dataset
-    mymatch <- OneAllelePerMarker(object)
+    mymatch <- OneAllelePerMarker(object, commonAllele = omitCommonAllele)
     altokeep <- altokeep[-mymatch]
   }  
   

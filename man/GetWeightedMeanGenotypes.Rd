@@ -16,6 +16,7 @@ numerical genotype values for each taxon and allele.
 GetWeightedMeanGenotypes(object, ...)
 \method{GetWeightedMeanGenotypes}{RADdata}(object, minval = 0, maxval = 1, 
                          omit1allelePerLocus = TRUE, 
+                         omitCommonAllele = TRUE,
                          naIfZeroReads = FALSE, 
                          onePloidyPerAllele = FALSE, \dots)
 }
@@ -46,6 +47,12 @@ prevent singularities for
 genome-wide association and genomic prediction.  The value for one
 allele can be predicted from the values from all other alleles at
 its locus.
+}
+\item{omitCommonAllele}{
+A logical, passed to the \code{commonAllele} argument of 
+\code{\link{OneAllelePerMarker}}, indicating whether the most common allele
+for each locus should be omitted (as opposed to simply the first allele
+for each locus).  Ignored if \code{omit1allelePerLocus = FALSE}.
 }
 \item{naIfZeroReads}{
 A logical indicating whether \code{NA} should be inserted into the 
