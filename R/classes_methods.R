@@ -789,6 +789,7 @@ GetWeightedMeanGenotypes <- function(object, ...){
 }
 GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
                                              omit1allelePerLocus = TRUE, 
+                                             omitCommonAllele = TRUE,
                                              naIfZeroReads = FALSE, 
                                              onePloidyPerAllele = FALSE, ...){
   # maybe include an argument for selecting a specific ploidy rather than
@@ -803,7 +804,7 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
   altokeep <- 1:nAlleles(object)
   if(omit1allelePerLocus){
     # make allele subset, to remove mathematical redundancy in dataset
-    mymatch <- OneAllelePerMarker(object)
+    mymatch <- OneAllelePerMarker(object, commonAllele = omitCommonAllele)
     altokeep <- altokeep[-mymatch]
   }  
   
@@ -1136,9 +1137,27 @@ GetBlankTaxa.RADdata <- function(object, ...){
 OneAllelePerMarker <- function(object, ...){
   UseMethod("OneAllelePerMarker", object)
 }
-OneAllelePerMarker.RADdata <- function(object, ...){
-  mymatch <- match(1:max(object$alleles2loc), object$alleles2loc)
-  mymatch <- na.omit(mymatch)
+OneAllelePerMarker.RADdata <- function(object, commonAllele = FALSE, ...){
+  if(commonAllele){
+    # get index of most common allele for each marker
+    if(is.null(object$alleleFreq)){
+      # estimate allele frequencies if not done already
+      object <- AddAlleleFreqHWE(object)
+    }
+    # sort by locus numbers, then by allele freq within locus
+    myorder <- order(object$alleles2loc, object$alleleFreq, 
+                     decreasing = c(FALSE, TRUE), method = "radix")
+    # get position of most common allele within sorted vector
+    mymatch1 <- fastmatch::fmatch(1:max(object$alleles2loc), 
+                                  object$alleles2loc[myorder])
+    mymatch1 <- na.omit(mymatch1)
+    # translate that to position in unsorted vector
+    mymatch <- myorder[mymatch1]
+  } else {
+    # get the index of the first allele for each marker
+    mymatch <- fastmatch::fmatch(1:max(object$alleles2loc), object$alleles2loc)
+    mymatch <- na.omit(mymatch)
+  }
   return(mymatch)
 }
 CanDoGetWeightedMeanGeno <- function(object, ...){

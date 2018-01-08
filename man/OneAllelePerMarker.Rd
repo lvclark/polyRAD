@@ -1,7 +1,8 @@
 \name{OneAllelePerMarker}
 \alias{OneAllelePerMarker}
+\alias{OneAllelePerMarker.RADdata}
 \title{
-Return the Index of the First Allele for Each Locus
+Return the Index of One Allele for Each Locus
 }
 \description{
 This function exists primarily to be called by functions such as 
@@ -12,17 +13,23 @@ the indices of one allele per locus.
 }
 \usage{
 OneAllelePerMarker(object, ...)
+\method{OneAllelePerMarker}{RADdata}(object, commonAllele = FALSE, \dots)
 }
 \arguments{
   \item{object}{
 A \code{"\link{RADdata}"} object.
 }
+  \item{commonAllele}{
+If \code{TRUE}, the index of the most common allele for each locus is 
+returned, according to \code{object$alleleFreq}.  If \code{FALSE}, 
+the index of the first allele for each locus is returned.
+  }
   \item{\dots}{
 Additional arguments (none implemented).
 }
 }
 \value{
-An integer vector indicating the index of the first allele for each locus
+An integer vector indicating the index of one allele for each locus
 in \code{object}.
 }
 
@@ -37,6 +44,8 @@ Lindsay V. Clark
 data(exampleRAD)
 
 OneAllelePerMarker(exampleRAD)
+
+OneAllelePerMarker(exampleRAD, commonAllele = TRUE)
 }
 
 \keyword{ utilities }

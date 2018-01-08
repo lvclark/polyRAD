@@ -2,6 +2,7 @@
 
 .ordered_gen_and_loctable <- function(object, numgen, 
                                       omit1allelePerLocus = TRUE,
+                                      omitCommonAllele = TRUE,
                                       chromAsInteger = TRUE){
   ## Internal function to make a data frame of loci with one row per     ##
   ## allele.  The data frame, with alignment data, and the matrix of     ##
@@ -9,11 +10,13 @@
   ## object = RADdata object                                             ##
   ## numgen = output of GetWeightedMeanGenotypes                         ##
   ## omit1allelePerLocus = TRUE if the same argument was used for GWMG   ##
+  ## omitCommonAllele = TRUE if the same argument was used for GwMG      ##
   ## chromAsInteger = should chromosomes be forced to be integers?       ##
   
   # look up alleles in loc table
   if(omit1allelePerLocus){
-    alindex <- object$alleles2loc[-OneAllelePerMarker(object)]
+    alindex <- object$alleles2loc[-OneAllelePerMarker(object,
+                                                      commonAllele = omitCommonAllele)]
   } else {
     alindex <- object$alleles2loc
   }
@@ -84,11 +87,12 @@ ExportGAPIT <- function(object, onePloidyPerAllele = FALSE){
   # get numeric genotypes
   numgen <- GetWeightedMeanGenotypes(object, minval = 0, maxval = 2,
                                      omit1allelePerLocus = TRUE,
+                                     omitCommonAllele = TRUE,
                                      onePloidyPerAllele = onePloidyPerAllele)
   
   # look up alleles in loc table
   ord <- .ordered_gen_and_loctable(object, numgen, omit1allelePerLocus = TRUE,
-                                   chromAsInteger = TRUE)
+                                   chromAsInteger = TRUE, omitCommonAllele = TRUE)
   rm(numgen)
   
   taxa <- GetTaxa(object)
@@ -110,6 +114,7 @@ Export_rrBLUP_Amat <- function(object, naIfZeroReads = FALSE,
   
   numgen <- GetWeightedMeanGenotypes(object, minval = -1, maxval = 1,
                                     omit1allelePerLocus = TRUE,
+                                    omitCommonAllele = TRUE,
                                     naIfZeroReads = naIfZeroReads,
                                     onePloidyPerAllele = onePloidyPerAllele)
   return(numgen)
@@ -125,6 +130,7 @@ Export_rrBLUP_GWAS <- function(object, naIfZeroReads = FALSE,
   
   # look up alleles in loc table
   ord <- .ordered_gen_and_loctable(object, numgen, omit1allelePerLocus = TRUE,
+                                   omitCommonAllele = TRUE,
                                    chromAsInteger = FALSE)
   rm(numgen)
   

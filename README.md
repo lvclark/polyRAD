@@ -1,10 +1,37 @@
 # polyRAD: Genotype Calling with Uncertainty from Sequencing Data in Polyploids and Diploids
 
-This R package is currently under development.
+This R package is currently under development.  See the [list of future features](https://github.com/lvclark/polyRAD/wiki/todo) to see where it is headed.
+
+I'm always interested in new collaboration!  If you find polyRAD to be helpful in your research, let me know if you'd be interested in sharing your data and results for coauthorship in the publication describing the software.  I would also like to hear your feature requests.  Contact: Lindsay Clark, University of Illinois, Urbana-Champaign.
 
 ## Purpose
 
 Genotypes derived from genotyping-by-sequencing (GBS) and restriction site-associated DNA sequencing (RAD-seq) have inherent uncertainty associated with them due to sampling error, i.e. some alleles might not get sequenced at all, or might not be sequenced in exact proportion to their copy number in the genome.  This package imports read depth in a variety of formats output by various bioinformatics pipelines and estimates the probability of each possible genotype for each taxon and locus.  Unlike similar pipelines, polyRAD can account for population structure and variable inheritance modes (autopolyploid, allopolyploid, intermediate).  Gentoypes and/or probability distributions can then be exported for downstream analysis such as genome-wide association, genomic selection, QTL mapping, or population structure analysis.
+
+## Formats supported
+
+To hopefully answer the question, "Can I use polyRAD?":
+
+polyRAD requires as input the sequence read depth at each allele for each sample.  Alleles must also be grouped into loci.  The bioinformatics pipeline that you used for SNP discovery did not have to assume polyploidy, as long as it faithfully reported allelic read depth.  Genomic alignment information is optional.  Right now there are data import functions for the following formats:
+
+* Variant Call Format (VCF).  The allele depth (AD) genotype field must be present.  I have tested the import function on files produced by the TASSEL GBSv2 pipeline.  It should also work for GATK.
+* TagDigger.  This is another piece of software I created, which reads FASTQ files and expected tag sequences and outputs a CSV file with read counts at samples x tags.
+* UNEAK.  The UNEAK pipeline outputs read depth in a file called HapMap.hmc.txt, which can be read by polyRAD.  (Beware that read depth is capped at 127 by UNEAK; TagDigger can help you if you expect high depth to be common in your dataset.)
+
+Currently there are export functions for the following software.  Genotypes are exported as continuous rather than discrete variables.
+
+* GAPIT
+* rrBLUP
+
+## Installation
+
+polyRAD is not yet on CRAN.  To install, go to the [releases](https://github.com/lvclark/polyRAD/releases) page and download the binary for the latest release.  This is polyRAD_0.x.tar.gz if you are on Mac or Linux, or polyRAD_0.x.zip if you are on Windows.  Don't unzip the file.  Move it into your working directory in R, then run
+
+```
+install.packages("polyRAD_0.x.zip", repos = NULL)
+```
+
+replacing the file name with the one you just downloaded.
 
 ## Funding
 
