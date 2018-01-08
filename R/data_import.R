@@ -796,3 +796,101 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   
   return(radout)
 }
+
+# Function to import from Stacks 1.48
+readStacks1 <- function(allelesFile, matchesFolder,
+                        min.ind.with.reads = 200,
+                        min.ind.with.minor.allele = 10,
+                        readAlignmentData = FALSE,
+                        possiblePloidies = list(2),
+                        contamRate = 0.001){
+  # read in catalog.alleles.tsv file
+  af <- scan(allelesFile, what = list(NULL, NULL, integer(0), character(0),
+                                      NULL, NULL),
+             sep = "\t", comment.char = "#")
+  # get locus names (numbers) and haplotypes for variable sites
+  keep <- af[[4]] != ""
+  locNames <- af[[3]][keep]
+  alleleNucleotides <- af[[4]][keep]
+  attr(alleleNucleotides, "Variable_sites_only") <- TRUE
+  alleleNames <- paste(locNames, alleleNucleotides, sep = "_")
+  
+  # get all of the sstacks files to read
+  sstacksFiles <- list.files(matchesFolder, "\\.matches\\.tsv")
+  sampleNames <- sub("\\.matches\\.tsv(\\.gz)?$", "", sstacksFiles)
+  sstacksFiles <- file.path(matchesFolder, sstacksFiles)
+  
+  # set up allele depth matrix
+  alleleDepth <- matrix(0L, nrow = length(sampleNames), 
+                        ncol = length(alleleNames),
+                        dimnames = list(sampleNames, alleleNames))
+  
+  # read sstacks files
+  for(i in 1:length(sampleNames)){
+    mf <- scan(sstacksFiles[i], 
+               what = list(NULL, NULL, integer(0), NULL, NULL, character(0),
+                           integer(0), NULL), sep = "\t", comment.char = "#")
+    keep <- mf[[6]] != "consensus"
+    theseLocNames <- mf[[3]][keep]
+    theseAlNuc <- mf[[6]][keep]
+    theseDepth <- mf[[7]][keep]
+    theseAlNames <- paste(theseLocNames, theseAlNuc, sep = "_")
+    alleleDepth[i, theseAlNames] <- theseDepth
+  }
+  
+  # filter loci
+  alRemove <- integer(0)
+  alIndex <- 1L
+  indperal <- colSums(alleleDepth > 0)
+  while(alIndex <= length(alleleNames)){
+    # find allele columns for this locus
+    thisLoc <- locNames[alIndex]
+    thesecol <- alIndex
+    alIndex <- alIndex + 1L
+    while(alIndex <= length(alleleNames) && 
+          locNames[alIndex] == thisLoc){
+      thesecol <- c(thesecol, alIndex)
+      alIndex <- alIndex + 1L
+    }
+    
+    # determine whether to keep the locus
+    keepLoc <- sum(rowSums(alleleDepth[,thesecol]) > 0) >= min.ind.with.reads
+    if(keepLoc){
+      keepLoc <- sum(indperal[thesecol] >= min.ind.with.minor.allele) >= 2
+    }
+    # update list of alleles to remove
+    if(!keepLoc) alRemove <- c(alRemove, thesecol)
+  }
+  # subset objects
+  alleleDepth <- alleleDepth[, -alRemove]
+  locNames <- locNames[-alRemove]
+  alleleNucleotides <- alleleNucleotides[-alRemove]
+  alleleNames <- alleleNames[-alRemove]
+  
+  # Get chromosome and position
+  uniqueLocNames <- unique(locNames)
+  if(readAlignmentData){
+    tagFile <- sub("alleles", "tags", allelesFile)
+    tf <- scan(tagFile, 
+               what = list(NULL, NULL, integer(0), character(0),
+                           integer(0), character(0), NULL, NULL, NULL, NULL,
+                           NULL, NULL, NULL, NULL),
+               sep = "\t", comment.char = "#")
+    keeprows <- fastmatch::fmatch(uniqueLocNames, tf[[3]])
+    locTable <- data.frame(row.names = as.character(uniqueLocNames),
+                           Chr = tf[[4]][keeprows],
+                           Pos = tf[[5]][keeprows],
+                           Strand = tf[[6]][keeprows])
+  } else {
+    # no alignment data
+    locTable <- data.frame(row.names = as.character(uniqueLocNames))
+  }
+  
+  # match depth matrix columns to locus table
+  alleles2loc <- fastmatch::fmatch(locNames, uniqueLocNames)
+  
+  # build RADdata object
+  radout <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
+                    contamRate, alleleNucleotides)
+  return(radout)
+}
