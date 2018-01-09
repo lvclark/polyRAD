@@ -807,7 +807,7 @@ readStacks1 <- function(allelesFile, matchesFolder,
   # read in catalog.alleles.tsv file
   af <- scan(allelesFile, what = list(NULL, NULL, integer(0), character(0),
                                       NULL, NULL),
-             sep = "\t", comment.char = "#")
+             sep = "\t", comment.char = "#", na.strings = character(0))
   # get locus names (numbers) and haplotypes for variable sites
   keep <- af[[4]] != ""
   locNames <- af[[3]][keep]
@@ -824,19 +824,24 @@ readStacks1 <- function(allelesFile, matchesFolder,
   alleleDepth <- matrix(0L, nrow = length(sampleNames), 
                         ncol = length(alleleNames),
                         dimnames = list(sampleNames, alleleNames))
+  # vector for reordering samples according to numbers in matches files
+  reorder <- integer(length(sampleNames))
   
   # read sstacks files
   for(i in 1:length(sampleNames)){
     mf <- scan(sstacksFiles[i], 
-               what = list(NULL, NULL, integer(0), NULL, NULL, character(0),
-                           integer(0), NULL), sep = "\t", comment.char = "#")
+               what = list(NULL, NULL, integer(0), integer(0), NULL, character(0),
+                           integer(0), NULL), sep = "\t", comment.char = "#", 
+               na.strings = character(0))
     keep <- mf[[6]] != "consensus"
     theseLocNames <- mf[[3]][keep]
     theseAlNuc <- mf[[6]][keep]
     theseDepth <- mf[[7]][keep]
     theseAlNames <- paste(theseLocNames, theseAlNuc, sep = "_")
     alleleDepth[i, theseAlNames] <- theseDepth
+    reorder[mf[[4]][1]] <- i
   }
+  alleleDepth <- alleleDepth[reorder,]
   
   # filter loci
   alRemove <- integer(0)
@@ -875,7 +880,7 @@ readStacks1 <- function(allelesFile, matchesFolder,
                what = list(NULL, NULL, integer(0), character(0),
                            integer(0), character(0), NULL, NULL, NULL, NULL,
                            NULL, NULL, NULL, NULL),
-               sep = "\t", comment.char = "#")
+               sep = "\t", comment.char = "#", na.strings = character(0))
     keeprows <- fastmatch::fmatch(uniqueLocNames, tf[[3]])
     locTable <- data.frame(row.names = as.character(uniqueLocNames),
                            Chr = tf[[4]][keeprows],

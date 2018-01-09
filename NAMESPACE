@@ -10,7 +10,7 @@ GetBlankTaxa, GetContamRate, GetDonorParent, GetLikelyGen,
 GetLocDepth, GetLoci, GetRecurrentParent, GetTaxa, 
 GetWeightedMeanGenotypes, IterateHWE, IteratePopStruct,
 MakeTasselVcfFilter, nTaxa, nAlleles, OneAllelePerMarker, 
-PipelineMapping2Parents, RADdata, readHMC, readTagDigger,
+PipelineMapping2Parents, RADdata, readHMC, readStacks1, readTagDigger,
 SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent,
 VCF2RADdata)
 

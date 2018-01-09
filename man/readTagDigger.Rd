@@ -73,7 +73,7 @@ Lindsay V. Clark
 }
 
 \seealso{
-\code{\link{readHMC}}
+\code{\link{readHMC}}, \code{\link{readStacks1}}, \code{\link{VCF2RADdata}}
 }
 \examples{
 # for this example we'll create dummy files
