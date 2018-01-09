@@ -32,6 +32,46 @@ A single ``RADdata'' object contains the entire dataset of read depth and
 locus information, as well as parameters that are estimated during the
 course of analysis.
 
+\section{Summary of available functions}
+
+For any function named in this section, see its help page for more information.
+(For example by typing \texttt{?VCF2RADdata} into the R console.)
+
+Several functions are available for import of read depth data and (optionally)
+alignment information into a RADdata object:
+
+\begin{itemize}
+\item \texttt{VCF2RADdata}
+\item \texttt{readTagDigger}
+\item \texttt{readStacks1}
+\item \texttt{readHMC}
+\end{itemize}
+
+More generally, the \texttt{RADdata} function is used for constructing RADdata
+objects; see the help page for that function for more information on what 
+data are needed.
+
+Several pipelines are available for genotype estimation, depending on how the 
+population is structured (i.e. what the genotype prior probabilities should be.):
+
+\begin{itemize}
+\item \texttt{PipelineMapping2Parents}
+\item \texttt{IterateHWE}
+\item \texttt{IteratePopStruct}
+\end{itemize}
+
+Lastly, for exporting the estimated genotypes to other software:
+
+\begin{itemize}
+\item \texttt{ExportGAPIT}
+\item \texttt{Export\_rrBLUP\_Amat}
+\item \texttt{Export\_rrBLUP\_GWAS}
+\end{itemize}
+
+If you need continuous numerical genotypes exported in some other format, see 
+\texttt{GetWeightedMeanGenotypes}.  Also, \texttt{GetLikelyGen} returns the 
+most likely genotypes for a single sample.
+
 \section{Estimating genotype probabilities in a mapping population}
 
 In this example, we'll import some data from an F1 mapping population

@@ -34,6 +34,10 @@ install.packages("polyRAD_0.x.zip", repos = NULL)
 
 replacing the file name with the one you just downloaded.
 
+## Tutorial
+
+The tutorial document for the package is available [on Github](https://github.com/lvclark/polyRAD/raw/master/vignettes/polyRADtutorial.pdf).
+
 ## Funding
 
 This material is based upon work supported by the National Science Foundation under Grant No. 
