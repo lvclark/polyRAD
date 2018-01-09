@@ -38,6 +38,15 @@ replacing the file name with the one you just downloaded.
 
 The tutorial document for the package is available [on Github](https://github.com/lvclark/polyRAD/raw/master/vignettes/polyRADtutorial.pdf).
 
+## Citation
+
+DOI for version 0.1: [![DOI](https://zenodo.org/badge/99379777.svg)](https://zenodo.org/badge/latestdoi/99379777)
+
+Version 0.1 was also presented in a poster:
+
+Clark LV, Lipka AE, and Sacks EJ (2017) polyRAD: Genotype Calling with Uncertainty from Sequencing Data
+in Polyploids and Diploids.  Plant and Animal Genome Conference XXVI, January 13-17, San Diego, California, USA.
+
 ## Funding
 
 This material is based upon work supported by the National Science Foundation under Grant No. 
