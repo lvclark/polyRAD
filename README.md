@@ -46,6 +46,7 @@ Version 0.1 was also presented in a poster:
 
 Clark LV, Lipka AE, and Sacks EJ (2018) polyRAD: Genotype Calling with Uncertainty from Sequencing Data
 in Polyploids and Diploids.  Plant and Animal Genome Conference XXVI, January 13-17, San Diego, California, USA.
+DOI:[10.13140/RG.2.2.27134.08001](http://dx.doi.org/10.13140/RG.2.2.27134.08001)
 
 ## Funding
 
