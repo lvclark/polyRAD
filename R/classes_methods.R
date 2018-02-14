@@ -61,10 +61,12 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   
   # get number of permutations of order in which each allele could have been sampled from total depth from that locus
   depthSamplingPermutations <- choose(expandedLocDepth, alleleDepth)
+  dimnames(depthSamplingPermutations)[[2]] <- dimnames(alleleDepth)[[2]]
   # for each allele and taxon, get proportion of reads for that locus
   depthRatio <- alleleDepth/expandedLocDepth
   # depth of reads for each locus that do NOT belong to a given allele
   antiAlleleDepth <- expandedLocDepth - alleleDepth
+  dimnames(antiAlleleDepth)[[2]] <- dimnames(alleleDepth)[[2]]
   
   return(structure(list(alleleDepth = alleleDepth, alleles2loc = alleles2loc,
                         locTable = locTable, possiblePloidies = possiblePloidies,
@@ -1061,7 +1063,7 @@ SetContamRate.RADdata <- function(object, value, ...){
   return(object)
 }
 
-# Functions for assigning taxa to specific roles
+# Functions for assigning taxa to specific roles ####
 SetDonorParent <- function(object, value){
   UseMethod("SetDonorParent", object)
 }
@@ -1132,7 +1134,7 @@ GetBlankTaxa.RADdata <- function(object, ...){
   return(bt)
 }
 
-# some basic utilities
+# some basic utilities ####
 
 OneAllelePerMarker <- function(object, ...){
   UseMethod("OneAllelePerMarker", object)
@@ -1166,4 +1168,138 @@ CanDoGetWeightedMeanGeno <- function(object, ...){
 CanDoGetWeightedMeanGeno.RADdata <- function(object, ...){
   return(!is.null(object$posteriorProb) && 
            (!is.null(object$ploidyChiSq) || length(object$posteriorProb) == 1))
+}
+
+SubsetByLocus <- function(object, ...){
+  UseMethod("SubsetByLocus", object)
+}
+SubsetByLocus.RADdata <- function(object, loci, ...){
+  # check and convert loci
+  if(is.character(loci)){
+    loci <- fastmatch::fmatch(loci, rownames(object$locTable))
+    if(any(is.na(loci))) stop("Some loci don't match RADdata object.")
+  } else {
+    if(any(is.na(loci))) stop("No missing data allowed in loci.")
+  }
+  if(!is.numeric(loci)){
+    stop("loci must be a numeric or character vector")
+  }
+  
+  # set up object and transfer attributes (including class)
+  thesealleles <- object$alleles2loc %fin% loci
+  splitRADdata <- list()
+  oldAttributes <- attributes(object)
+  oldAttributes <- oldAttributes[-match("names", names(oldAttributes))]
+  attributes(splitRADdata) <- oldAttributes
+  attr(splitRADdata, "nLoci") <- length(loci)
+  
+  # mandatory slots
+  splitRADdata$alleleDepth <- object$alleleDepth[, thesealleles, drop = FALSE]
+  oldAl2loc <- object$alleles2loc[thesealleles]
+  splitRADdata$alleles2loc <- fastmatch::fmatch(oldAl2loc, loci)
+  splitRADdata$locTable <- object$locTable[loci,, drop = FALSE]
+  splitRADdata$possiblePloidies <- object$possiblePloidies
+  splitRADdata$locDepth <- object$locDepth[, as.character(loci), drop = FALSE]
+  dimnames(splitRADdata$locDepth)[[2]] <- as.character(1:length(loci))
+  splitRADdata$depthSamplingPermutations <- 
+    object$depthSamplingPermutations[, thesealleles, drop = FALSE]
+  splitRADdata$depthRatio <- object$depthRatio[, thesealleles, drop = FALSE]
+  splitRADdata$antiAlleleDepth <- object$antiAlleleDepth[, thesealleles, drop = FALSE]
+  splitRADdata$alleleNucleotides <- object$alleleNucleotides[thesealleles]
+  
+  # additional components that may exist if some processing has already been done
+  if(!is.null(object$alleleFreq)){
+    splitRADdata$alleleFreq <- object$alleleFreq[thesealleles]
+  }
+  if(!is.null(object$genotypeLikelihood)){
+    splitRADdata$genotypeLikelihood <- 
+      lapply(object$genotypeLikelihood, function(x) x[,, thesealleles, drop = FALSE])
+  }
+  if(!is.null(object$priorProb)){
+    if(length(dim(object$priorProb[[1]])) == 3){
+      splitRADdata$priorProb <- 
+        lapply(object$priorProb, function(x) x[,, thesealleles, drop = FALSE])
+    }
+    if(length(dim(object$priorProb[[1]])) == 2){
+      splitRADdata$priorProb <- 
+        lapply(object$priorProb, function(x) x[, thesealleles, drop = FALSE])
+    }
+  }
+  if(!is.null(object$priorProbPloidies)){
+    splitRADdata$priorProbPloidies <- object$priorProbPloidies
+  }
+  if(!is.null(object$ploidyChiSq)){
+    splitRADdata$ploidyChiSq <- object$ploidyChiSq[, thesealleles, drop = FALSE]
+  }
+  if(!is.null(object$ploidyChiSqP)){
+    splitRADdata$ploidyChiSqP <- object$ploidyChiSqP[, thesealleles, drop = FALSE]
+  }
+  if(!is.null(object$posteriorProb)){
+    splitRADdata$posteriorProb <- 
+      lapply(object$posteriorProb, function(x) x[,, thesealleles, drop = FALSE])
+  }
+  if(!is.null(object$alleleFreqByTaxa)){
+    splitRADdata$alleleFreqByTaxa <- object$alleleFreqByTaxa[, thesealleles, drop = FALSE]
+  }
+  if(!is.null(object$PCA)){
+    splitRADdata$PCA <- object$PCA
+  }
+  
+  return(splitRADdata)
+}
+SplitByChromosome <- function(object, ...){
+  UseMethod("SplitByChromosome", object)
+}
+SplitByChromosome.RADdata <- function(object, chromlist = NULL, 
+                                      chromlist.use.regex = FALSE, 
+                                      fileprefix = "splitRADdata", ...){
+  # set up the list of chromosomes if necessary
+  if(is.null(chromlist)){
+    chromlist <- unique(object$locTable$Chr)
+    chromlist.use.regex <- FALSE
+  }
+  ngroups <- length(chromlist)
+  
+  # get vectors of locus numbers to keep for each item in chromlist
+  locgroups <- list()
+  length(locgroups) <- ngroups
+  for(i in 1:ngroups){
+    thesechr <- chromlist[[i]]
+    if(chromlist.use.regex){ 
+      # matching with regular expresions
+      theseindices <- integer(0)
+      for(chr in thesechr){
+        theseindices <- c(theseindices, grep(chr, object$locTable$Chr))
+      }
+      theseindices <- sort(theseindices)
+    } else { 
+      # matching exactly
+      theseindices <- which(object$locTable$Chr %fin% thesechr)
+    }
+    locgroups[[i]] <- theseindices
+    message(paste(length(theseindices), "loci for chromosome(s)", 
+                  paste(thesechr, collapse = " ")))
+  }
+  # check on total number of loci
+  if(sum(sapply(locgroups, length)) > attr(object, "nLoci")){
+    warning("Some loci are in multiple groups.")
+  }
+  
+  # generate file names
+  filenames <- paste(fileprefix, "_", 
+                     sapply(chromlist, function(x) paste(x, collapse = "")),
+                     ".RData", sep = "")
+  
+  # make new RADdata objects and save as .RData files.
+  for(i in 1:ngroups){
+    message(paste("Making new RADdata object for", 
+                  paste(chromlist[[i]], collapse = " "), "..."))
+    # build new object 
+    splitRADdata <- SubsetByLocus(object, locgroups[[i]])
+
+    # save the object to a file
+    save(splitRADdata, file = filenames[i])
+  }
+  
+  return(filenames)
 }
