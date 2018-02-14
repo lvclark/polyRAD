@@ -278,6 +278,26 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         cons <- cons[nm,, drop = FALSE]
       }
     }
+    
+    # if that didn't work, just try looking for alleles with equal depth
+    if(length(nmInd) > 0){
+      # get rid of rows where multiple alleles have same depth
+      keepInd <- apply(depth1T, 1, function(x) length(unique(x)) == length(x)) &
+        apply(depth2T, 1, function(x) length(unique(x)) == length(x))
+      depth1T <- depth1T[keepInd,, drop = FALSE]
+      depth2T <- depth2T[keepInd,, drop = FALSE]
+      # alleles to potentially match
+      als1 <- which(colSums(depth1T) > 0)
+      als2 <- which(colSums(depth2T) > 0)
+      for(al1 in als1){
+        for(al2 in als2){
+          # individuals with equal read depth for these two alleles
+          if(sum(depth1T[, al1] == depth2T[, al2] & depth1T[, al1] > 0) > 0){
+            alMatch <- rbind(alMatch, c(al1, al2))
+          }
+        }
+      }
+    }
 
     return(alMatch)
   }
