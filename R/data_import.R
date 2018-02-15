@@ -511,6 +511,9 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         # match any remaining alleles that don't have "homozygotes"
         alMatch <- findRemainingMatches(lastDepth, thisDepth, alMatch)
         
+        # if matching didn't work, skip adding this SNP
+        if(dim(alMatch)[1] < dim(lastDepth)[2]) next
+        
         # make new set of haplotype sequences
         startPosFromReference <- lastPos + nchar(lastSeq[1])
         endPosFromReference <- thisPos - 1
