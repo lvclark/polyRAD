@@ -881,6 +881,8 @@ AddPCA.RADdata <- function(object, nPcsInit = 50, maxR2changeratio = 0.05,
   
   # replace NaN with NA
   genmat[is.na(genmat)] <- NA
+  # remove non-variable sites
+  genmat <- genmat[, which(colSums(genmat, na.rm = TRUE) > 0)]
   
   # adjust number of PC axes if necessary
   if(nPcsInit > dim(genmat)[2]){
@@ -936,6 +938,7 @@ AddAlleleFreqByTaxa.RADdata <- function(object, minfreq = 0.0001, ...){
       PCcoef[,i] <- lm(genmat[,i] ~ object$PCA)$coefficients
     }
   }
+  PCcoef[is.na(PCcoef)] <- 0 # for non-variable sites
   
   # predict allele frequencies from PC axes
   predAl <- object$PCA %*% PCcoef[-1,] + 
@@ -1195,7 +1198,7 @@ SubsetByTaxon.RADdata <- function(object, taxa, ...){
   
   # mandatory slots
   splitRADdata$alleleDepth <- object$alleleDepth[taxa, , drop = FALSE]
-  splitRADdata$alleles2loc <- object$allele2loc
+  splitRADdata$alleles2loc <- object$alleles2loc
   splitRADdata$locTable <- object$locTable
   splitRADdata$possiblePloidies <- object$possiblePloidies
   splitRADdata$locDepth <- object$locDepth[taxa, , drop = FALSE]
