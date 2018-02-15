@@ -1170,6 +1170,80 @@ CanDoGetWeightedMeanGeno.RADdata <- function(object, ...){
            (!is.null(object$ploidyChiSq) || length(object$posteriorProb) == 1))
 }
 
+SubsetByTaxon <- function(object, ...){
+  UseMethod("SubsetByTaxon", object)
+}
+SubsetByTaxon.RADdata <- function(object, taxa, ...){
+  # check and convert taxa
+  if(is.character(taxa)){
+    taxa <- fastmatch::fmatch(taxa, GetTaxa(object))
+    if(any(is.na(taxa))) stop("Some taxa don't match RADdata object.")
+  } else {
+    if(any(is.na(taxa))) stop("No missing data allowed in taxa.")
+  }
+  if(!is.numeric(taxa)){
+    stop("taxa must be a numeric or character vector")
+  }
+  
+  # set up object and transfer attributes (including class)
+  splitRADdata <- list()
+  oldAttributes <- attributes(object)
+  oldAttributes <- oldAttributes[-match("names", names(oldAttributes))]
+  attributes(splitRADdata) <- oldAttributes
+  attr(splitRADdata, "nTaxa") <- length(taxa)
+  attr(splitRADdata, "taxa") <- GetTaxa(object)[taxa]
+  
+  # mandatory slots
+  splitRADdata$alleleDepth <- object$alleleDepth[taxa, , drop = FALSE]
+  splitRADdata$alleles2loc <- object$allele2loc
+  splitRADdata$locTable <- object$locTable
+  splitRADdata$possiblePloidies <- object$possiblePloidies
+  splitRADdata$locDepth <- object$locDepth[taxa, , drop = FALSE]
+  splitRADdata$depthSamplingPermutations <- 
+    object$depthSamplingPermutations[taxa, , drop = FALSE]
+  splitRADdata$depthRatio <- object$depthRatio[taxa, , drop = FALSE]
+  splitRADdata$antiAlleleDepth <- object$antiAlleleDepth[taxa, , drop = FALSE]
+  splitRADdata$alleleNucleotides <- object$alleleNucleotides
+  
+  # slots that may have been added by other functions
+  if(!is.null(object$alleleFreq)){
+    splitRADdata$alleleFreq <- object$alleleFreq
+  }
+  if(!is.null(object$genotypeLikelihood)){
+    splitRADdata$genotypeLikelihood <- 
+      lapply(object$genotypeLikelihood, function(x) x[, taxa,, drop = FALSE])
+  }
+  if(!is.null(object$priorProb)){
+    if(length(dim(object$priorProb[[1]])) == 3){
+      splitRADdata$priorProb <- 
+        lapply(object$priorProb, function(x) x[, taxa,, drop = FALSE])
+    } else {
+      splitRADdata$priorProb <- object$priorProb
+    }
+  }
+  if(!is.null(object$priorProbPloidies)){
+    splitRADdata$priorProbPloidies <- object$priorProbPloidies
+  }
+  if(!is.null(object$ploidyChiSq)){
+    splitRADdata$ploidyChiSq <- object$ploidyChiSq
+  }
+  if(!is.null(object$ploidyChiSqP)){
+    splitRADdata$ploidyChiSqP <- object$ploidyChiSqP
+  }
+  if(!is.null(object$posteriorProb)){
+    splitRADdata$posteriorProb <- 
+      lapply(object$posteriorProb, function(x) x[, taxa,, drop = FALSE])
+  }
+  if(!is.null(object$alleleFreqByTaxa)){
+    splitRADdata$alleleFreqByTaxa <- object$alleleFreqByTaxa[taxa,, drop = FALSE]
+  }
+  if(!is.null(object$PCA)){
+    splitRADdata$PCA <- object$PCA[taxa,, drop = FALSE]
+  }
+  
+  return(splitRADdata)
+}
+
 SubsetByLocus <- function(object, ...){
   UseMethod("SubsetByLocus", object)
 }

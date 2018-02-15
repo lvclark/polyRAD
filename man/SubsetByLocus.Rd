@@ -87,7 +87,7 @@ Lindsay V. Clark
 }
 
 \seealso{
-\code{\link{VCF2RADdata}}
+\code{\link{VCF2RADdata}}, \code{\link{SubsetByTaxon}}
 }
 
 \examples{
