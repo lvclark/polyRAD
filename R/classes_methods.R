@@ -882,7 +882,8 @@ AddPCA.RADdata <- function(object, nPcsInit = 50, maxR2changeratio = 0.05,
   # replace NaN with NA
   genmat[is.na(genmat)] <- NA
   # remove non-variable sites
-  genmat <- genmat[, which(colSums(genmat, na.rm = TRUE) > 0)]
+  genfreq <- colMeans(genmat, na.rm = TRUE)
+  genmat <- genmat[, which(genfreq > 0 & genfreq < 1)]
   
   # adjust number of PC axes if necessary
   if(nPcsInit > dim(genmat)[2]){
