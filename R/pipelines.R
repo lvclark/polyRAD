@@ -17,7 +17,7 @@ IterateHWE <- function(object, tol = 1e-8, excludeTaxa = GetBlankTaxa(object)){
   object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
   
   while(meanDiff > tol){
-    cat(paste("Starting iteration", nIter), sep = "\n")
+    message(paste("Starting iteration", nIter))
     oldAlFreq <- object$alleleFreq
     object <- AddGenotypePriorProb_HWE(object)
     object <- AddGenotypeLikelihood(object)
@@ -26,7 +26,7 @@ IterateHWE <- function(object, tol = 1e-8, excludeTaxa = GetBlankTaxa(object)){
     object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
     nIter <- nIter + 1
     meanDiff <- mean(abs(oldAlFreq - object$alleleFreq), na.rm = TRUE)
-    cat(paste("Mean difference in allele frequencies of", meanDiff), sep = "\n")
+    message(paste("Mean difference in allele frequencies of", meanDiff))
   }
   
   return(object)
@@ -49,12 +49,13 @@ IteratePopStruct <- function(object, tol = 1e-3,
   meanDiff <- 1 # mean difference between allele frequencies from round to round
                 # (1 is a dummy value for while loop)
   
+  message("Performing initial PCA and allele frequency estimation.")
   object <- AddPCA(object, nPcsInit = nPcsInit)
   object <- AddAlleleFreqByTaxa(object)
   
   while(meanDiff > tol){
-    cat(paste("Starting iteration", nIter), sep = "\n")
-    cat(paste("PCs used:", dim(object$PCA)[2]), sep = "\n")
+    message(paste("Starting iteration", nIter))
+    message(paste("PCs used:", dim(object$PCA)[2]))
     oldAlFreq <- object$alleleFreqByTaxa
     object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePriorProb_ByTaxa(object)
@@ -69,7 +70,7 @@ IteratePopStruct <- function(object, tol = 1e-3,
     object <- AddAlleleFreqByTaxa(object, minfreq = minfreq)
     nIter <- nIter + 1
     meanDiff <- mean(abs(oldAlFreq - object$alleleFreqByTaxa), na.rm = TRUE)
-    cat(paste("Mean difference in allele frequencies of", meanDiff), sep = "\n")
+    message(paste("Mean difference in allele frequencies of", meanDiff))
   }
   
   return(object)
