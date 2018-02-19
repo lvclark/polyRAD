@@ -23,6 +23,7 @@ Currently there are export functions for the following software.  Genotypes are 
 
 * [GAPIT](http://www.zzlab.net/GAPIT/)
 * [rrBLUP](https://cran.r-project.org/web/packages/rrBLUP/)
+* [TASSEL](http://www.maizegenetics.net/tassel)
 
 ## Installation
 

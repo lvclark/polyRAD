@@ -142,3 +142,21 @@ Export_rrBLUP_GWAS <- function(object, naIfZeroReads = FALSE,
                      stringsAsFactors = FALSE)
   return(geno)
 }
+
+Export_TASSEL_Numeric <- function(object, file, naIfZeroReads = FALSE,
+                                  onePloidyPerAllele = FALSE){
+  ## From a RADdata object, export numeric genotypes for TASSEL ##
+  
+  numgen <- GetWeightedMeanGenotypes(object, minval = 0, maxval = 1,
+                                     omit1allelePerLocus = TRUE,
+                                     omitCommonAllele = TRUE,
+                                     naIfZeroReads = naIfZeroReads,
+                                     onePloidyPerAllele = onePloidyPerAllele)
+  # file header
+  cat(c("<Numeric>",
+        paste(c("<Marker>", colnames(numgen)), collapse = "\t")),
+      sep = "\n", file = file)
+  # genotypes table
+  write.table(round(numgen, 3), file = file, row.names = TRUE, col.names = FALSE,
+              append = TRUE, sep = "\t", quote = FALSE)
+}

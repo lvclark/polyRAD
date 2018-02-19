@@ -5,7 +5,8 @@ AddGenotypePriorProb_HWE,
 AddGenotypePriorProb_Mapping2Parents, AddPCA,
 AddPloidyChiSq, AddPloidyLikelihood, AddPriorTimesLikelihood,
 CanDoGetWeightedMeanGeno, ExportGAPIT,
-Export_rrBLUP_Amat, Export_rrBLUP_GWAS, GetAlleleNames,
+Export_rrBLUP_Amat, Export_rrBLUP_GWAS, Export_TASSEL_Numeric,
+GetAlleleNames,
 GetBlankTaxa, GetContamRate, GetDonorParent, GetLikelyGen, 
 GetLocDepth, GetLoci, GetRecurrentParent, GetTaxa, 
 GetWeightedMeanGenotypes, IterateHWE, IteratePopStruct,
@@ -15,7 +16,7 @@ SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent,
 SplitByChromosome, SubsetByLocus, SubsetByTaxon, VCF2RADdata)
 
 importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom")
-importFrom("utils", "read.csv")
+importFrom("utils", "read.csv", "write.table")
 importFrom("fastmatch", "%fin%")
 importFrom("methods", "is")
 
