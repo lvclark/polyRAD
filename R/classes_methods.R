@@ -1381,3 +1381,31 @@ SplitByChromosome.RADdata <- function(object, chromlist = NULL,
   
   return(filenames)
 }
+
+# Function to discard slots that are no longer needed after pipelines have been
+# run.
+StripDown <- function(object, ...){
+  UseMethod("StripDown", object)
+}
+StripDown.RADdata <- function(object, 
+                              remove.slots = c("depthSamplingPermutations",
+                                               "depthRatio", 
+                                               "antiAlleleDepth",
+                                               "genotypeLikelihood",
+                                               "priorProb"),
+                              ...){
+  always.keep <- c("alleles2loc", "alleleNucleotides", "locTable", 
+                   "priorProbPloidies", "possiblePloidies", "ploidyChiSq", 
+                   "posteriorProb")
+  if(any(always.keep %in% remove.slots)){
+    ak <- always.keep[always.keep %in% remove.slots]
+    stop(paste(c("Removal of the following would interfere with data export:", 
+                 ak), 
+               collapse = " "))
+  }
+  
+  for(slot in remove.slots){
+    object[[slot]] <- NULL
+  }
+  return(object)
+}

@@ -13,7 +13,7 @@ GetWeightedMeanGenotypes, IterateHWE, IteratePopStruct,
 MakeTasselVcfFilter, nTaxa, nAlleles, OneAllelePerMarker, 
 PipelineMapping2Parents, RADdata, readHMC, readStacks1, readTagDigger,
 SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent,
-SplitByChromosome, SubsetByLocus, SubsetByTaxon, VCF2RADdata)
+SplitByChromosome, StripDown, SubsetByLocus, SubsetByTaxon, VCF2RADdata)
 
 importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom")
 importFrom("utils", "read.csv", "write.table")
@@ -54,3 +54,4 @@ S3method(SetRecurrentParent, RADdata)
 S3method(SplitByChromosome, RADdata)
 S3method(SubsetByLocus, RADdata)
 S3method(SubsetByTaxon, RADdata)
+S3method(StripDown, RADdata)
