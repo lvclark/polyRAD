@@ -80,6 +80,11 @@ Lindsay V. Clark
 \seealso{
 \code{\link{GetWeightedMeanGenotypes}} for outputting genotypes in a 
 useful format after iteration is completed.
+
+\code{\link{StripDown}} to remove memory-hogging slots that are no longer
+needed after the pipeline has been run.
+
+\code{\link{PipelineMapping2Parents}} for mapping populations.
 }
 \examples{
 # load dataset

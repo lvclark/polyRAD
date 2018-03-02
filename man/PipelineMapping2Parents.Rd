@@ -94,6 +94,9 @@ Lindsay V. Clark
 \seealso{
 \code{\link{GetWeightedMeanGenotypes}} for exporting genotypes from 
 the resulting object.
+
+\code{\link{StripDown}} to remove memory-hogging slots that are no longer
+needed after the pipeline has been run.
 }
 \examples{
 # load data for the example
