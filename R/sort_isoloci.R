@@ -72,3 +72,34 @@ CheckAllelesPerLocus <- function(depth, ploidy, contamRate, freq = NULL,
 #  }
   return(contamlik) # return one likelihood for each ind. with too many alleles
 }
+
+# Function to check whether all individuals would have alleles from all isoloci
+# if a locus were split a certain way.  For individuals missing alleles for
+# some isoloci, returns the likelihood of those alleles being missing due to
+# sampling error.
+
+# Function to cluster alleles into putative isoloci based on sequence similarities.
+# Use negative associations as well?
+ClusterAlleles <- function(depth, nucleotides, nclust){
+  
+  nAl <- length(nucleotides) # number of alleles
+  if(ncol(depth) != nAl){
+    stop("Number of alleles does not match between depth and nucleotides")
+  }
+  # get distances between sequences
+  if(require(Biostrings, quietly = TRUE)){
+    nucdist <- Biostrings::stringDist(nucleotides)
+  } else {
+    nucsplit <- strsplit(nucleotides, "")
+    nucmat <- matrix(0L, nrow = nAl, ncol = nAl)
+    for(i in 1:(nAl-1)){
+      for(j in (i+1):nAl){
+        nucmat[i,j] <- nucmat[j,i] <- sum(nucsplit[[i]] != nucsplit[[j]])
+      }
+    }
+    nucdist <- as.dist(nucmat)
+  }
+  
+  # make clusters based on DNA sequences
+  nucclust <- cutree(hclust(nucdist), k = nclust)
+}
