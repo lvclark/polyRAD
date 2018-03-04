@@ -40,8 +40,9 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   if(contamRate > 0.01){
     warning("contamRate higher than expected.")
   }
-  if(!is.character(alleleNucleotides)){
-    stop("alleleNucleotides must be a character vector.")
+  if(!(is.character(alleleNucleotides) | 
+       "DNAStringSet" %in% class(alleleNucleotides))){
+    stop("alleleNucleotides must be a character vector or DNAStringSet.")
   }
   if(length(alleleNucleotides) != length(alleles2loc)){
     stop("Length of alleleNucleotides must be same as length of alleles2loc.")
@@ -67,6 +68,11 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   # depth of reads for each locus that do NOT belong to a given allele
   antiAlleleDepth <- expandedLocDepth - alleleDepth
   dimnames(antiAlleleDepth)[[2]] <- dimnames(alleleDepth)[[2]]
+  
+  # convert alleleNucleotides to DNAStringSet if Bioconductor installed
+  if(require(Biostrings, quietly = TRUE) && is.character(alleleNucleotides)){
+    alleleNucleotides <- Biostrings::DNAStringSet(alleleNucleotides)
+  }
   
   return(structure(list(alleleDepth = alleleDepth, alleles2loc = alleles2loc,
                         locTable = locTable, possiblePloidies = possiblePloidies,
