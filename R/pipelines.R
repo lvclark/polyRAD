@@ -76,6 +76,98 @@ IteratePopStruct <- function(object, tol = 1e-3,
   return(object)
 }
 
+# Function to run genotype estimation using both population structure and
+# linkage disequilibrium.
+# LDdist is the distance in nucleotides within which to search for alleles in LD.
+# minLDcorr is the minimum correlation coefficient between the residuals of 
+# allelic values after regression on PCA axes, with the values of a nearby 
+# allele, for that allele to be used in genotype prediction.
+IteratePopStructLD <- function(object, tol = 1e-3, 
+                             excludeTaxa = GetBlankTaxa(object),
+                             nPcsInit = 50, minfreq = 0.0001,
+                             LDdist = 1e4, minLDcor = 0.01){
+  if(!"RADdata" %in% class(object)){
+    stop("RADdata object needed.")
+  }
+  if(tol > 1e-2){
+    warning("tol unexpectedly high.")
+  }
+  if(tol < 0){
+    stop("tol must be above zero")
+  }
+  
+  nIter <- 1 # which round of iteration are we on
+  meanDiff <- 1 # mean difference between allele frequencies from round to round
+  # (1 is a dummy value for while loop)
+  
+  # Initialization before testing for LD
+  message("Performing initial PCA and allele frequency estimation.")
+  object <- AddPCA(object, nPcsInit = nPcsInit)
+  object <- AddAlleleFreqByTaxa(object)
+  message("Performing preliminary genotype estimation")
+  object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
+  object <- AddGenotypePriorProb_ByTaxa(object)
+  object <- AddGenotypeLikelihood(object)
+  object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
+  object <- AddGenotypePosteriorProb(object)
+  object <- AddPCA(object, nPcsInit = dim(object$PCA)[2] + 1,
+                   minPcsOut = dim(object$PCA)[2])
+  object <- AddAlleleFreqByTaxa(object, minfreq = minfreq)
+  
+  # Test for LD
+  message("Finding alleles in LD")
+  wmgeno <- GetWeightedMeanGenotypes(object, omit1allelePerLocus = FALSE)
+  object$alleleLinkages <- list() # to hold LD information for each allele
+  length(object$alleleLinkages) <- nAlleles(object)
+  for(L in 1:attr(object, "nLoci")){
+    theseAlleles <- which(object$alleles2loc == L) # alleles for this locus
+    nearbyAlleles <- FindNearbyAlleles(object, L, LDdist) # alleles to test for LD
+    for(a in theseAlleles){
+      # get residuals of allelic values not predicted by population structure
+      thisLM <- lm(wmgeno[,a] ~ object$PCA)
+      thisResid <- residuals(thisLM)
+      # set up vectors to store correlated alleles and correlation stats
+      linkedalleles <- integer(0)
+      correlations <- numeric(0)
+      # see how each nearby allele correlates with residuals
+      for(a2 in nearbyAlleles){
+        thiscor <- cor(wmgeno[,a2], thisResid)
+        if(thiscor >= minLDcor){
+          linkedalleles <- c(linkedalleles, a2)
+          correlations <- c(correlations, thiscor)
+        }
+      }
+      # store linkages for this allele
+      object$alleleLinkages[[a]] <- data.frame(allele = linkedalleles,
+                                        corr = correlations)
+    }
+  }
+  
+  # Iteratively estimate genotypes
+  while(meanDiff > tol){
+    message(paste("Starting iteration", nIter))
+    message(paste("PCs used:", dim(object$PCA)[2]))
+    oldAlFreq <- object$alleleFreqByTaxa
+    object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
+    object <- AddGenotypePriorProb_ByTaxa(object)
+    ## Add a call here to get prior probs with LD
+    object <- AddGenotypeLikelihood(object)
+    object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
+    object <- AddGenotypePosteriorProb(object)
+    object <- AddPCA(object, nPcsInit = dim(object$PCA)[2] + 1,
+                     minPcsOut = dim(object$PCA)[2])
+    # -> reasoning for PC number constraints: 
+    #     tend to get more accuracy with more PCs,
+    #     number of PCs going up and down prevents convergence of algorithm
+    object <- AddAlleleFreqByTaxa(object, minfreq = minfreq)
+    nIter <- nIter + 1
+    meanDiff <- mean(abs(oldAlFreq - object$alleleFreqByTaxa), na.rm = TRUE)
+    message(paste("Mean difference in allele frequencies of", meanDiff))
+  }
+  
+  return(object)
+}
+
 PipelineMapping2Parents <- function(object, donorParent = GetDonorParent(object),
                                     recurrentParent = GetRecurrentParent(object),
                                     n.gen.backcrossing = 0,
