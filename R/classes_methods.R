@@ -1415,3 +1415,38 @@ StripDown.RADdata <- function(object,
   }
   return(object)
 }
+
+# Function to find allele indices for nearby loci.
+# locus can be the number or name of the locus.
+# distance is the distance in basepairs within which to search.
+# allele indices (not locus indices) are returned
+FindNearbyAlleles <- function(object, ...){
+  UseMethod("FindNearbyAlleles", object)
+}
+FindNearbyAlleles.RADdata <- function(object, locus, distance){
+  if(!all(c("Chr", "Pos") %in% names(object$locTable))){
+    stop("Alignment data not present in RADdata object.")
+  }
+  
+  if(is.character(locus)){
+    locus <- fastmatch::fmatch(locus, rownames(object$locTable))
+  }
+  thischr <- object$locTable[locus, "Chr"]
+  thispos <- object$locTable[locus, "Pos"]
+  
+  # numbers for loci on this chromosome
+  chrLocNum <- which(object$locTable$Chr == thischr)
+  # positions on this chromosome
+  chrPos <- object$locTable$Pos[chrLocNum]
+  # numbers for loci near this locus
+  matchingLocNum <- chrLocNum[chrPos >= thispos - distance & chrPos <= thispos + distance]
+  ## (could redo this with GRanges)
+  
+  # remove this locus from matches
+  matchingLocNum <- matchingLocNum[matchingLocNum != locus]
+  
+  # get matching alleles
+  allelesout <- which(object$alleles2loc %fin% matchingLocNum)
+  
+  return(allelesout)
+}
