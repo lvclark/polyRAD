@@ -150,7 +150,7 @@ IteratePopStructLD <- function(object, tol = 1e-3,
     oldAlFreq <- object$alleleFreqByTaxa
     object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePriorProb_ByTaxa(object)
-    ## Add a call here to get prior probs with LD
+    object <- AddGenotypePriorProb_LD(object)
     object <- AddGenotypeLikelihood(object)
     object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePosteriorProb(object)
