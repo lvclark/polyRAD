@@ -1015,7 +1015,7 @@ AddGenotypePriorProb_ByTaxa.RADdata <- function(object, ...){
 AddGenotypePriorProb_LD <- function(object, ...){
   UseMethod("AddGenotypePriorProb_LD", object)
 }
-AddGenotypePriorProb_LD.RADdata <- function(object, ...){
+AddGenotypePriorProb_LD.RADdata <- function(object, mapping = FALSE, ...){
   if(is.null(object$posteriorProb) || is.null(object$alleleLinkages)){
     stop("posteriorProb and alleleLinkages slots needed.")
   }
@@ -1041,6 +1041,27 @@ AddGenotypePriorProb_LD.RADdata <- function(object, ...){
       } else {             # linked alleles exist
         # get posterior probabilities for linked alleles
         thispost <- object$posteriorProb[[pldIndex]][,, atab$allele, drop = FALSE]
+        
+        # in a mapping population, make sure we are considering genotypes that are possible
+        if(mapping){
+          # genotypes possible for this allele
+          possibleThisAllele <- which(object$priorProb[[pldIndex]][,a] > 0)
+          for(a2 in atab$allele){
+            # genotypes possible for this linked allele
+            possibleLinked <- which(object$priorProb[[pldIndex]][,a2] > 0)
+            if(!identical(possibleThisAllele, possibleLinked)){
+              i <- match(a2, atab$allele)
+              if(length(possibleThisAllele) == length(possibleLinked)){
+                # shift over, for example 0 = 1 and 0 = 2
+                thispost[possibleThisAllele,,i] <- thispost[possbleLinked,,i]
+                thispost[-possibleThisAllele,,i] <- 0
+              } else {
+                ## situations like F2-type marker linked to test-cross type marker ##
+              }
+            }
+          }
+        }
+        
         # multiply by correlation coefficient
         thispost <- sweep(thispost, 3, atab$corr, "*")
         # add even priors for the remainder of the coefficient
