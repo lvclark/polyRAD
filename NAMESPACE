@@ -15,7 +15,8 @@ PipelineMapping2Parents, RADdata, readHMC, readStacks1, readTagDigger,
 SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent,
 SplitByChromosome, StripDown, SubsetByLocus, SubsetByTaxon, VCF2RADdata)
 
-importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom")
+importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom",
+           "hclust", "cutree")
 importFrom("utils", "read.csv", "write.table")
 importFrom("fastmatch", "%fin%")
 importFrom("methods", "is")

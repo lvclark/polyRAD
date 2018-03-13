@@ -40,8 +40,9 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   if(contamRate > 0.01){
     warning("contamRate higher than expected.")
   }
-  if(!is.character(alleleNucleotides)){
-    stop("alleleNucleotides must be a character vector.")
+  if(!(is.character(alleleNucleotides) | 
+       "DNAStringSet" %in% class(alleleNucleotides))){
+    stop("alleleNucleotides must be a character vector or DNAStringSet.")
   }
   if(length(alleleNucleotides) != length(alleles2loc)){
     stop("Length of alleleNucleotides must be same as length of alleles2loc.")
@@ -67,6 +68,11 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   # depth of reads for each locus that do NOT belong to a given allele
   antiAlleleDepth <- expandedLocDepth - alleleDepth
   dimnames(antiAlleleDepth)[[2]] <- dimnames(alleleDepth)[[2]]
+  
+  # convert alleleNucleotides to DNAStringSet if Bioconductor installed
+  if(require(Biostrings, quietly = TRUE) && is.character(alleleNucleotides)){
+    alleleNucleotides <- Biostrings::DNAStringSet(alleleNucleotides)
+  }
   
   return(structure(list(alleleDepth = alleleDepth, alleles2loc = alleles2loc,
                         locTable = locTable, possiblePloidies = possiblePloidies,
@@ -1006,6 +1012,75 @@ AddGenotypePriorProb_ByTaxa.RADdata <- function(object, ...){
   return(object)
 }
 
+AddGenotypePriorProb_LD <- function(object, ...){
+  UseMethod("AddGenotypePriorProb_LD", object)
+}
+AddGenotypePriorProb_LD.RADdata <- function(object, mapping = FALSE, ...){
+  if(is.null(object$posteriorProb) || is.null(object$alleleLinkages)){
+    stop("posteriorProb and alleleLinkages slots needed.")
+  }
+  # Set up list of arrays to contain prior probabilities based on linked
+  # loci alone.
+  nPld <- length(object$posteriorProb)
+  object$priorProbLD <- list()
+  length(object$priorProbLD) <- nPld
+  
+  # Loop through the possible ploidies
+  for(pldIndex in 1:nPld){
+    # set up array
+    object$priorProbLD[[pldIndex]] <- 
+      array(dim = dim(object$posteriorProb[[pldIndex]]),
+            dimnames = dimnames(object$posteriorProb[[pldIndex]]))
+    # number of possible genotypes
+    ngen <- dim(object$posteriorProb[[pldIndex]])[1]
+    # Loop through alleles
+    for(a in 1:nAlleles(object)){
+      atab <- object$alleleLinkages[[a]]
+      if(nrow(atab) == 0){ # no linked alleles
+        object$priorProbLD[[pldIndex]][,,a] <- 1/ngen
+      } else {             # linked alleles exist
+        # get posterior probabilities for linked alleles
+        thispost <- object$posteriorProb[[pldIndex]][,, atab$allele, drop = FALSE]
+        
+        # in a mapping population, make sure we are considering genotypes that are possible
+        if(mapping){
+          # genotypes possible for this allele
+          possibleThisAllele <- which(object$priorProb[[pldIndex]][,a] > 0)
+          for(a2 in atab$allele){
+            # genotypes possible for this linked allele
+            possibleLinked <- which(object$priorProb[[pldIndex]][,a2] > 0)
+            if(!identical(possibleThisAllele, possibleLinked)){
+              i <- match(a2, atab$allele)
+              if(length(possibleThisAllele) == length(possibleLinked)){
+                # shift over, for example 0 = 1 and 0 = 2
+                thispost[possibleThisAllele,,i] <- thispost[possbleLinked,,i]
+                thispost[-possibleThisAllele,,i] <- 0
+              } else {
+                ## situations like F2-type marker linked to test-cross type marker ##
+              }
+            }
+          }
+        }
+        
+        # multiply by correlation coefficient
+        thispost <- sweep(thispost, 3, atab$corr, "*")
+        # add even priors for the remainder of the coefficient
+        thispost <- sweep(thispost, 3, (1 - atab$corr)/ngen, "+")
+        # multiply across alleles to get priors
+        if(nrow(atab) == 1){
+          object$priorProbLD[[pldIndex]][,,a] <- thispost[,, 1]
+        } else {
+          thisLDprior <- apply(thispost, c(1, 2), prod)
+          thisLDprior <- sweep(thisLDprior, 2, colSums(thisLDprior), "/")
+          object$priorProbLD[[pldIndex]][,,a] <- thisLDprior
+        }
+      } # end of chunk for if there are linked alleles
+    } # end of loop through alleles
+  } # end of loop through ploidies
+  
+  return(object)
+} # end of AddGenotypePriorProb_LD.RADdata
+
 #### Accessors ####
 GetTaxa <- function(object, ...){
   UseMethod("GetTaxa", object)
@@ -1408,4 +1483,39 @@ StripDown.RADdata <- function(object,
     object[[slot]] <- NULL
   }
   return(object)
+}
+
+# Function to find allele indices for nearby loci.
+# locus can be the number or name of the locus.
+# distance is the distance in basepairs within which to search.
+# allele indices (not locus indices) are returned
+FindNearbyAlleles <- function(object, ...){
+  UseMethod("FindNearbyAlleles", object)
+}
+FindNearbyAlleles.RADdata <- function(object, locus, distance){
+  if(!all(c("Chr", "Pos") %in% names(object$locTable))){
+    stop("Alignment data not present in RADdata object.")
+  }
+  
+  if(is.character(locus)){
+    locus <- fastmatch::fmatch(locus, rownames(object$locTable))
+  }
+  thischr <- object$locTable[locus, "Chr"]
+  thispos <- object$locTable[locus, "Pos"]
+  
+  # numbers for loci on this chromosome
+  chrLocNum <- which(object$locTable$Chr == thischr)
+  # positions on this chromosome
+  chrPos <- object$locTable$Pos[chrLocNum]
+  # numbers for loci near this locus
+  matchingLocNum <- chrLocNum[chrPos >= thispos - distance & chrPos <= thispos + distance]
+  ## (could redo this with GRanges)
+  
+  # remove this locus from matches
+  matchingLocNum <- matchingLocNum[matchingLocNum != locus]
+  
+  # get matching alleles
+  allelesout <- which(object$alleles2loc %fin% matchingLocNum)
+  
+  return(allelesout)
 }

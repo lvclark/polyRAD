@@ -77,6 +77,10 @@
     }
     stopifnot(identical(dim(thispriorarr), dim(object$genotypeLikelihood[[j]])))
     results[[i]] <- thispriorarr * object$genotypeLikelihood[[j]]
+    # factor in LD if present
+    if(!is.null(object$priorProbLD)){
+      results[[i]] <- results[[i]] * object$priorProbLD[[i]]
+    }
   }
   
   return(results)
