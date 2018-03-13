@@ -712,7 +712,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
     # set up alleles2loc
     thisAlleles2loc <- rep(1:thisNloc, times = nAlt + 1)
     # set up locTable
-    thisLocTable <- data.frame(row.names = row.names(vcf),
+    thisLocTable <- data.frame(row.names = make.unique(row.names(vcf)),
                                Chr = as.character(SummarizedExperiment::seqnames(vcf)),
                                Pos = Biostrings::start(vcf),
                                S4Vectors::mcols(vcf)[,extracols],
