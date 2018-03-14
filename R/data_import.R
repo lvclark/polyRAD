@@ -756,12 +756,16 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
     # update locTable to reflect cut loci
     thisLocTable <- thisLocTable[keepLoc,]
     # update locus numbers
-    thisAlleles2loc <- rep(1:sum(keepLoc), times = table(thisAlleles2loc))
     thisNloc <- sum(keepLoc)
+    if(thisNloc > 0){
+      thisAlleles2loc <- rep(1:thisNloc, times = table(thisAlleles2loc))
+    } else {
+      thisAlleles2loc <- integer(0)
+    }
     thisNallele <- length(thisAlleles2loc)
     
     # group SNPs into tags
-    if(phaseSNPs){
+    if(phaseSNPs && thisNloc > 0){
       # add the last marker to the current set if appropriate
       # (i.e. if the break between file chunks may have been within a tag)
       if(currLoc > 0 && thisLocTable$Chr[1] == locTable$Chr[currLoc] &&
@@ -791,17 +795,19 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
       thisNallele <- length(thisAlleles2loc)
     }
     
-    # add data from this chunk to objects for whole dataset
-    thisAlCol <- (1:thisNallele) + currAl
-    alleleDepth[,thisAlCol] <- thisAlDepth
-    dimnames(alleleDepth)[[2]][thisAlCol] <- dimnames(thisAlDepth)[[2]]
-    alleles2loc[thisAlCol] <- thisAlleles2loc + currLoc
-    alleleNucleotides[thisAlCol] <- thisAlleleNucleotides
-    locTable[(1:thisNloc) + currLoc, ] <- thisLocTable
-    row.names(locTable)[(1:thisNloc) + currLoc] <- row.names(thisLocTable)
-    # update position in the output
-    currAl <- currAl + thisNallele
-    currLoc <- currLoc + thisNloc
+    if(thisNloc > 0){
+      # add data from this chunk to objects for whole dataset
+      thisAlCol <- (1:thisNallele) + currAl
+      alleleDepth[,thisAlCol] <- thisAlDepth
+      dimnames(alleleDepth)[[2]][thisAlCol] <- dimnames(thisAlDepth)[[2]]
+      alleles2loc[thisAlCol] <- thisAlleles2loc + currLoc
+      alleleNucleotides[thisAlCol] <- thisAlleleNucleotides
+      locTable[(1:thisNloc) + currLoc, ] <- thisLocTable
+      row.names(locTable)[(1:thisNloc) + currLoc] <- row.names(thisLocTable)
+      # update position in the output
+      currAl <- currAl + thisNallele
+      currLoc <- currLoc + thisNloc
+    }
     
     # don't loop if we are using "which" in svparam
     if(is.na(yieldSize)) break
