@@ -106,6 +106,10 @@ increases the amount of RAM used by the function.
 This function requires the BioConductor package \pkg{VariantAnnotation}.
 See \url{https://bioconductor.org/packages/release/bioc/html/VariantAnnotation.html}
 for installation instructions.
+
+If you anticipate running \code{VCF2RADdata} on the same file more than once,
+it is recommended to run \code{bgzip} and \code{indexTabix} from the package
+\pkg{Rsamtools} once before running \code{VCF2RADdata}.  See examples.
 }
 \value{
 A \code{\link{RADdata}} object.
@@ -129,14 +133,21 @@ Other data import functions:  \code{\link{readStacks1}}, \code{\link{readHMC}},
 \code{\link{readTagDigger}}
 }
 \examples{
+require(VariantAnnotation)
+
 # get the example VCF installed with polyRAD
 exampleVCF <- system.file("extdata", "Msi01genes.vcf", package = "polyRAD")
+
+\dontrun{
+# Compress and index the VCF before reading
+vcfBG <- bgzip(exampleVCF)
+indexTabix(vcfBG, "vcf")
+}
 
 # Read into RADdata object
 myRAD <- VCF2RADdata(exampleVCF, expectedLoci = 100, expectedAlleles = 500)
 
 # Example of subsetting by genomic region (first 200 kb on Chr01)
-require(VariantAnnotation)
 mysv <- ScanVcfParam(fixed = "ALT", info = NA, geno = "AD",
                      samples = samples(scanVcfHeader(exampleVCF)),
                      which = GRanges("01", IRanges(1, 200000)))
