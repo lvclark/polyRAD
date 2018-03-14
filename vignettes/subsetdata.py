@@ -6,11 +6,10 @@ outPrefix = "HapMapMsiSubset1"
 
 with open(filePrefix + ".fas.txt", mode = 'rt') as incon:
     with open(outPrefix + ".fas.txt", mode = 'wt') as outcon:
-        for i in range(nMarker * 2):
+        for i in range(nMarker * 4):
             outcon.write(incon.readline())
 
 with open(filePrefix + ".hmc.txt", mode = 'rt') as incon:
     with open(outPrefix + ".hmc.txt", mode = 'wt') as outcon:
         for i in range(nMarker + 1):
             outcon.write(incon.readline())
-            
