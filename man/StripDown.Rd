@@ -6,7 +6,7 @@ Remove Unneeded Slots to Conserve Memory
 }
 \description{
 This function is designed to be used after a \code{\link{RADdata}} object
-has been processed by one of the \link[dest=IterateHWE]{pipeline} functions.  
+has been processed by one of the \link[=IterateHWE]{pipeline} functions.  
 Slots that are no longer needed are removed in order to conserve memory.
 }
 \usage{

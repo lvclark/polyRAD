@@ -70,7 +70,7 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   dimnames(antiAlleleDepth)[[2]] <- dimnames(alleleDepth)[[2]]
   
   # convert alleleNucleotides to DNAStringSet if Bioconductor installed
-  if(require(Biostrings, quietly = TRUE) && is.character(alleleNucleotides)){
+  if(requireNamespace("Biostrings", quietly = TRUE) && is.character(alleleNucleotides)){
     alleleNucleotides <- Biostrings::DNAStringSet(alleleNucleotides)
   }
   
@@ -1053,7 +1053,7 @@ AddGenotypePriorProb_LD.RADdata <- function(object, mapping = FALSE, ...){
               i <- match(a2, atab$allele)
               if(length(possibleThisAllele) == length(possibleLinked)){
                 # shift over, for example 0 = 1 and 0 = 2
-                thispost[possibleThisAllele,,i] <- thispost[possbleLinked,,i]
+                thispost[possibleThisAllele,,i] <- thispost[possibleLinked,,i]
                 thispost[-possibleThisAllele,,i] <- 0
               } else {
                 ## situations like F2-type marker linked to test-cross type marker ##

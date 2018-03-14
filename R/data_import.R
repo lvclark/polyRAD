@@ -515,7 +515,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         if(dim(alMatch)[1] < dim(lastDepth)[2]) next
         
         # make new set of haplotype sequences
-        startPosFromReference <- lastPos + nchar(lastSeq[1])
+        startPosFromReference <- lastPos + SummarizedExperiment::width(lastSeq[1])
         endPosFromReference <- thisPos - 1
         if(endPosFromReference >= startPosFromReference &&
            !is.null(refgenome) && length(thisFAchr) == 1){
@@ -698,7 +698,8 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
     # reference alleles
     thisRef <- VariantAnnotation::ref(vcf)
     # alternative alleles; clean out ones w/o alt allele
-    thisAltList <- Biostrings::DNAStringSetList(lapply(alt(vcf), function(x) x[width(x) > 0])) 
+    thisAltList <- Biostrings::DNAStringSetList(lapply(VariantAnnotation::alt(vcf), 
+                                                       function(x) x[BiocGenerics::width(x) > 0])) 
     nAlt <- sapply(thisAltList, length) # n alt alleles per locus
     thisNallele <- thisNloc + sum(nAlt) # n alleles in this chunk
     thisAlt <- unlist(thisAltList)
