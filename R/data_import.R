@@ -748,9 +748,11 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
       iAl <- iAl + nAlt[i] + 1L # update last allele index
     }
     # remove cut alleles from allele objects
-    thisAlleleNucleotides <- thisAlleleNucleotides[-remAl]
-    thisAlDepth <- thisAlDepth[, -remAl]
-    thisAlleles2loc <- thisAlleles2loc[-remAl]
+    if(length(remAl) > 0){
+      thisAlleleNucleotides <- thisAlleleNucleotides[-remAl]
+      thisAlDepth <- thisAlDepth[, -remAl]
+      thisAlleles2loc <- thisAlleles2loc[-remAl]
+    }
     # update locTable to reflect cut loci
     thisLocTable <- thisLocTable[keepLoc,]
     # update locus numbers
