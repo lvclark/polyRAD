@@ -725,6 +725,8 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
                                           paste(row.names(vcf)[thisAlleles2loc],
                                                 thisAlleleNucleotides, sep = "_")),
                           byrow = TRUE)
+    # replace NA with zero
+    thisAlDepth[is.na(thisAlDepth)] <- 0L
     # how many individuals have each allele
     indperal <- colSums(thisAlDepth > 0)
     # loop to filter markers
