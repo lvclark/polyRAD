@@ -179,7 +179,13 @@ PipelineMapping2Parents <- function(object, donorParent = GetDonorParent(object)
                                     freqAllowedDeviation = 0.05,
                                     freqExcludeTaxa = c(GetDonorParent(object),
                                                     GetRecurrentParent(object),
-                                                    GetBlankTaxa(object))){
+                                                    GetBlankTaxa(object)),
+                                    useLinkage = TRUE, linkageDist = 1e7,
+                                    minLinkageCorr = 0.5){
+  if(useLinkage && (is.null(object$locTable$Chr) ||
+                    is.null(object$locTable$Pos))){
+    stop("Set useLinkage = FALSE if alignment data unavailable.")
+  }
   # estimate possible allele frequencies
   allelesin <- max(sapply(donorParentPloidies, sum)) + 
     max(sapply(recurrentParentPloidies, sum))
@@ -201,5 +207,39 @@ PipelineMapping2Parents <- function(object, donorParent = GetDonorParent(object)
   object <- AddPloidyChiSq(object, excludeTaxa = freqExcludeTaxa)
   object <- AddGenotypePosteriorProb(object)
   
+  # add in linkage data if available
+  if(useLinkage){
+    # find linkages
+    wmgeno <- GetWeightedMeanGenotypes(object, omit1allelePerLocus = FALSE)
+    wmgeno <- wmgeno[!rownames(wmgeno) %in% freqExcludeTaxa, ]
+    object$alleleLinkages <- list()
+    length(object$alleleLinkages) <- nAlleles(object)
+    for(L in 1:attr(object, "nLoci")){
+      theseAlleles <- which(object$alleles2loc == L) # alleles for this locus
+      nearbyAlleles <- FindNearbyAlleles(object, L, linkageDist)
+      for(a in theseAlleles){
+        # empty vectors to store alleles that are linked, and correlations
+        linkedalleles <- integer(0)
+        correlations <- numeric(0)
+        # loop through nearby alleles to see if linked
+        for(a2 in nearbyAlleles){
+          if(all(is.na(wmgeno[,a])) || sd(wmgeno[,a]) == 0) break
+          if(all(is.na(wmgeno[,a2])) || sd(wmgeno[,a2]) == 0) next
+          thiscor <- cor(wmgeno[,a2], wmgeno[,a])
+          if(thiscor >= minLinkageCorr){
+            linkedalleles <- c(linkedalleles, a2)
+            correlations <- c(correlations, thiscor)
+          }
+        }
+        object$alleleLinkages[[a]] <- data.frame(allele = linkedalleles,
+                                                 corr = correlations)
+      }
+    } # end loop through loci to find linked alleles at other loci
+    
+    # update genotype probabilities
+    object <- AddGenotypePriorProb_LD(object, mapping = TRUE)
+    object <- AddGenotypePosteriorProb(object)
+  } # end IF statement for using linked alleles
+  
   return(object)
-}
+} # end PipelineMapping2Parents
