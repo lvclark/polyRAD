@@ -85,7 +85,7 @@ IteratePopStruct <- function(object, tol = 1e-3,
 IteratePopStructLD <- function(object, tol = 1e-3, 
                              excludeTaxa = GetBlankTaxa(object),
                              nPcsInit = 50, minfreq = 0.0001,
-                             LDdist = 1e4, minLDcor = 0.01){
+                             LDdist = 1e4, minLDcorr = 0.01){
   if(!"RADdata" %in% class(object)){
     stop("RADdata object needed.")
   }
@@ -116,32 +116,9 @@ IteratePopStructLD <- function(object, tol = 1e-3,
   
   # Test for LD
   message("Finding alleles in LD")
-  wmgeno <- GetWeightedMeanGenotypes(object, omit1allelePerLocus = FALSE)
-  object$alleleLinkages <- list() # to hold LD information for each allele
-  length(object$alleleLinkages) <- nAlleles(object)
-  for(L in 1:attr(object, "nLoci")){
-    theseAlleles <- which(object$alleles2loc == L) # alleles for this locus
-    nearbyAlleles <- FindNearbyAlleles(object, L, LDdist) # alleles to test for LD
-    for(a in theseAlleles){
-      # get residuals of allelic values not predicted by population structure
-      thisLM <- lm(wmgeno[,a] ~ object$PCA)
-      thisResid <- residuals(thisLM)
-      # set up vectors to store correlated alleles and correlation stats
-      linkedalleles <- integer(0)
-      correlations <- numeric(0)
-      # see how each nearby allele correlates with residuals
-      for(a2 in nearbyAlleles){
-        thiscor <- cor(wmgeno[,a2], thisResid)
-        if(thiscor >= minLDcor){
-          linkedalleles <- c(linkedalleles, a2)
-          correlations <- c(correlations, thiscor)
-        }
-      }
-      # store linkages for this allele
-      object$alleleLinkages[[a]] <- data.frame(allele = linkedalleles,
-                                        corr = correlations)
-    }
-  }
+  object <- AddAlleleLinkages(object, type = "popstruct",
+                              linkageDist = LDdist, minCorr = minLDcor,
+                              excludeTaxa = GetBlankTaxa(object))
   
   # Iteratively estimate genotypes
   while(meanDiff > tol){
@@ -150,7 +127,7 @@ IteratePopStructLD <- function(object, tol = 1e-3,
     oldAlFreq <- object$alleleFreqByTaxa
     object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePriorProb_ByTaxa(object)
-    object <- AddGenotypePriorProb_LD(object)
+    object <- AddGenotypePriorProb_LD(object, type = "popstruct")
     object <- AddGenotypeLikelihood(object)
     object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePosteriorProb(object)
@@ -210,34 +187,12 @@ PipelineMapping2Parents <- function(object, donorParent = GetDonorParent(object)
   # add in linkage data if available
   if(useLinkage){
     # find linkages
-    wmgeno <- GetWeightedMeanGenotypes(object, omit1allelePerLocus = FALSE)
-    wmgeno <- wmgeno[!rownames(wmgeno) %in% freqExcludeTaxa, ]
-    object$alleleLinkages <- list()
-    length(object$alleleLinkages) <- nAlleles(object)
-    for(L in 1:attr(object, "nLoci")){
-      theseAlleles <- which(object$alleles2loc == L) # alleles for this locus
-      nearbyAlleles <- FindNearbyAlleles(object, L, linkageDist)
-      for(a in theseAlleles){
-        # empty vectors to store alleles that are linked, and correlations
-        linkedalleles <- integer(0)
-        correlations <- numeric(0)
-        # loop through nearby alleles to see if linked
-        for(a2 in nearbyAlleles){
-          if(all(is.na(wmgeno[,a])) || sd(wmgeno[,a]) == 0) break
-          if(all(is.na(wmgeno[,a2])) || sd(wmgeno[,a2]) == 0) next
-          thiscor <- cor(wmgeno[,a2], wmgeno[,a])
-          if(thiscor >= minLinkageCorr){
-            linkedalleles <- c(linkedalleles, a2)
-            correlations <- c(correlations, thiscor)
-          }
-        }
-        object$alleleLinkages[[a]] <- data.frame(allele = linkedalleles,
-                                                 corr = correlations)
-      }
-    } # end loop through loci to find linked alleles at other loci
-    
+    object <- AddAlleleLinkages(object, type = "mapping", 
+                                linkageDist = linkageDist, 
+                                minCorr = minLinkageCorr,
+                                excludeTaxa = freqExcludeTaxa)
     # update genotype probabilities
-    object <- AddGenotypePriorProb_LD(object, mapping = TRUE)
+    object <- AddGenotypePriorProb_LD(object, type = "mapping")
     object <- AddGenotypePosteriorProb(object)
   } # end IF statement for using linked alleles
   

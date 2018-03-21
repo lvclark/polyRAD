@@ -1,7 +1,7 @@
 export(AddAlleleFreqByTaxa, AddAlleleFreqHWE, AddAlleleFreqMapping,
-       AddGenotypeLikelihood,  
+       AddAlleleLinkages, AddGenotypeLikelihood,  
 AddGenotypePosteriorProb,  AddGenotypePriorProb_ByTaxa,
-AddGenotypePriorProb_HWE,
+AddGenotypePriorProb_HWE, AddGenotypePriorProb_LD,
 AddGenotypePriorProb_Mapping2Parents, AddPCA,
 AddPloidyChiSq, AddPloidyLikelihood, AddPriorTimesLikelihood,
 CanDoGetWeightedMeanGeno, ExportGAPIT,
@@ -25,10 +25,12 @@ S3method(print, RADdata)
 S3method(AddAlleleFreqByTaxa, RADdata)
 S3method(AddAlleleFreqHWE, RADdata)
 S3method(AddAlleleFreqMapping, RADdata)
+S3method(AddAlleleLinkages, RADdata)
 S3method(AddGenotypeLikelihood, RADdata)
 S3method(AddGenotypePosteriorProb, RADdata)
 S3method(AddGenotypePriorProb_ByTaxa, RADdata)
 S3method(AddGenotypePriorProb_HWE, RADdata)
+S3method(AddGenotypePriorProb_LD, RADdata)
 S3method(AddGenotypePriorProb_Mapping2Parents, RADdata)
 S3method(AddPCA, RADdata)
 S3method(AddPloidyChiSq, RADdata)

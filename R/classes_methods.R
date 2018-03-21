@@ -1015,9 +1015,12 @@ AddGenotypePriorProb_ByTaxa.RADdata <- function(object, ...){
 AddGenotypePriorProb_LD <- function(object, ...){
   UseMethod("AddGenotypePriorProb_LD", object)
 }
-AddGenotypePriorProb_LD.RADdata <- function(object, mapping = FALSE, ...){
+AddGenotypePriorProb_LD.RADdata <- function(object, type, ...){
   if(is.null(object$posteriorProb) || is.null(object$alleleLinkages)){
     stop("posteriorProb and alleleLinkages slots needed.")
+  }
+  if(!type %in% c("mapping", "hwe", "popstruct")){
+    stop("type must be 'mapping', 'hwe', or 'popstruct'.")
   }
   # Set up list of arrays to contain prior probabilities based on linked
   # loci alone.
@@ -1043,7 +1046,7 @@ AddGenotypePriorProb_LD.RADdata <- function(object, mapping = FALSE, ...){
         thispost <- object$posteriorProb[[pldIndex]][,, atab$allele, drop = FALSE]
         
         # in a mapping population, make sure we are considering genotypes that are possible
-        if(mapping){
+        if(type == "mapping"){
           # genotypes possible for this allele
           possibleThisAllele <- which(object$priorProb[[pldIndex]][,a] > 0)
           for(a2 in atab$allele){
@@ -1080,6 +1083,63 @@ AddGenotypePriorProb_LD.RADdata <- function(object, mapping = FALSE, ...){
   
   return(object)
 } # end of AddGenotypePriorProb_LD.RADdata
+
+AddAlleleLinkages <- function(object, ...){
+  UseMethod("AddAlleleLinkages", object)
+}
+AddAlleleLinkages.RADdata <- function(object, type, linkageDist, minCorr,
+                                      excludeTaxa = character(0), ...){
+  if(!type %in% c("mapping", "hwe", "popstruct")){
+    stop("type must be 'mapping', 'hwe', or 'popstruct'.")
+  }
+  # get weighted mean genotypes for doing correlations
+  wmgeno <- GetWeightedMeanGenotypes(object, omit1allelePerLocus = FALSE)
+  wmgeno <- wmgeno[!rownames(wmgeno) %in% excludeTaxa, ]
+  # set up new slot in RADdata object
+  object$alleleLinkages <- list()
+  length(object$alleleLinkages) <- nAlleles(object)
+  # set up PCA values if they will be used
+  if(type == "popstruct"){
+    if(is.null(object$PCA)) stop("Run AddPCA first.")
+    PCA <- object$PCA[!rownames(object$PCA) %in% excludeTaxa, , drop = FALSE]
+  }
+  
+  # loop through loci
+  for(L in 1:nLoci(object)){
+    theseAlleles <- which(object$alleles2loc == L) # alleles for this locus
+    nearbyAlleles <- FindNearbyAlleles(object, L, linkageDist)
+    
+    for(a in theseAlleles){
+      # empty vectors to store alleles that are linked, and correlations
+      linkedalleles <- integer(0)
+      correlations <- numeric(0)
+      # get weighted mean genotype values for this allele
+      thisGenVal <- wmgeno[,a]
+      if(type == "popstruct"){
+        # get residuals after population structure accounted for
+        thislm <- lm(thisGenVal ~ PCA)
+        thisGenVal <- residuals(thislm)
+      }
+      
+      # see how each allele correlates with residuals
+      for(a2 in nearbyAlleles){
+        if(all(is.na(thisGenVal)) || sd(thisGenVal) == 0) break
+        if(all(is.na(wmgeno[,a2])) || sd(wmgeno[,a2]) == 0) next
+        thiscor <- cor(wmgeno[,a2], thisGenVal)
+        if(thiscor >= minCorr){
+          linkedalleles <- c(linkedalleles, a2)
+          correlations <- c(correlations, thiscor)
+        }
+      }
+      
+      # store linkages for this allele
+      object$alleleLinkages[[a]] <- data.frame(allele = linkedalleles,
+                                               corr = correlations)
+    } # end of loop through alleles for one locus
+  } # end of loop through loci
+  
+  return(object)
+} # end of AddAlleleLinkages function
 
 #### Accessors ####
 GetTaxa <- function(object, ...){
