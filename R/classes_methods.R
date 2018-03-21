@@ -1100,6 +1100,12 @@ GetLoci <- function(object, ...){
 GetLoci.RADdata <- function(object, ...){
   return(row.names(object$locTable))
 }
+nLoci <- function(object, ...){
+  UseMethod("nLoci", object)
+}
+nLoci.RADdata <- function(object, ...){
+  return(attr(object, "nLoci"))
+}
 nAlleles <- function(object, ...){
   UseMethod("nAlleles", object)
 }

@@ -5,6 +5,7 @@
 \alias{GetContamRate}
 \alias{SetContamRate}
 \alias{nTaxa}
+\alias{nLoci}
 \alias{nAlleles}
 \alias{GetAlleleNames}
 \title{
@@ -23,6 +24,7 @@ GetLocDepth(object, ...)
 GetContamRate(object, ...)
 SetContamRate(object, value, ...)
 nTaxa(object, ...)
+nLoci(object, ...)
 nAlleles(object, ...)
 GetAlleleNames(object, ...)
 }
@@ -45,7 +47,8 @@ taxa in rows and loci in columns, giving the total read depth for each taxon
 and locus.  For \code{GetContamRate}, a number indicating the expected 
 contamination rate that is stored in the object.  For \code{SetContamRate}, a
 \code{"RADdata"} object with an updated contamination rate.
-For \code{nTaxa}, the number of taxa in the object.  For \code{nAlleles}, the
+For \code{nTaxa}, the number of taxa in the object.  For \code{nLoci}, the 
+number of loci in the object.  For \code{nAlleles}, the
 number of alleles across all loci in the object.  For \code{GetAlleleNames},
 the names of all alleles.
 }
