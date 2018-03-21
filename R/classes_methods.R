@@ -87,7 +87,7 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
 # print method for RADdata (just some summary statistics) ####
 print.RADdata <- function(x, ...){
   cat("## RADdata object ##", 
-      paste(nTaxa(x), "taxa and", attr(x, "nLoci"), "loci"),
+      paste(nTaxa(x), "taxa and", nLoci(x), "loci"),
       paste(sum(x$locDepth), "total reads"), 
       paste("Assumed sample cross-contamination rate of", 
             attr(x, "contamRate")),
@@ -1500,7 +1500,7 @@ SplitByChromosome.RADdata <- function(object, chromlist = NULL,
                   paste(thesechr, collapse = " ")))
   }
   # check on total number of loci
-  if(sum(sapply(locgroups, length)) > attr(object, "nLoci")){
+  if(sum(sapply(locgroups, length)) > nLoci(object)){
     warning("Some loci are in multiple groups.")
   }
   
