@@ -135,7 +135,8 @@ mydata <- PipelineMapping2Parents(mydata,
                                                      "IGR-2011-001",
                                                      "p196-150A-c", 
                                                      "p877-348-b"),
-                                  freqAllowedDeviation = 0.06)
+                                  freqAllowedDeviation = 0.06,
+                                  useLinkage = FALSE)
 @
 
 We can examine the allele frequencies.
