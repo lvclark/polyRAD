@@ -66,8 +66,8 @@ number for a given allele in a given taxon, and \eqn{prior_{cit}} is the
 prior probability for a given allele copy number for a given allele in a given
 taxon based on linkage alone:
 
-\deqn{prior_{cit} = \frac{\prod_{j = 1}^J{post_{cjt} * r_{ij} + (1 - r_{ij})/(K + 1)}}{\sum_{c = 0}0^K{\prod_{j = 1}^J{post_{cjt} * r_{ij} + (1 - r_{ij})/(K + 1)}}}}{
-prior_{cit} = (\prod_{j = 1}^J{post_{cjt} * r_{ij} + (1 - r_{ij})/(K + 1)})/(\sum_{c = 0}0^K{\prod_{j = 1}^J{post_{cjt} * r_{ij} + (1 - r_{ij})/(K + 1)}})}
+\deqn{prior_{cit} = \frac{\prod_{j = 1}^J{post_{cjt} * r_{ij} + (1 - r_{ij})/(K + 1)}}{\sum_{c = 0}^K{\prod_{j = 1}^J{post_{cjt} * r_{ij} + (1 - r_{ij})/(K + 1)}}}}{
+prior_{cit} = (\prod_{j = 1}^J{post_{cjt} * r_{ij} + (1 - r_{ij})/(K + 1)})/(\sum_{c = 0}^K{\prod_{j = 1}^J{post_{cjt} * r_{ij} + (1 - r_{ij})/(K + 1)}})}
 
 }
 
