@@ -69,6 +69,12 @@ taxon based on linkage alone:
 \deqn{prior_{cit} = \frac{\prod_{j = 1}^J{post_{cjt} * r_{ij} + (1 - r_{ij})/(K + 1)}}{\sum_{c = 0}^K{\prod_{j = 1}^J{post_{cjt} * r_{ij} + (1 - r_{ij})/(K + 1)}}}}{
 prior_{cit} = (\prod_{j = 1}^J{post_{cjt} * r_{ij} + (1 - r_{ij})/(K + 1)})/(\sum_{c = 0}^K{\prod_{j = 1}^J{post_{cjt} * r_{ij} + (1 - r_{ij})/(K + 1)}})}
 
+For mapping populations, \code{AddGenotypePriorProb_LD} instead estimates 
+prior probabilities as fitted values when the posterior probabilities for
+a given allele are regressed on the posterior probabilities for a linked allele.
+This allows loci with different segregation patterns to be informative for
+predicting genotypes.
+
 }
 
 \value{

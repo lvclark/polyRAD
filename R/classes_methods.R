@@ -1049,26 +1049,31 @@ AddGenotypePriorProb_LD.RADdata <- function(object, type, ...){
         if(type == "mapping"){
           # genotypes possible for this allele
           possibleThisAllele <- which(object$priorProb[[pldIndex]][,a] > 0)
+          # array to hold new probabilities for getting priors
+          newpost <- array(0, dim = dim(thispost))
           for(a2 in atab$allele){
             # genotypes possible for this linked allele
             possibleLinked <- which(object$priorProb[[pldIndex]][,a2] > 0)
-            if(!identical(possibleThisAllele, possibleLinked)){
-              i <- match(a2, atab$allele)
-              if(length(possibleThisAllele) == length(possibleLinked)){
-                # shift over, for example 0 = 1 and 0 = 2
-                thispost[possibleThisAllele,,i] <- thispost[possibleLinked,,i]
-                thispost[-possibleThisAllele,,i] <- 0
-              } else {
-                ## situations like F2-type marker linked to test-cross type marker ##
-              }
+            i <- match(a2, atab$allele)
+            # regress posterior probs for each allele copy number on all posterior probs
+            for(j in possibleThisAllele){
+              thisX <- thispost[possibleLinked[-1],,i]
+              if(!is.vector(thisX)) thisX <- t(thisX) 
+              thislm <- lm(object$posteriorProb[[pldIndex]][j,,a] ~ 
+                             thisX)
+              newpost[j,,i] <- thislm$fitted.values
             }
           }
+          newpost[newpost < 0] <- 0
+          newpost[newpost > 1] <- 1
+          thispost <- newpost
+        } else { # for hwe or pop structure situations
+          # multiply by correlation coefficient
+          thispost <- sweep(thispost, 3, atab$corr, "*")
+          # add even priors for the remainder of the coefficient
+          thispost <- sweep(thispost, 3, (1 - atab$corr)/ngen, "+")
         }
         
-        # multiply by correlation coefficient
-        thispost <- sweep(thispost, 3, atab$corr, "*")
-        # add even priors for the remainder of the coefficient
-        thispost <- sweep(thispost, 3, (1 - atab$corr)/ngen, "+")
         # multiply across alleles to get priors
         if(nrow(atab) == 1){
           object$priorProbLD[[pldIndex]][,,a] <- thispost[,, 1]
