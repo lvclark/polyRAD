@@ -145,8 +145,7 @@ IteratePopStructLD <- function(object, tol = 1e-3,
   return(object)
 }
 
-PipelineMapping2Parents <- function(object, donorParent = GetDonorParent(object),
-                                    recurrentParent = GetRecurrentParent(object),
+PipelineMapping2Parents <- function(object,
                                     n.gen.backcrossing = 0,
                                     n.gen.intermating = 0,
                                     n.gen.selfing = 0, 
@@ -163,6 +162,8 @@ PipelineMapping2Parents <- function(object, donorParent = GetDonorParent(object)
                     is.null(object$locTable$Pos))){
     stop("Set useLinkage = FALSE if alignment data unavailable.")
   }
+  donorParent <- GetDonorParent(object)
+  recurrentParent <- GetRecurrentParent(object)
   # estimate possible allele frequencies
   allelesin <- max(sapply(donorParentPloidies, sum)) + 
     max(sapply(recurrentParentPloidies, sum))

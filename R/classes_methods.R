@@ -1027,6 +1027,11 @@ AddGenotypePriorProb_LD.RADdata <- function(object, type, ...){
   nPld <- length(object$posteriorProb)
   object$priorProbLD <- list()
   length(object$priorProbLD) <- nPld
+  # Find parents, to exclude from correlations in mapping populations
+  if(type == "mapping"){
+    parents <- c(GetDonorParent(object), GetRecurrentParent(object))
+    progeny <- which(!GetTaxa(object) %in% parents)
+  }
   
   # Loop through the possible ploidies
   for(pldIndex in 1:nPld){
@@ -1057,11 +1062,11 @@ AddGenotypePriorProb_LD.RADdata <- function(object, type, ...){
             i <- match(a2, atab$allele)
             # regress posterior probs for each allele copy number on all posterior probs
             for(j in possibleThisAllele){
-              thisX <- thispost[possibleLinked[-1],,i]
+              thisX <- thispost[possibleLinked[-1],, i]
               if(!is.vector(thisX)) thisX <- t(thisX) 
               thislm <- lm(object$posteriorProb[[pldIndex]][j,,a] ~ 
-                             thisX)
-              newpost[j,,i] <- thislm$fitted.values
+                             thisX, subset = progeny)
+              newpost[j,progeny,i] <- thislm$fitted.values
             }
           }
           newpost[newpost < 0] <- 0

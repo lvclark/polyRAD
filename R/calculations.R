@@ -81,6 +81,12 @@
     if(!is.null(object$priorProbLD)){
       results[[i]] <- results[[i]] * object$priorProbLD[[i]]
     }
+    # in a mapping population, don't use priors for parents
+    if(!is.null(attr(object, "donorParent")) &&
+       !is.null(attr(object, "recurrentParent"))){
+      parents <- c(GetDonorParent(object), GetRecurrentParent(object))
+      results[[i]][, parents, ] <- object$genotypeLikelihood[[j]][, parents, ]
+    }
   }
   
   return(results)
