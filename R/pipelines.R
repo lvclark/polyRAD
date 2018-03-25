@@ -117,7 +117,7 @@ IteratePopStructLD <- function(object, tol = 1e-3,
   # Test for LD
   message("Finding alleles in LD")
   object <- AddAlleleLinkages(object, type = "popstruct",
-                              linkageDist = LDdist, minCorr = minLDcor,
+                              linkageDist = LDdist, minCorr = minLDcorr,
                               excludeTaxa = GetBlankTaxa(object))
   
   # Iteratively estimate genotypes
@@ -165,6 +165,7 @@ PipelineMapping2Parents <- function(object,
   donorParent <- GetDonorParent(object)
   recurrentParent <- GetRecurrentParent(object)
   # estimate possible allele frequencies
+  message("Making initial parameter estimates...")
   allelesin <- max(sapply(donorParentPloidies, sum)) + 
     max(sapply(recurrentParentPloidies, sum))
   possfreq <- seq(0, 1, length.out = (n.gen.backcrossing + 1) * allelesin + 1)
@@ -187,6 +188,7 @@ PipelineMapping2Parents <- function(object,
   
   # add in linkage data if available
   if(useLinkage){
+    message("Updating priors using linkage...")
     # find linkages
     object <- AddAlleleLinkages(object, type = "mapping", 
                                 linkageDist = linkageDist, 
@@ -196,6 +198,7 @@ PipelineMapping2Parents <- function(object,
     object <- AddGenotypePriorProb_LD(object, type = "mapping")
     object <- AddGenotypePosteriorProb(object)
   } # end IF statement for using linked alleles
+  message("Done.")
   
   return(object)
 } # end PipelineMapping2Parents

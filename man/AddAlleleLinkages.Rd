@@ -2,6 +2,7 @@
 \alias{AddAlleleLinkages}
 \alias{AddAlleleLinkages.RADdata}
 \alias{AddGenotypePriorProb_LD}
+\alias{AddGenotypePriorProb_LD.RADdata}
 \title{
 Identify and Utilize Linked Alleles for Estimating Genotype Priors
 }
@@ -38,13 +39,16 @@ search for linked alleles.
 A number ranging from zero to one indicating the minimum correlation needed
 for an allele to be used for genotype prediction at another allele.
 }
+\item{excludeTaxa}{
+A character vector listing taxa to be excluded from correlation estimates.
+}
   \item{\dots}{
 Additional arguments (none implemented).
 }
 }
 \details{
 These functions are primarily designed to be used internally by the
-\link[IterateHWE]{pipeline} functions.
+\link[=IterateHWE]{pipeline} functions.
 
 \code{AddAlleleLinkages} obtains genotypic values using 
 \code{GetWeightedMeanGenotypes}, then regresses those values for a given 
@@ -69,11 +73,14 @@ taxon based on linkage alone:
 \deqn{prior_{cit} = \frac{\prod_{j = 1}^J{post_{cjt} * r_{ij} + (1 - r_{ij})/(K + 1)}}{\sum_{c = 0}^K{\prod_{j = 1}^J{post_{cjt} * r_{ij} + (1 - r_{ij})/(K + 1)}}}}{
 prior_{cit} = (\prod_{j = 1}^J{post_{cjt} * r_{ij} + (1 - r_{ij})/(K + 1)})/(\sum_{c = 0}^K{\prod_{j = 1}^J{post_{cjt} * r_{ij} + (1 - r_{ij})/(K + 1)}})}
 
-For mapping populations, \code{AddGenotypePriorProb_LD} instead estimates 
+For mapping populations, \code{AddGenotypePriorProb_LD} uses the above formula
+when each allele only has two possible genotypes (i.e. test-cross segretagion).
+When more genotypes are possible, \code{AddGenotypePriorProb_LD} instead estimates 
 prior probabilities as fitted values when the posterior probabilities for
 a given allele are regressed on the posterior probabilities for a linked allele.
 This allows loci with different segregation patterns to be informative for
-predicting genotypes.
+predicting genotypes, and for cases where two alleles are in phase for some but not
+all parental copies.
 
 }
 
@@ -95,7 +102,7 @@ Lindsay V. Clark
 }
 
 \seealso{
-\code{\link{AddGenotypePriorProb}}
+\code{\link{AddGenotypePriorProb_HWE}}
 }
 \examples{
 # load example dataset

@@ -1044,7 +1044,7 @@ AddGenotypePriorProb_LD.RADdata <- function(object, type, ...){
     # Loop through alleles
     for(a in 1:nAlleles(object)){
       atab <- object$alleleLinkages[[a]]
-      if(nrow(atab) == 0){ # no linked alleles
+      if(length(atab$allele) == 0){ # no linked alleles
         object$priorProbLD[[pldIndex]][,,a] <- 1/ngen
       } else {             # linked alleles exist
         # get posterior probabilities for linked alleles
@@ -1060,13 +1060,27 @@ AddGenotypePriorProb_LD.RADdata <- function(object, type, ...){
             # genotypes possible for this linked allele
             possibleLinked <- which(object$priorProb[[pldIndex]][,a2] > 0)
             i <- match(a2, atab$allele)
-            # regress posterior probs for each allele copy number on all posterior probs
-            for(j in possibleThisAllele){
-              thisX <- thispost[possibleLinked[-1],, i]
-              if(!is.vector(thisX)) thisX <- t(thisX) 
-              thislm <- lm(object$posteriorProb[[pldIndex]][j,,a] ~ 
-                             thisX, subset = progeny)
-              newpost[j,progeny,i] <- thislm$fitted.values
+            if(length(possibleThisAllele) == 2 && length(possibleLinked) == 2){
+              # If there are only two possible genotypes for each, we know that all
+              # copies of alleles are linked and can treat them that way.
+              newpost[possibleThisAllele,progeny,i] <- 
+                thispost[possibleLinked,progeny,i] * atab$corr[i] +
+                0.5 * (1 - atab$corr[i])
+            } else {
+              # If any allele has more than two genotypes, we aren't sure of
+              # complete phasing.
+              # regress posterior probs for each allele copy number on all posterior probs
+              for(j in possibleThisAllele){
+                thisX <- thispost[possibleLinked[-1],, i]
+                if(is.vector(thisX)){
+                  thisX <- matrix(thisX, nrow = length(thisX), ncol = 1)
+                } else {
+                  thisX <- t(thisX)
+                }
+                thislm <- lm.fit(x = thisX[progeny,, drop=FALSE],
+                                 y = object$posteriorProb[[pldIndex]][j, progeny, a])
+                newpost[j,progeny,i] <- thislm$fitted.values
+              }
             }
           }
           newpost[newpost < 0] <- 0
@@ -1080,7 +1094,7 @@ AddGenotypePriorProb_LD.RADdata <- function(object, type, ...){
         }
         
         # multiply across alleles to get priors
-        if(nrow(atab) == 1){
+        if(length(atab$allele) == 1){
           object$priorProbLD[[pldIndex]][,,a] <- thispost[,, 1]
         } else {
           thisLDprior <- apply(thispost, c(1, 2), prod)
@@ -1133,8 +1147,8 @@ AddAlleleLinkages.RADdata <- function(object, type, linkageDist, minCorr,
       
       # see how each allele correlates with residuals
       for(a2 in nearbyAlleles){
-        if(all(is.na(thisGenVal)) || sd(thisGenVal) == 0) break
-        if(all(is.na(wmgeno[,a2])) || sd(wmgeno[,a2]) == 0) next
+        if(all(is.na(thisGenVal)) || all(thisGenVal == thisGenVal[1])) break
+        if(all(is.na(wmgeno[,a2])) || all(wmgeno[,a2] == wmgeno[1,a2])) next
         thiscor <- cor(wmgeno[,a2], thisGenVal)
         if(thiscor >= minCorr){
           linkedalleles <- c(linkedalleles, a2)
@@ -1143,8 +1157,8 @@ AddAlleleLinkages.RADdata <- function(object, type, linkageDist, minCorr,
       }
       
       # store linkages for this allele
-      object$alleleLinkages[[a]] <- data.frame(allele = linkedalleles,
-                                               corr = correlations)
+      object$alleleLinkages[[a]] <- list(allele = linkedalleles,
+                                         corr = correlations)
     } # end of loop through alleles for one locus
   } # end of loop through loci
   
@@ -1543,7 +1557,8 @@ StripDown.RADdata <- function(object,
                                                "depthRatio", 
                                                "antiAlleleDepth",
                                                "genotypeLikelihood",
-                                               "priorProb"),
+                                               "priorProb",
+                                               "priorProbLD"),
                               ...){
   always.keep <- c("alleles2loc", "alleleNucleotides", "locTable", 
                    "priorProbPloidies", "possiblePloidies", "ploidyChiSq", 

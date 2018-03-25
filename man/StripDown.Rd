@@ -14,7 +14,8 @@ StripDown(object, ...)
 \method{StripDown}{RADdata}(object, 
           remove.slots = c("depthSamplingPermutations",
                            "depthRatio", "antiAlleleDepth",
-                           "genotypeLikelihood", "priorProb"),
+                           "genotypeLikelihood", "priorProb",
+                           "priorProbLD"),
           \dots)
 }
 \arguments{
@@ -31,8 +32,8 @@ Additional arguments (none implemented).
 \details{
 The default slots that are removed take up a lot of memory but are not used
 by the export functions.  Other slots to consider removing are 
-\code{alleleFreq}, \code{alleleFreqByTaxa}, \code{PCA}, \code{locDepth}, and 
-\code{alleleDepth}.  Of course, if you
+\code{alleleFreq}, \code{alleleFreqByTaxa}, \code{PCA}, \code{locDepth}, 
+\code{alleleDepth}, and \code{alleleLinkages}.  Of course, if you
 have custom uses for some of the slots that are removed by default, you can 
 change the \code{remove.slots} vector to not include them.
 

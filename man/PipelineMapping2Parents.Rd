@@ -13,28 +13,20 @@ from read depth in a \code{"\link{RADdata}"} object containing data from
 a mapping population.
 }
 \usage{
-PipelineMapping2Parents(object, donorParent = GetDonorParent(object), 
-                        recurrentParent = GetRecurrentParent(object), 
-                        n.gen.backcrossing = 0, n.gen.intermating = 0, 
-                        n.gen.selfing = 0, 
+PipelineMapping2Parents(object, n.gen.backcrossing = 0,
+                        n.gen.intermating = 0, n.gen.selfing = 0, 
                         donorParentPloidies = object$possiblePloidies, 
                         recurrentParentPloidies = object$possiblePloidies, 
                         minLikelihoodRatio = 10, freqAllowedDeviation = 0.05, 
                         freqExcludeTaxa = c(GetDonorParent(object), 
                                             GetRecurrentParent(object), 
-                                            GetBlankTaxa(object)))
+                                            GetBlankTaxa(object)),
+                        useLinkage = TRUE, linkageDist = 1e7,
+                        minLinkageCorr = 0.5)
 }
 \arguments{
   \item{object}{
 A \code{"\link{RADdata}"} object.
-}
-  \item{donorParent}{
-A character string indicating which taxon is the donor parent.  If 
-backcrossing was not performed, it does not matter which taxon is listed
-as the donor parent or recurrent parent.
-}
-  \item{recurrentParent}{
-A character string indicating which parent is the recurrent parent.
 }
   \item{n.gen.backcrossing}{
 An integer, zero or greater, indicating how many generations of 
@@ -72,6 +64,20 @@ counted as that allele frequency.
   \item{freqExcludeTaxa}{
 A character vector indicating taxa to exclude from allele frequency
 estimates and ploidy \eqn{\chi ^ 2}{chi-squared} estimates.
+}
+  \item{useLinkage}{
+Boolean.  Should genotypes at nearby loci (according to genomic alignment
+data) be used for updating genotype priors?
+}
+  \item{linkageDist}{
+A number, in basepairs, indicating the maximum distance for linked loci.
+Ignored if \code{useLinkage = FALSE}.
+}
+  \item{minLinkageCorr}{
+A number ranging from zero to one.  Indicates the minimum correlation 
+coeffienct between weighted mean genotypes at two alleles in order for linkage
+data to be used for updating genotype priors. Ignored if 
+\code{useLinkage = FALSE}.
 }
 }
 \details{

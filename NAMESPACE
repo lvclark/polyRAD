@@ -16,7 +16,7 @@ SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent,
 SplitByChromosome, StripDown, SubsetByLocus, SubsetByTaxon, VCF2RADdata)
 
 importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom",
-           "hclust", "cutree", "as.dist", "cor", "residuals")
+           "hclust", "cutree", "as.dist", "cor", "residuals", "lm.fit")
 importFrom("utils", "read.csv", "write.table")
 importFrom("fastmatch", "%fin%")
 importFrom("methods", "is")
