@@ -245,8 +245,10 @@ AddGenotypeLikelihood.RADdata <- function(object, ...){
     for(j in 1:(ploidies[i]+1)){
       object$genotypeLikelihood[[i]][j,,] <- 
         object$depthSamplingPermutations * 
-          t(apply(object$alleleDepth, 1, function(x) alleleProb[j,] ^ x) * 
-            apply(object$antiAlleleDepth, 1, function(x) antiAlleleProb[j,] ^ x))
+          AlleleProbExp(object$alleleDepth, alleleProb[j,]) * 
+            AlleleProbExp(object$antiAlleleDepth, antiAlleleProb[j,]) # Rcpp function
+#          t(apply(object$alleleDepth, 1, function(x) alleleProb[j,] ^ x) * 
+#            apply(object$antiAlleleDepth, 1, function(x) antiAlleleProb[j,] ^ x)) # non-C version of above two lines
       # when depth is too high, use dbinom instead.
       toRecalculate <- which(is.na(object$genotypeLikelihood[[i]][j,,]) |
                                object$genotypeLikelihood[[i]][j,,] == Inf,

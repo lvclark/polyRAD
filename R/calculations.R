@@ -132,3 +132,21 @@
   }
   return(outFreq)
 }
+
+# internal function used by AddGenotypeLikelihood
+cppFunction("NumericMatrix AlleleProbExp(IntegerMatrix depth, NumericVector alleleProb) {
+  int alleles = alleleProb.size();
+  int samples = depth.nrow();
+  NumericMatrix out(samples, alleles);
+  
+  for(int s = 0; s < samples; ++s){
+    for(int a = 0; a < alleles; ++a){
+      out(s, a) = 1;
+      for(int i = 0; i < depth(s, a); ++i){
+        out(s, a) *= alleleProb[a];
+      }
+    }
+  }
+  
+  return out;
+}")
