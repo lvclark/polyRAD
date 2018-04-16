@@ -1079,7 +1079,7 @@ AddGenotypePriorProb_LD.RADdata <- function(object, type, ...){
                 } else {
                   thisX <- t(thisX)
                 }
-                thislm <- lm.fit(x = thisX[progeny,, drop=FALSE],
+                thislm <- lm.fit(x = cbind(rep(1, length(progeny)), thisX[progeny,, drop=FALSE]),
                                  y = object$posteriorProb[[pldIndex]][j, progeny, a])
                 newpost[j,progeny,i] <- thislm$fitted.values
               }
