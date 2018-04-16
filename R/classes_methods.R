@@ -384,23 +384,59 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
   # combinations of parent ploidies that match list of progeny ploidies
   pldcombos <- matrix(NA, nrow = 0, ncol = 2, 
                       dimnames = list(NULL,c("donor","recurrent")))
+  # matrix of expected allele frequencies for all possible genotypes and ploidies
+  expfreq_byPloidy <- list()
+  # find possible combinations of parent ploidies, and possible expected allele frequencies
   for(pl.d in pldtot.don){
     for(pl.r in pldtot.rec){
       if((pl.d/2 + pl.r/2) %in% pldtot && (n.gen.backcrossing == 0 || pl.d == pl.r)){
         pldcombos <- rbind(pldcombos, matrix(c(pl.d, pl.r), nrow = 1, ncol = 2))
+        
+        expfreq_byPloidy[[length(expfreq_byPloidy) + 1]] <- matrix(nrow = pl.d+1, ncol = pl.r+1)
+        for(gen.d in 0:pl.d){
+          for(gen.r in 0:pl.r){
+            expfreq_byPloidy[[length(expfreq_byPloidy)]][gen.d + 1, gen.r + 1] <- 
+              (gen.d * 0.5^n.gen.backcrossing + gen.r * (2 - 0.5^n.gen.backcrossing))/
+              (pl.d + pl.r)
+          }
+        }
       }
     }
   }
+  
   # do allele frequencies match parent genotypes?
-#  freqMatchGen <- matrix(FALSE, nrow = dim(pldcombos)[1], ncol = nAlleles)
-#  for(i in 1:dim(pldcombos)[1]){
-#    thisgen.don <- likelyGen.don[as.character(pldcombos[i,"donor"]),]
-#    thisgen.rec <- likelyGen.rec[as.character(pldcombos[i,"recurrent"]),]
-#    expfreq <- (thisgen.don * 0.5^n.gen.backcrossing + 
-#      thisgen.rec * (2 - 0.5^n.gen.backcrossing))/(pldcombos[i,"donor"] + 
-#                                                     pldcombos[i,"recurrent"])
-#    freqMatchGen[i,] <- expfreq == object$alleleFreq
-#  }
+  freqMatchGen <- matrix(FALSE, nrow = dim(pldcombos)[1], ncol = nAlleles)
+  for(i in 1:dim(pldcombos)[1]){
+    thisgen.don <- likelyGen.don[as.character(pldcombos[i,"donor"]),]
+    thisgen.rec <- likelyGen.rec[as.character(pldcombos[i,"recurrent"]),]
+    expfreq <- (thisgen.don * 0.5^n.gen.backcrossing + 
+      thisgen.rec * (2 - 0.5^n.gen.backcrossing))/(pldcombos[i,"donor"] + 
+                                                     pldcombos[i,"recurrent"])
+    freqMatchGen[i,] <- expfreq == object$alleleFreq
+  }
+  freqMatchGen[is.na(freqMatchGen)] <- FALSE
+  allelesToFix <- which(colSums(freqMatchGen) == 0)
+  # correct parental genotypes where appropriate, using rounded allele frequencies
+  for(a in allelesToFix){
+    thisfreq <- object$alleleFreq[a]
+    for(i in 1:dim(pldcombos)[1]){
+      poss_matches <- which(expfreq_byPloidy[[i]] == thisfreq, arr.ind = TRUE) - 1
+      if(nrow(poss_matches) == 0) next
+      if(nrow(poss_matches) == 1){ # only one possible match (i.e. when there is backcrossing)
+        likelyGen.don[as.character(pldcombos[i,"donor"]),a] <- unname(poss_matches[,1])
+        likelyGen.rec[as.character(pldcombos[i,"recurrent"]),a] <- unname(poss_matches[,2])
+      } else { # multiple possible matches
+        current.don <- likelyGen.don[as.character(pldcombos[i,"donor"]),a]
+        current.rec <- likelyGen.rec[as.character(pldcombos[i,"recurrent"]),a]
+        # if one genotype is already a match, fix the other one
+        if(!is.na(current.don) && any(poss_matches[,1] == current.don)){
+          likelyGen.rec[as.character(pldcombos[i,"recurrent"]),a] <- unname(poss_matches[poss_matches[,1] == current.don,2])
+        } else if(!is.na(current.rec) && any(poss_matches[,2] == current.rec)){
+          likelyGen.don[as.character(pldcombos[i,"donor"]),a] <- unname(poss_matches[poss_matches[,2] == current.rec,1])
+        }
+      }
+    }
+  }
   
   # function for deteriming ploidy of offspring (by index in possiblePloidies)
   offspringPloidy <- function(pld1, pld2){ 
