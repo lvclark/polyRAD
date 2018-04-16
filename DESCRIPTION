@@ -11,6 +11,7 @@ Maintainer: Lindsay V. Clark <lvclark@illinois.edu>
 Imports: fastmatch, pcaMethods, methods, Rcpp
 Suggests: rrBLUP, Rsamtools, GenomeInfoDb, Biostrings, GenomicRanges, VariantAnnotation,
   SummarizedExperiment, S4Vectors, IRanges, BiocGenerics
+LinkingTo: Rcpp
 Description: Read depth data from genotyping-by-sequencing (GBS) or restriction 
   site-associated DNA sequencing (RAD-seq) are imported and used to make Bayesian
   probability estimates of genotypes in polyploids or diploids.  The genotype 

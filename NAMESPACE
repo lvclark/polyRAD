@@ -1,3 +1,5 @@
+useDynLib(polyRAD)
+
 export(AddAlleleFreqByTaxa, AddAlleleFreqHWE, AddAlleleFreqMapping,
        AddAlleleLinkages, AddGenotypeLikelihood,  
 AddGenotypePosteriorProb,  AddGenotypePriorProb_ByTaxa,
@@ -20,7 +22,7 @@ importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom",
 importFrom("utils", "read.csv", "write.table")
 importFrom("fastmatch", "%fin%")
 importFrom("methods", "is")
-importFrom("Rcpp", "cppFunction")
+importFrom("Rcpp", "evalCpp")
 
 S3method(print, RADdata)
 S3method(AddAlleleFreqByTaxa, RADdata)
