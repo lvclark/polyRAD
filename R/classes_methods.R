@@ -178,6 +178,9 @@ AddAlleleFreqMapping.RADdata <- function(object,
     }
   }
   
+  # for unexpected allele frequencies, keep them as they are
+  outFreq[is.na(outFreq)] <- meanRat[is.na(outFreq)]
+  
   # add allele frequencies to the object
   object$alleleFreq <- outFreq
   attr(object, "alleleFreqType") <- "mapping"
@@ -357,8 +360,7 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     stop("All parent ploidies must be in the possible ploidies for the object")
   }
   if(is.null(object$alleleFreq) || attr(object,"alleleFreqType") != "mapping"){
-    cat("Allele frequencies for mapping population not found.  Estimating.", 
-        sep = "\n")
+    message("Allele frequencies for mapping population not found.  Estimating.")
     allelesin <- max(sapply(donorParentPloidies, sum)) + 
       max(sapply(recurrentParentPloidies, sum))
     possfreq <- seq(0, 1, length.out = (n.gen.backcrossing + 1) * allelesin + 1)
@@ -367,7 +369,7 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
                                    expectedFreq = possfreq)
   }
   if(is.null(object$genotypeLikelihood)){
-    cat("Genotype likelihoods not found.  Estimating.", sep = "\n")
+    message("Genotype likelihoods not found.  Estimating.")
     object <- AddGenotypeLikelihood(object)
   }
   # get most likely genotype for the parents
