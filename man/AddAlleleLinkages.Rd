@@ -74,7 +74,7 @@ taxon based on linkage alone:
 prior_{cit} = (\prod_{j = 1}^J{post_{cjt} * r_{ij} + (1 - r_{ij})/(K + 1)})/(\sum_{c = 0}^K{\prod_{j = 1}^J{post_{cjt} * r_{ij} + (1 - r_{ij})/(K + 1)}})}
 
 For mapping populations, \code{AddGenotypePriorProb_LD} uses the above formula
-when each allele only has two possible genotypes (i.e. test-cross segretagion).
+when each allele only has two possible genotypes (i.e. test-cross segregation).
 When more genotypes are possible, \code{AddGenotypePriorProb_LD} instead estimates 
 prior probabilities as fitted values when the posterior probabilities for
 a given allele are regressed on the posterior probabilities for a linked allele.
