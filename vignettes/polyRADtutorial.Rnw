@@ -66,6 +66,7 @@ Lastly, for exporting the estimated genotypes to other software:
 \item \texttt{ExportGAPIT}
 \item \texttt{Export\_rrBLUP\_Amat}
 \item \texttt{Export\_rrBLUP\_GWAS}
+\item \texttt{Export\_TASSEL\_Numeric}
 \end{itemize}
 
 If you need continuous numerical genotypes exported in some other format, see 
@@ -80,7 +81,7 @@ of \emph{Miscanthus sinensis} that were output by the
 These data are from a study by Liu \emph{et al.} 
 (2015; \href{http://dx.doi.org/10.1111/gcbb.12275}{doi:10.1111/gcbb.12275};
 data available at \url{http://hdl.handle.net/2142/79522}), and can be
-found in the ``doc'' folder of the polyRAD installation.
+found in the ``extdata'' folder of the polyRAD installation.
 \emph{Miscanthus} is an ancient tetraploid that has undergone diploidization.
 Given the ability of the UNEAK pipeline to filter paralogs, we expect most
 loci to behave in a diploid fashion, but some may behave in an allotetraploid
@@ -92,7 +93,10 @@ inheritance modes: diploid (2) and allotetraploid (2 2).
 
 <<>>=
 library(polyRAD)
-mydata <- readHMC("HapMapClareMap1subset.hmc.txt",
+maphmcfile <- system.file("extdata", "ClareMap_HapMap.hmc.txt", 
+                          package = "polyRAD")
+
+mydata <- readHMC(maphmcfile,
                   possiblePloidies = list(2, c(2, 2)))
 mydata
 @
@@ -115,10 +119,34 @@ mydata <- SetDonorParent(mydata, "Kaskade-Justin")
 mydata <- SetRecurrentParent(mydata, "Zebrinus-Justin")
 @
 
+The next thing we'll want to do is add our genomic alignment data.  For this
+dataset, we have alignment data stored in a CSV file, also in the ``extdata''
+directory of the polyRAD installation.  We'll add it to the \texttt{locTable}
+slot of our \texttt{RADdata} object.  Be sure to name the new columns
+``Chr'' and ``Pos''.
+
+<<>>=
+alignfile <- system.file("extdata", "ClareMap_alignments.csv", 
+                         package = "polyRAD")
+
+aligndata <- read.csv(alignfile, row.names = 1)
+head(aligndata)
+
+mydata$locTable$Chr <- aligndata[GetLoci(mydata), 1]
+mydata$locTable$Pos <- aligndata[GetLoci(mydata), 2]
+head(mydata$locTable)
+@
+
+If you don't have alignment data in your own dataset, you can still use
+the pipeline described here.  Just set \texttt{useLinkage = FALSE} in 
+the code below.  The advantage of including alignment data is that gentoypes
+at linked markers are used for imputing missing or correcting erroneous
+genotypes.
+
 Now we can run the pipeline.
 We'll specify that we don't want to include the parents or doubled haploid
 lines in the estimation of allele frequencies or evaluation of genotype
-freqnecies (\texttt{excludeTaxa} argument). The
+frequenecies (\texttt{excludeTaxa} argument). The
 \texttt{allowedDeviation} argument indicates how different the apparent
 allele frequency (based on read depth ratios) can be from an expected
 allele frequency (determined based on ploidy and mapping population type) 
@@ -136,12 +164,12 @@ mydata <- PipelineMapping2Parents(mydata,
                                                      "p196-150A-c", 
                                                      "p877-348-b"),
                                   freqAllowedDeviation = 0.06,
-                                  useLinkage = FALSE)
+                                  useLinkage = TRUE)
 @
 
 We can examine the allele frequencies.
 Allele frequencies that fall outside of the expected ranges will be 
-recorded as \texttt{NA}.
+recorded as they were estimated from read depth.
 
 <<>>=
 table(mydata$alleleFreq)
@@ -152,20 +180,20 @@ genotype at each locus, taxon, and ploidy.  This is the probability
 of seeing the observed distribution of reads.
 
 <<>>=
-mydata$alleleDepth[3,1:10]
-mydata$genotypeLikelihood[[1]][,3,1:10]
-mydata$genotypeLikelihood[[2]][,3,1:10]
+mydata$alleleDepth[3,11:20]
+mydata$genotypeLikelihood[[1]][,3,11:20]
+mydata$genotypeLikelihood[[2]][,3,11:20]
 @
 
 Above, for one individal (Map1-001), we see its read depth at the
 first ten alleles (first five loci), followed by the genotype likelihoods
-under diploid and tetraploid models.  For example, at locus TP29 we see
-that homozygosity for allele 0 is the most likely, although heterozygosity
-is not impossible, and homozygosity for allele 1 could happen in the very,
-very unlikely event that all eight of the reads are due to contamination.
-At TP37, heterozygosity is by far the most likely state, and if there
-is tetraploidy there are probably one or two copies of allele 0 rather than
-three copies.
+under diploid and tetraploid models.  For example, at locus TP26698, 
+heterozygosity is the most likely state, although there is a chance that
+this individual is homozygous for allele 1 and the one read of allele 0
+was due to contamination.  If this locus is allotetraploid, it is most
+likely that there is one copy of allele 0 and three copies of allele 1.
+Other loci have higher depth and as a result there is less uncertainty
+in the genotype, particularly for the diploid model.
 
 The prior genotype probabilities (expected genotype distributions) are also
 stored in the object for each possible ploidy.  These distributions are estimated based
@@ -174,14 +202,14 @@ can be ignored by increasing the \texttt{minLikelihoodRatio} argument to
 \texttt{PipelineMapping2Parents}.
 
 <<>>=
-mydata$priorProb[[1]][,1:10]
-mydata$priorProb[[2]][,1:10]
+mydata$priorProb[[1]][,11:20]
+mydata$priorProb[[2]][,11:20]
 @
 
 Here we see some pretty big differences under the diploid and
-allotetrapliod models.  For example, if TP29 is behaving in a diploid
+allotetrapliod models.  For example, if TP24805 is behaving in a diploid
 fashion we expect F2-like segregation since both parents were 
-heterozygous.  However, if TP29 is behaving in an allotetraploid
+heterozygous.  However, if TP24805 is behaving in an allotetraploid
 fashion, we expect that both parents are homozygous at differing 
 paralogous loci, resulting in no segregation.
 
@@ -191,7 +219,7 @@ genotype likelihoods and estimating a $\chi^2$ statistic.  Lower
 values indicate a better fit.
 
 <<>>=
-mydata$ploidyChiSq[,1:10]
+mydata$ploidyChiSq[,11:20]
 @
 
 We can make a plot to get an overall sense of how well the markers
@@ -205,14 +233,15 @@ abline(a = 0, b = 1, col = "red")
 @
 
 Alleles above the red line fit the diploid model better, and alleles
-below the red line fit the tetraploid model better.
+below the red line fit the tetraploid model better.  In this case it
+looks like everything is diploid with fairly high confidence.
 
 Now we'll examine the posterior genotype probabilities.  These are still
 estimated separately for each ploidy.
 
 <<>>=
-mydata$posteriorProb[[1]][,3,1:10]
-mydata$posteriorProb[[2]][,3,1:10]
+mydata$posteriorProb[[1]][,3,11:20]
+mydata$posteriorProb[[2]][,3,11:20]
 @
 
 We can export the results for use in downstream analysis.  The function
@@ -226,32 +255,13 @@ which can be changed with the \texttt{minval} and \texttt{maxval} arguments.
 
 <<>>=
 mywm <- GetWeightedMeanGenotypes(mydata)
-mywm[3:6, 1:10]
+mywm[c(297,2:6), 6:10]
 @
 
-Note that the parent weighted mean genotypes are not necessarily correct,
-since they were estimated using the genotype priors for the progeny.
-We can view parent genotypes with \texttt{GetLikelyGen}, which was used
-internally by \texttt{AddGenotypePriorProb\_Mapping2Parents} to estimate
-the parent genotypes.
-
-<<>>=
-kaskadeGen <- GetLikelyGen(mydata, "Kaskade-Justin")
-zebrinusGen <- GetLikelyGen(mydata, "Zebrinus-Justin")
-kaskadeGen[,1:10]
-zebrinusGen[,1:10]
-@
-
-To subset parent genotypes in order to match the progeny genotypes:
-
-<<>>=
-kaskadeGenSubset <- sweep(kaskadeGen[,-OneAllelePerMarker(mydata)],
-                          1, c(2,4), "/")
-zebrinusGenSubset <- sweep(zebrinusGen[,-OneAllelePerMarker(mydata)],
-                          1, c(2,4), "/")
-kaskadeGenSubset[,1:10]
-zebrinusGenSubset[,1:10]
-@
+Note that the parent weighted mean genotypes were estimated using 
+gentoype likelihood only, ignoring the priors set for the progeny.  In 
+some places they may not match the progeny genotypes, indicating a
+likely error in parental genotype calling.
 
 \section{Estimating genotype probabilities in a diversity panel}
 
@@ -263,12 +273,38 @@ iteration until convergence is reached.
 
 Here we'll import a RAD-seq dataset from a large collection of wild and
 ornamental \textit{Miscanthus} from Clark \textit{et al.} (2014;
-\href{http://hdl.handle.net/10.1093/aob/mcu084}{doi:10.1093/aob/mcu084},
-data available at \url{http://hdl.handle.net/2142/49963}).
+\href{http://hdl.handle.net/10.1093/aob/mcu084}{doi:10.1093/aob/mcu084}.
+
+Since the data are in VCF format, we will need the Bioconductor package
+VariantAnnotation to load them.  See 
+\url{https://bioconductor.org/packages/release/bioc/html/VariantAnnotation.html}
+for installation instructions.
 
 <<>>=
-mydata <- readHMC("HapMapMsiSubset1.hmc.txt",
-                  possiblePloidies = list(2, c(2,2)))
+library(VariantAnnotation)
+
+myVCF <- system.file("extdata", "Msi01genes.vcf", package = "polyRAD")
+@
+
+For your own VCF files, you will want to compress and index them before
+reading them.  This has already been done for the file supplied with
+polyRAD, but here is how you would do it:
+
+<<eval=FALSE>>=
+mybg <- bgzip(myVCF)
+indexTabix(mybg, format = "vcf")
+@
+
+Now we can make our \texttt{RADdata} object.  Because this is a small example
+dataset, we are setting \texttt{expectedLoci} and \texttt{expectedAlleles} to
+very low values; in a real dataset they should reflect how much data you are
+actually expecting.  It is best to slightly overestimate the number of expected
+alleles and loci.
+
+<<>>=
+mydata <- VCF2RADdata(myVCF, possiblePloidies = list(2, c(2,2)),
+                      expectedLoci = 100, expectedAlleles = 500)
+mydata
 @
 
 We can iteratively estimate genotype probabilities assuming 
@@ -285,9 +321,6 @@ Let's take a look at allele frequencies:
 hist(mydataHWE$alleleFreq, breaks = 20)
 @
 
-There are bumps around 0.4 and 0.6, which may be artefactual due to paralogs
-in the dataset.
-
 We can do a different genotype probability estimation that models population
 structure and variation in allele frequencies among populations.  We don't
 need to specify populations, since principal components analysis is used to
@@ -297,17 +330,18 @@ includes a very broad sampling of \textit{Miscanthus} across Asia, so it
 is very appropriate to model population structure in this case.
 
 <<>>=
-mydataPopStruct <- IteratePopStruct(mydata)
+mydataPopStruct <- IteratePopStruct(mydata, nPcsInit = 8)
 @
 
-The allele frequency bumps have somewhat gone away:
+Allele frequency estimates have changed slightly:
 
 <<fig=TRUE>>=
 hist(mydataPopStruct$alleleFreq, breaks = 20)
 @
 
 Here's some of the population structure that was used for modeling
-allele frequencies:
+allele frequencies (fairly weak in this case because so few markers
+were used):
 
 <<fig=TRUE>>=
 plot(mydataPopStruct$PCA[,1], mydataPopStruct$PCA[,2],
@@ -319,7 +353,7 @@ Allele frequencies were estimated for each taxon, and are stored in the
 \texttt{\$alleleFreqByTaxa} slot.
 
 <<fig=TRUE>>=
-myallele <- 11
+myallele <- 1
 freqcol <- rainbow(101)[round(mydataPopStruct$alleleFreqByTaxa[,myallele] * 100) + 1]
 plot(mydataPopStruct$PCA[,1], mydataPopStruct$PCA[,2],
      xlab = "PC axis 1", ylab = "PC axis 2", pch = 21,
