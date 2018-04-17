@@ -878,6 +878,7 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
       }
     } else {
       chisqInverse <- 1/object$ploidyChiSq[,altokeep, drop = FALSE]
+      chisqInverse[is.na(chisqInverse)] <- 0
       ploidyweights <- sweep(chisqInverse, 2, colSums(chisqInverse), "/")
     }
     ploidyweights[is.na(ploidyweights)] <- 0
@@ -897,6 +898,7 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
                                    1, thesegenval, "*"), 
                              c(2,3,1)), 
                        dims = 2)
+    thesewm[is.na(thesewm)] <- 0
     # multiply by weight for this ploidy and add to total
     wmgeno <- wmgeno + sweep(thesewm, 2, ploidyweights[i,], "*")
   }
