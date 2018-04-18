@@ -34,7 +34,7 @@ IterateHWE <- function(object, tol = 1e-8, excludeTaxa = GetBlankTaxa(object)){
 
 IteratePopStruct <- function(object, tol = 1e-3, 
                              excludeTaxa = GetBlankTaxa(object),
-                             nPcsInit = 50, minfreq = 0.0001){
+                             nPcsInit = 10, minfreq = 0.0001){
   if(!"RADdata" %in% class(object)){
     stop("RADdata object needed.")
   }
@@ -84,8 +84,8 @@ IteratePopStruct <- function(object, tol = 1e-3,
 # allele, for that allele to be used in genotype prediction.
 IteratePopStructLD <- function(object, tol = 1e-3, 
                              excludeTaxa = GetBlankTaxa(object),
-                             nPcsInit = 50, minfreq = 0.0001,
-                             LDdist = 1e4, minLDcorr = 0.01){
+                             nPcsInit = 10, minfreq = 0.0001,
+                             LDdist = 1e4, minLDcorr = 0.2){
   if(!"RADdata" %in% class(object)){
     stop("RADdata object needed.")
   }
@@ -104,7 +104,7 @@ IteratePopStructLD <- function(object, tol = 1e-3,
   message("Performing initial PCA and allele frequency estimation.")
   object <- AddPCA(object, nPcsInit = nPcsInit)
   object <- AddAlleleFreqByTaxa(object)
-  message("Performing preliminary genotype estimation")
+  message("Performing preliminary genotype estimation.")
   object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
   object <- AddGenotypePriorProb_ByTaxa(object)
   object <- AddGenotypeLikelihood(object)
@@ -115,7 +115,7 @@ IteratePopStructLD <- function(object, tol = 1e-3,
   object <- AddAlleleFreqByTaxa(object, minfreq = minfreq)
   
   # Test for LD
-  message("Finding alleles in LD")
+  message("Finding alleles in LD.")
   object <- AddAlleleLinkages(object, type = "popstruct",
                               linkageDist = LDdist, minCorr = minLDcorr,
                               excludeTaxa = GetBlankTaxa(object))

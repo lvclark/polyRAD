@@ -12,7 +12,7 @@ posterior probabilities can then be exported for downstream analysis.
 \usage{
 IterateHWE(object, tol = 1e-08, excludeTaxa = GetBlankTaxa(object))
 IteratePopStruct(object, tol = 1e-03, excludeTaxa = GetBlankTaxa(object),
-                 nPcsInit = 50, minfreq = 0.0001)
+                 nPcsInit = 10, minfreq = 0.0001)
 }
 
 \arguments{
