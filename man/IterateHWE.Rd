@@ -131,6 +131,13 @@ exampleRAD <- IteratePopStruct(exampleRAD, nPcsInit = 3)
 
 # export results
 GetWeightedMeanGenotypes(exampleRAD)
+
+# dataset for LD pipeline
+mydata <- VCF2RADdata(system.file("extdata", "Msi01genes.vcf",
+                                  package = "polyRAD"))
+
+# run LD pipeline
+mydata <- IteratePopStructLD(mydata, nPcsInit = 10)
 }
 
 \keyword{ iteration }
