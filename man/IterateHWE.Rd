@@ -1,6 +1,7 @@
 \name{IterateHWE}
 \alias{IterateHWE}
 \alias{IteratePopStruct}
+\alias{IteratePopStructLD}
 \title{
 Iteratively Estimate Population Parameters and Genotypes In a Diversity Panel
 }
@@ -13,6 +14,9 @@ posterior probabilities can then be exported for downstream analysis.
 IterateHWE(object, tol = 1e-08, excludeTaxa = GetBlankTaxa(object))
 IteratePopStruct(object, tol = 1e-03, excludeTaxa = GetBlankTaxa(object),
                  nPcsInit = 10, minfreq = 0.0001)
+IteratePopStructLD(object, tol = 1e-03, excludeTaxa = GetBlankTaxa(object),
+                   nPcsInit = 10, minfreq = 0.0001, LDdist = 1e4, 
+                   minLDcorr = 0.2)
 }
 
 \arguments{
@@ -36,6 +40,17 @@ estimate from \code{object$depthRatio}.  Passed to \code{\link{AddPCA}}.
 A number indicating the minimum allele frequency allowed.  Passed to
 \code{\link{AddAlleleFreqByTaxa}}.
 }
+\item{LDdist}{
+The distance, in basepairs, within which to search for alleles that may be in
+linkage disequilibrium with a given allele.
+}
+\item{minLDcorr}{
+The minimum correlation coefficient between two alleles 
+for linkage disequilibrium between those alleles to be used by the pipeline
+for genotype estimation.  The correlation coefficient is calculated using
+residuals of weighted mean genotype values regressed on PC axes; see
+\code{\link{AddAlleleLinkages}}.
+}
 }
 
 \details{
@@ -54,14 +69,26 @@ modeling population structure:
 After the first PCA analysis, the number of principal component axes is not
 allowed to decrease, and can only increase by one from one round to the next,
 in order to help the algorithm converge.
+
+\code{IteratePopStructLD} runs each of the functions listed for 
+\code{IteratePopStruct} once, then runs \code{\link{AddAlleleLinkages}}.
+It then runs  
+\code{\link{AddAlleleFreqHWE}}, \code{\link{AddGenotypePriorProb_ByTaxa}},
+\code{\link{AddGenotypePriorProb_LD}},
+\code{\link{AddGenotypeLikelihood}}, \code{\link{AddPloidyChiSq}}, 
+\code{\link{AddGenotypePosteriorProb}}, \code{\link{AddPCA}}, 
+and \code{\link{AddAlleleFreqByTaxa}} iteratively until convergence of
+allele frequencies.
 }
 
 \value{
 A \code{"RADdata"} object identical to that passed to the function, but with
-\code{$alleleFreq}, \code{$priorProb}, \code{$genotypeLikelihood},
-and \code{$posteriorProb} slots added.  For \code{IterateHWE}, 
-\code{$ploidyChiSq}, is also added.  For \code{IteratePopStruct}, 
-\code{$alleleFreqByTaxa} is also added.
+\code{$alleleFreq}, \code{$priorProb}, \code{$genotypeLikelihood}, 
+\code{$ploidyChiSq}, and \code{$posteriorProb} slots added.  
+For \code{IteratePopStruct} and \code{IteratePopStructLD}, 
+\code{$alleleFreqByTaxa} and \code{$PCA} are also added.  For 
+\code{IteratePopStructLD}, \code{$alleleLinkages} and \code{$priorProbLD} 
+are also added.
 }
 
 \note{
