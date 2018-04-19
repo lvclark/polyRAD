@@ -687,7 +687,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   genome <- VariantAnnotation::seqinfo(hdr)
   if(length(genome) == 0 && length(VariantAnnotation::vcfWhich(svparam)) > 0){
     genome <- unique(names(VariantAnnotation::vcfWhich(svparam)))
-    genome <- Seqinfo(seqnames = genome)
+    genome <- GenomeInfoDb::Seqinfo(seqnames = genome)
   }
 
   # Read data one chunk at a time
