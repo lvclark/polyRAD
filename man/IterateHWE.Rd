@@ -1,5 +1,6 @@
 \name{IterateHWE}
 \alias{IterateHWE}
+\alias{IterateHWE_LD}
 \alias{IteratePopStruct}
 \alias{IteratePopStructLD}
 \title{
@@ -11,7 +12,9 @@ until allele frequencies stabilize to within a user-defined threshold.  Genotype
 posterior probabilities can then be exported for downstream analysis.
 }
 \usage{
-IterateHWE(object, tol = 1e-08, excludeTaxa = GetBlankTaxa(object))
+IterateHWE(object, tol = 1e-05, excludeTaxa = GetBlankTaxa(object))
+IterateHWE_LD(object, tol = 1e-05, excludeTaxa = GetBlankTaxa(object),
+              LDdist = 1e4, minLDcorr = 0.2)
 IteratePopStruct(object, tol = 1e-03, excludeTaxa = GetBlankTaxa(object),
                  nPcsInit = 10, minfreq = 0.0001)
 IteratePopStructLD(object, tol = 1e-03, excludeTaxa = GetBlankTaxa(object),
@@ -47,9 +50,7 @@ linkage disequilibrium with a given allele.
 \item{minLDcorr}{
 The minimum correlation coefficient between two alleles 
 for linkage disequilibrium between those alleles to be used by the pipeline
-for genotype estimation.  The correlation coefficient is calculated using
-residuals of weighted mean genotype values regressed on PC axes; see
-\code{\link{AddAlleleLinkages}}.
+for genotype estimation; see \code{\link{AddAlleleLinkages}}.
 }
 }
 
@@ -87,8 +88,8 @@ A \code{"RADdata"} object identical to that passed to the function, but with
 \code{$ploidyChiSq}, and \code{$posteriorProb} slots added.  
 For \code{IteratePopStruct} and \code{IteratePopStructLD}, 
 \code{$alleleFreqByTaxa} and \code{$PCA} are also added.  For 
-\code{IteratePopStructLD}, \code{$alleleLinkages} and \code{$priorProbLD} 
-are also added.
+\code{IteratePopStructLD} and \code{IterateHWE_LD}, \code{$alleleLinkages} 
+and \code{$priorProbLD} are also added.
 }
 
 \note{
@@ -133,11 +134,14 @@ exampleRAD <- IteratePopStruct(exampleRAD, nPcsInit = 3)
 GetWeightedMeanGenotypes(exampleRAD)
 
 # dataset for LD pipeline
-mydata <- VCF2RADdata(system.file("extdata", "Msi01genes.vcf",
-                                  package = "polyRAD"))
+require(Biostrings)
+data(Msi01genes)
 
-# run LD pipeline
-mydata <- IteratePopStructLD(mydata, nPcsInit = 10)
+# run HWE + LD pipeline
+mydata1 <- IterateHWE_LD(Msi01genes)
+
+# run pop. struct + LD pipeline
+mydata2 <- IteratePopStructLD(Msi01genes)
 }
 
 \keyword{ iteration }

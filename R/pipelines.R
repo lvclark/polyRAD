@@ -1,6 +1,6 @@
 # Wrapper functions that run multiple steps in a pipeline for polyRAD
 
-IterateHWE <- function(object, tol = 1e-8, excludeTaxa = GetBlankTaxa(object)){
+IterateHWE <- function(object, tol = 1e-5, excludeTaxa = GetBlankTaxa(object)){
   if(!"RADdata" %in% class(object)){
     stop("RADdata object needed.")
   }
@@ -20,6 +20,51 @@ IterateHWE <- function(object, tol = 1e-8, excludeTaxa = GetBlankTaxa(object)){
     message(paste("Starting iteration", nIter))
     oldAlFreq <- object$alleleFreq
     object <- AddGenotypePriorProb_HWE(object)
+    object <- AddGenotypeLikelihood(object)
+    object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
+    object <- AddGenotypePosteriorProb(object)
+    object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
+    nIter <- nIter + 1
+    meanDiff <- mean(abs(oldAlFreq - object$alleleFreq), na.rm = TRUE)
+    message(paste("Mean difference in allele frequencies of", meanDiff))
+  }
+  
+  return(object)
+}
+
+IterateHWE_LD <- function(object, tol = 1e-5, 
+                          excludeTaxa = GetBlankTaxa(object),
+                          LDdist = 1e4, minLDcorr = 0.2){
+  if(!"RADdata" %in% class(object)){
+    stop("RADdata object needed.")
+  }
+  if(tol > 1e-2){
+    warning("tol unexpectedly high.")
+  }
+  if(tol < 0){
+    stop("tol must be above zero")
+  }
+  nIter <- 1 # which round of iteration are we on
+  meanDiff <- 1 # mean difference between allele frequencies from round to round
+  # (1 is a dummy value for while loop)
+  
+  message("Performing preliminary genotype estimation.")
+  object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
+  object <- AddGenotypePriorProb_HWE(object)
+  object <- AddGenotypeLikelihood(object)
+  object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
+  object <- AddGenotypePosteriorProb(object)
+  object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
+  message("Finding alleles in LD.")
+  object <- AddAlleleLinkages(object, type = "hwe",
+                              linkageDist = LDdist, minCorr = minLDcorr,
+                              excludeTaxa = GetBlankTaxa(object))
+  
+  while(meanDiff > tol){
+    message(paste("Starting iteration", nIter))
+    oldAlFreq <- object$alleleFreq
+    object <- AddGenotypePriorProb_HWE(object)
+    object <- AddGenotypePriorProb_LD(object, type = "hwe")
     object <- AddGenotypeLikelihood(object)
     object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePosteriorProb(object)

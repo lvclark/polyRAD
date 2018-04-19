@@ -57,7 +57,9 @@ population is structured (i.e. what the genotype prior probabilities should be.)
 \begin{itemize}
 \item \texttt{PipelineMapping2Parents}
 \item \texttt{IterateHWE}
+\item \texttt{IterateHWE\_LD}
 \item \texttt{IteratePopStruct}
+\item \texttt{IteratePopStructLD}
 \end{itemize}
 
 Lastly, for exporting the estimated genotypes to other software:
@@ -367,5 +369,9 @@ wmgenoPopStruct <- GetWeightedMeanGenotypes(mydataPopStruct)
 wmgenoPopStruct[1:10,1:5]
 @
 
+If you expect that your species has high linkage disequilibrium, the functions
+\texttt{IterateHWE\_LD} and \texttt{IteratePopStructLD} behave like 
+\texttt{IterateHWE} and \texttt{IteratePopStruct}, respectively, but also
+update priors based on genotypes at linked loci.
 
 \end{document}
