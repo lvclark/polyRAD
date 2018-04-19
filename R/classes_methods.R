@@ -1183,8 +1183,9 @@ AddAlleleLinkages.RADdata <- function(object, type, linkageDist, minCorr,
       thisGenVal <- wmgeno[,a]
       if(type == "popstruct"){
         # get residuals after population structure accounted for
-        thislm <- lm(thisGenVal ~ PCA)
-        thisGenVal <- residuals(thislm)
+        thislm <- lm.fit(y = thisGenVal,
+                         x = cbind(rep(1, nrow(PCA)), PCA))
+        thisGenVal <- thislm$residuals
       }
       
       # see how each allele correlates with residuals
