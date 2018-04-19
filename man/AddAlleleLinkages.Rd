@@ -106,18 +106,19 @@ Lindsay V. Clark
 }
 \examples{
 # load example dataset
-mydata <- VCF2RADdata(system.file("extdata", "Msi01genes.vcf",
-                                  package = "polyRAD"))
+require(Biostrings)
+data(Msi01genes)
+
 # Run non-LD pop structure pipeline
-mydata <- IteratePopStruct(mydata, tol = 0.01, nPcsInit = 10)
+Msi01genes <- IteratePopStruct(Msi01genes, tol = 0.01, nPcsInit = 10)
 
 # Add linkages
-mydata <- AddAlleleLinkages(mydata, "popstruct", 1e4, 0.05)
+Msi01genes <- AddAlleleLinkages(Msi01genes, "popstruct", 1e4, 0.05)
 # Get new posterior probabilities based on those linkages
-mydata <- AddGenotypePriorProb_LD(mydata, "popstruct")
+Msi01genes <- AddGenotypePriorProb_LD(Msi01genes, "popstruct")
 
 # Preview results
-mydata$priorProbLD[[1]][,1:10,1:10]
+Msi01genes$priorProbLD[[1]][,1:10,1:10]
 }
 \keyword{ array }
 \keyword{ regression }
