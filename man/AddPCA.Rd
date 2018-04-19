@@ -12,7 +12,7 @@ The PCA scores are then stored in the \code{$PCA} slot of the
 }
 \usage{
 AddPCA(object, ...)
-\method{AddPCA}{RADdata}(object, nPcsInit = 50, maxR2changeratio = 0.05, 
+\method{AddPCA}{RADdata}(object, nPcsInit = 10, maxR2changeratio = 0.05, 
                          minPcsOut = 1, \dots)
 }
 \arguments{

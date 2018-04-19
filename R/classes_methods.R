@@ -914,7 +914,7 @@ AddPCA <- function(object, ...){
   UseMethod("AddPCA", object)
 }
 # some key additional arguments: nPcs is the number of PC axes to return
-AddPCA.RADdata <- function(object, nPcsInit = 50, maxR2changeratio = 0.05, 
+AddPCA.RADdata <- function(object, nPcsInit = 10, maxR2changeratio = 0.05, 
                            minPcsOut = 1, ...){
   if(minPcsOut > nPcsInit){
     stop("minPcsOut can not be greater than nPcsInit.")
