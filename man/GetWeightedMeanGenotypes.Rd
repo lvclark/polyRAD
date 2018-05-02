@@ -1,16 +1,22 @@
 \name{GetWeightedMeanGenotypes}
 \alias{GetWeightedMeanGenotypes}
 \alias{GetWeightedMeanGenotypes.RADdata}
+\alias{GetProbableGenotypes}
+\alias{GetProbableGenotypes.RADdata}
 \title{
-Export Numeric Genotype Values Weighted by Posterior Probabilities
+Export Numeric Genotype Values from Posterior Probabilities
 }
 \description{
-This function calculates numerical genotype values, weighted by 
-posterior genotype probabilities.  If the \code{"\link{RADdata}"} 
+These functions calculate numerical genotype values using posterior
+probabilities in a \code{"\link{RADdata}"} object, and output
+those values as a matrix of taxa by alleles.
+\code{GetWeightedMeanGenotypes} returns continuous genotype values, 
+weighted by posterior genotype probabilities.  
+\code{GetProbableGenotypes} returns discrete genotype values indicating
+the most probable genotype.  If the \code{"\link{RADdata}"} 
 object includes more than one possible inheritance mode, the 
 \code{$ploidyChiSq} slot is used for selecting or weighting 
-inheritance modes for each allele.  A matrix is returned with
-numerical genotype values for each taxon and allele.
+inheritance modes for each allele.
 }
 \usage{
 GetWeightedMeanGenotypes(object, ...)
@@ -19,6 +25,11 @@ GetWeightedMeanGenotypes(object, ...)
                          omitCommonAllele = TRUE,
                          naIfZeroReads = FALSE, 
                          onePloidyPerAllele = FALSE, \dots)
+
+GetProbableGenotypes(object, ...)
+\method{GetProbableGenotypes}{RADdata}(object, omit1allelePerLocus = TRUE,
+                     omitCommonAllele = TRUE,
+                     naIfZeroReads = FALSE, \dots)
 }
 \arguments{
   \item{object}{
@@ -58,7 +69,7 @@ for each locus).  Ignored if \code{omit1allelePerLocus = FALSE}.
 A logical indicating whether \code{NA} should be inserted into the 
 output matrix for any taxa and loci where the total read depth for
 the locus is zero.  If \code{FALSE}, the output for these genotypes is
-essentially the weighted mean across prior genotype probabilities, since
+essentially calculated using prior genotype probabilities, since
 prior and posterior genotype probabilities are equal when there are no
 reads.
 }
@@ -74,18 +85,24 @@ genotypes that have been weighted across inheritance modes are returned.
 \details{
 For each inheritance mode \eqn{m}, taxon \eqn{t}, allele \eqn{a}, allele copy number 
 \eqn{i}, total ploidy \eqn{k}, and posterior genotype probability \eqn{p_{i,t,a,m}},
-weighted mean genotype \eqn{g_{t,a,m}} is estimated as:
+weighted mean genotype \eqn{g_{t,a,m}} is estimated by \code{GetWeightedMeanGenotypes} as:
 
 \deqn{g_{t,a,m} = \sum_{i = 0}^k p_{i,t,a,m} * \frac{i}{k}}{g_{t,a,m} = \sum_{i = 0}^k p_{i,t,a,m} * i/k}
 
+For \code{GetProbableGenotypes}, the genotype is the one with the maximum posterior
+probability:
+
+\deqn{g_{t,a,m} = i | \max_{i = 0}^k{p_{i,t,a,m}}}
+
 When there are multiple inheritance modes and \code{onePloidyPerAllele = FALSE},
-the weighted genotype is estimated as:
+the weighted genotype is estimated by \code{GetWeightedMeanGenotypes} as:
 
 \deqn{g_{t,a} = \sum_m [ g_{t,a,m} * \frac{1}{\chi^2_{m,a}} / \sum_m \frac{1}{\chi^2_{m,a}}]}{
 \sum_m [ g_{t,a,m} * 1/\chi^2_{m,a} / \sum_m 1/\chi^2_{m,a}]
 }
 
-When there are multiple inheritance modes and \code{onePloidyPerAllele = TRUE},
+In \code{GetProbableGenotypes}, or \code{GetWeightedMeanGenotypes}
+when there are multiple inheritance modes and \code{onePloidyPerAllele = TRUE},
 the genotype is simply the one corresponding to the inheritance mode with the minimum
 \eqn{\chi ^2}{chi-squared} value:
 
@@ -93,9 +110,23 @@ the genotype is simply the one corresponding to the inheritance mode with the mi
 }
 
 \value{
-A named matrix, with taxa in rows and alleles in columns,
+For \code{GetWeightedMeanGenotypes},
+a named matrix, with taxa in rows and alleles in columns,
 and values ranging from \code{minval} to \code{maxval}.
 These values can be treated as continuous genotypes.
+
+For \code{GetProbableGenotypes}, a list:
+
+\item{genotypes}{
+A named integer matrix, with taxa in rows and alleles in columns,
+and values ranging from zero to the maximum ploidy for
+each allele.  These values can be treated as discrete genotypes.
+}
+\item{ploidy_index}{
+A vector with one value per allele.  It contains the index
+of the most inheritance mode of that allele in 
+\code{object$priorProbPloidies}.
+}
 }
 \author{
 Lindsay V. Clark
@@ -119,6 +150,11 @@ exampleRAD_mapping <- AddPloidyChiSq(exampleRAD_mapping)
 wmg <- GetWeightedMeanGenotypes(exampleRAD_mapping)
 # examine the results
 wmg[1:10,]
+
+# get most probable genotypes
+pg <- GetProbableGenotypes(exampleRAD_mapping, naIfZeroReads = TRUE)
+# examine the results
+pg$genotypes[1:10,]
 }
 
 \keyword{ methods }

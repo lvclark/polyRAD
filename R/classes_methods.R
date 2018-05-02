@@ -910,6 +910,54 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
   return(wmgeno)
 }
 
+# function to get the most probable genotypes at the most probable ploidy
+GetProbableGenotypes <- function(object, ...){
+  UseMethod("GetProbableGenotypes", object)
+}
+GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
+                                         omitCommonAllele = TRUE,
+                                         naIfZeroReads = FALSE, ...){
+  if(!CanDoGetWeightedMeanGeno(object)){
+    stop("Need posteriorProb and ploidyChiSq.")
+  }
+  # determine which alleles should be processed
+  allelesToExport <- 1:nAlleles(object)
+  if(omit1allelePerLocus){
+    allelesToExport <- allelesToExport[-OneAllelePerMarker(object,
+                                          commonAllele = omitCommonAllele)]
+  }
+  
+  # matrix for output
+  outmat <- matrix(NA_integer_, nrow = nTaxa(object),
+                   ncol = length(allelesToExport),
+                   dimnames = list(GetTaxa(object), 
+                                   GetAlleleNames(object)[allelesToExport]))
+  # index of which ploidy was exported for each allele
+  pldindex <- integer(length(allelesToExport))
+  
+  # loop through alleles
+  for(a in allelesToExport){
+    # find most probable ploidy
+    if(is.null(object$ploidyChiSq)){
+      pldindex[a] <- 1
+    } else {
+      pldindex[a] <- which.max(object$ploidyChiSq[,a])
+    }
+    if(is.na(pldindex[a])) next
+    # find the most probable genotypes
+    i <- fastmatch::fmatch(a, allelesToExport)
+    outmat[,i] <- apply(object$posteriorProb[[pldindex[a]]][,,a], 2,
+                        function(x) which.max(x) - 1L)
+    # insert NA where there are zero reads
+    if(naIfZeroReads){
+      outmat[object$locDepth[,as.character(object$alleles2loc[a])] == 0,
+             i] <- NA_integer_
+    }
+  }
+  
+  return(list(genotypes = outmat, ploidy_index = pldindex))
+}
+
 AddPCA <- function(object, ...){
   UseMethod("AddPCA", object)
 }

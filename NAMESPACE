@@ -10,8 +10,8 @@ CanDoGetWeightedMeanGeno, ExportGAPIT,
 Export_rrBLUP_Amat, Export_rrBLUP_GWAS, Export_TASSEL_Numeric,
 GetAlleleNames,
 GetBlankTaxa, GetContamRate, GetDonorParent, GetLikelyGen, 
-GetLocDepth, GetLoci, GetRecurrentParent, GetTaxa, 
-GetWeightedMeanGenotypes, IterateHWE, IterateHWE_LD,
+GetLocDepth, GetLoci, GetProbableGenotypes, GetRecurrentParent, 
+GetTaxa, GetWeightedMeanGenotypes, IterateHWE, IterateHWE_LD,
 IteratePopStruct, IteratePopStructLD,
 MakeTasselVcfFilter, nTaxa, nAlleles, nLoci, OneAllelePerMarker, 
 PipelineMapping2Parents, RADdata, readHMC, readStacks1, readTagDigger,
@@ -48,6 +48,7 @@ S3method(GetDonorParent, RADdata)
 S3method(GetLikelyGen, RADdata)
 S3method(GetLocDepth, RADdata)
 S3method(GetLoci, RADdata)
+S3method(GetProbableGenotypes, RADdata)
 S3method(GetRecurrentParent, RADdata)
 S3method(GetTaxa, RADdata)
 S3method(GetWeightedMeanGenotypes, RADdata)
