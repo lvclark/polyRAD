@@ -5,3 +5,11 @@ AlleleProbExp <- function(depth, alleleProb) {
     .Call('_polyRAD_AlleleProbExp', PACKAGE = 'polyRAD', depth, alleleProb)
 }
 
+BestGenos <- function(probs, ploidy, ntaxa, nalleles) {
+    .Call('_polyRAD_BestGenos', PACKAGE = 'polyRAD', probs, ploidy, ntaxa, nalleles)
+}
+
+BestPloidies <- function(chisq) {
+    .Call('_polyRAD_BestPloidies', PACKAGE = 'polyRAD', chisq)
+}
+

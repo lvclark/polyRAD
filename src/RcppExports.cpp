@@ -17,9 +17,36 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// BestGenos
+IntegerMatrix BestGenos(NumericVector probs, int ploidy, int ntaxa, int nalleles);
+RcppExport SEXP _polyRAD_BestGenos(SEXP probsSEXP, SEXP ploidySEXP, SEXP ntaxaSEXP, SEXP nallelesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type probs(probsSEXP);
+    Rcpp::traits::input_parameter< int >::type ploidy(ploidySEXP);
+    Rcpp::traits::input_parameter< int >::type ntaxa(ntaxaSEXP);
+    Rcpp::traits::input_parameter< int >::type nalleles(nallelesSEXP);
+    rcpp_result_gen = Rcpp::wrap(BestGenos(probs, ploidy, ntaxa, nalleles));
+    return rcpp_result_gen;
+END_RCPP
+}
+// BestPloidies
+IntegerVector BestPloidies(NumericMatrix chisq);
+RcppExport SEXP _polyRAD_BestPloidies(SEXP chisqSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type chisq(chisqSEXP);
+    rcpp_result_gen = Rcpp::wrap(BestPloidies(chisq));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_polyRAD_AlleleProbExp", (DL_FUNC) &_polyRAD_AlleleProbExp, 2},
+    {"_polyRAD_BestGenos", (DL_FUNC) &_polyRAD_BestGenos, 4},
+    {"_polyRAD_BestPloidies", (DL_FUNC) &_polyRAD_BestPloidies, 1},
     {NULL, NULL, 0}
 };
 

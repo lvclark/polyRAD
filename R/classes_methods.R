@@ -325,7 +325,9 @@ GetLikelyGen.RADdata <- function(object, taxon, minLikelihoodRatio = 10){
   for(i in 1:npld){
     nonNaAlleles <- which(!is.na(object$genotypeLikelihood[[i]][1,taxind,]))
     # get the most likely genotype
-    outmat[i,nonNaAlleles] <- apply(object$genotypeLikelihood[[i]][,taxind,nonNaAlleles], 2, which.max) - 1
+#    outmat[i,nonNaAlleles] <- apply(object$genotypeLikelihood[[i]][,taxind,nonNaAlleles], 2, which.max) - 1 # R version
+    outmat[i,nonNaAlleles] <- BestGenos(object$genotypeLikelihood[[i]][,taxind,nonNaAlleles],
+                                        ploidies[i], 1, length(nonNaAlleles)) # Rcpp function
     # remove genotypes that don't meet the likelihood ratio threshold
     if(minLikelihoodRatio > 1){
       # get likelihood ratios
@@ -866,13 +868,7 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
     if(onePloidyPerAllele){
       ploidyweights <- matrix(0, nrow = nPloidies,
                               ncol = length(altokeep))
-      bestploidies <- apply(object$ploidyChiSq[,altokeep, drop = FALSE], 2, 
-                            function(x){
-                              if(all(is.na(x))){
-                                   return(0)
-                                 } else {
-                                   return(which.min(x))
-                                 }})
+      bestploidies <- BestPloidies(object$ploidyChiSq[,altokeep, drop = FALSE])
       for(i in 1:nPloidies){
         ploidyweights[i,bestploidies == i] <- 1
       }
@@ -924,7 +920,7 @@ GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
   allelesToExport <- 1:nAlleles(object)
   if(omit1allelePerLocus){
     allelesToExport <- allelesToExport[-OneAllelePerMarker(object,
-                                          commonAllele = omitCommonAllele)]
+                                                           commonAllele = omitCommonAllele)]
   }
   
   # matrix for output
@@ -933,26 +929,27 @@ GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
                    dimnames = list(GetTaxa(object), 
                                    GetAlleleNames(object)[allelesToExport]))
   # index of which ploidy was exported for each allele
-  pldindex <- integer(length(allelesToExport))
+  if(length(object$posteriorProb) == 1){
+    pldindex <- rep(1L, length(allelesToExport))
+    ploidyindices <- 1L
+  } else {
+    pldindex <- BestPloidies(object$ploidyChiSq[,allelesToExport,drop=FALSE]) # Rcpp function
+    ploidyindices <- sort(unique(pldindex))
+  }
+  names(pldindex) <- GetAlleleNames(object)[allelesToExport]
   
-  # loop through alleles
-  for(a in allelesToExport){
-    # find most probable ploidy
-    if(is.null(object$ploidyChiSq)){
-      pldindex[a] <- 1
-    } else {
-      pldindex[a] <- which.min(object$ploidyChiSq[,a])
-    }
-    if(is.na(pldindex[a])) next
-    # find the most probable genotypes
-    i <- fastmatch::fmatch(a, allelesToExport)
-    outmat[,i] <- apply(object$posteriorProb[[pldindex[a]]][,,a], 2,
-                        function(x) which.max(x) - 1L)
-    # insert NA where there are zero reads
-    if(naIfZeroReads){
-      outmat[object$locDepth[,as.character(object$alleles2loc[a])] == 0,
-             i] <- NA_integer_
-    }
+  # loop through ploidies and fill in matrix
+  for(p in ploidyindices){
+    thesealleles <- which(pldindex == p)
+    thispld = dim(object$posteriorProb[[p]])[1] - 1L
+    outmat[,thesealleles] <- BestGenos(object$posteriorProb[[p]][,,allelesToExport[thesealleles]],
+                                       thispld, nTaxa(object), length(thesealleles)) # Rcpp function
+  }
+  
+  # put in NA for zero reads if necessary
+  if(naIfZeroReads){
+    isZero <- (object$locDepth == 0)[,as.character(object$alleles2loc[allelesToExport])]
+    outmat[isZero] <- NA_integer_
   }
   
   return(list(genotypes = outmat, ploidy_index = pldindex))
