@@ -75,10 +75,10 @@ For \code{Export_rrBLUP_Amat}, a matrix with taxa in rows and alleles (markers)
 in columns, containing genotype data.  This can be passed to \code{A.mat} in
 \pkg{rrBLUP}.
 
-For \code{Export_rrBLUP_Amat}, a data frame with alleles (markers) in rows.
+For \code{Export_rrBLUP_GWAS}, a data frame with alleles (markers) in rows.
 The first three columns contain the marker names, chromosomes, and positions,
 and the remaining columns each represent one taxon and contain the genotype
-data.  This can be passed to the \code{GWAS} function in \pkg{rrBLUP}
+data.  This can be passed to the \code{GWAS} function in \pkg{rrBLUP}.
 
 \code{Export_TASSEL_Numeric} writes a file but does not return an object.
 }
