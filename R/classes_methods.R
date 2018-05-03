@@ -941,7 +941,7 @@ GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
     if(is.null(object$ploidyChiSq)){
       pldindex[a] <- 1
     } else {
-      pldindex[a] <- which.max(object$ploidyChiSq[,a])
+      pldindex[a] <- which.min(object$ploidyChiSq[,a])
     }
     if(is.na(pldindex[a])) next
     # find the most probable genotypes
