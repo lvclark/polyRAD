@@ -114,7 +114,7 @@ future by examining distribution of genotype likelihoods.
 }
 
 \seealso{
-\code{\link{AddGenotypeLikelihood}}, \code{link{AddGenotypePriorProb_HWE}}
+\code{\link{AddGenotypeLikelihood}}, \code{\link{AddGenotypePriorProb_HWE}}
 }
 \examples{
 # load dataset and set some parameters
