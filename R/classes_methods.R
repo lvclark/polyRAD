@@ -881,7 +881,7 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
   }
 
   # set up emtpy matrix to contain results
-  wmgeno <- matrix(0, nrow = nTaxa(object),
+  wmgeno <- matrix(NA, nrow = nTaxa(object),
                    ncol = length(altokeep),
                    dimnames = list(GetTaxa(object),
                                    GetAlleleNames(object)[altokeep]))
@@ -894,9 +894,13 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
                                    1, thesegenval, "*"), 
                              c(2,3,1)), 
                        dims = 2)
-    thesewm[is.na(thesewm)] <- 0
     # multiply by weight for this ploidy and add to total
-    wmgeno <- wmgeno + sweep(thesewm, 2, ploidyweights[i,], "*")
+    thesewm <- sweep(thesewm, 2, ploidyweights[i,], "*")
+    nasofar <- is.na(wmgeno)
+    nanew <- is.na(thesewm)
+    add <- !nasofar & !nanew
+    wmgeno[nasofar] <- thesewm[nasofar]
+    wmgeno[add] <- wmgeno[add] + thesewm[add]
   }
   
   if(naIfZeroReads){ # if there were zero reads for that locus, replace with NA

@@ -9,7 +9,7 @@ IntegerMatrix BestGenos(NumericVector probs, int ploidy, int ntaxa, int nalleles
   int nprobs = probs.size();
   int ngen = ploidy + 1;
   int ngentimestaxa = ngen * ntaxa;
-  int bestgen = 0;
+  int bestgen = NA_INTEGER;
   float bestprob = 0;
   int copynum;
   int taxon;
@@ -23,6 +23,10 @@ IntegerMatrix BestGenos(NumericVector probs, int ploidy, int ntaxa, int nalleles
     if(copynum == 0 || probs[i] > bestprob){
       bestgen = copynum;
       bestprob = probs[i];
+      if(NumericVector::is_na(probs[i])){
+        bestgen = NA_INTEGER;
+        bestprob = 0;
+      }
     }
     if(copynum == ploidy){
       bestgenos(taxon, allele) = bestgen;
