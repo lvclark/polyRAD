@@ -424,17 +424,32 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     for(i in 1:dim(pldcombos)[1]){
       poss_matches <- which(expfreq_byPloidy[[i]] == thisfreq, arr.ind = TRUE) - 1
       if(nrow(poss_matches) == 0) next
-      if(nrow(poss_matches) == 1){ # only one possible match (i.e. when there is backcrossing)
-        likelyGen.don[as.character(pldcombos[i,"donor"]),a] <- unname(poss_matches[,1])
-        likelyGen.rec[as.character(pldcombos[i,"recurrent"]),a] <- unname(poss_matches[,2])
+      if(nrow(poss_matches) == 1){
+        # only one possible match (i.e. when there is backcrossing)
+        likelyGen.don[as.character(pldcombos[i,"donor"]),a] <- 
+          unname(poss_matches[,1])
+        likelyGen.rec[as.character(pldcombos[i,"recurrent"]),a] <- 
+          unname(poss_matches[,2])
       } else { # multiple possible matches
-        current.don <- likelyGen.don[as.character(pldcombos[i,"donor"]),a]
-        current.rec <- likelyGen.rec[as.character(pldcombos[i,"recurrent"]),a]
-        # if one genotype is already a match, fix the other one
-        if(!is.na(current.don) && any(poss_matches[,1] == current.don)){
-          likelyGen.rec[as.character(pldcombos[i,"recurrent"]),a] <- unname(poss_matches[poss_matches[,1] == current.don,2])
-        } else if(!is.na(current.rec) && any(poss_matches[,2] == current.rec)){
-          likelyGen.don[as.character(pldcombos[i,"donor"]),a] <- unname(poss_matches[poss_matches[,2] == current.rec,1])
+        # vector to contain genotype combo likelihoods
+        thislikeli <- numeric(nrow(poss_matches)) 
+        # indices for current ploidies
+        plind.d <- which(pldtot == pldcombos[i,"donor"])
+        plind.r <- which(pldtot == pldcombos[i,"recurrent"])
+        for(m in 1:nrow(poss_matches)){
+          gen.d <- poss_matches[m,1]
+          gen.r <- poss_matches[m,2]
+          
+          thislikeli[m] <- 
+            object$genotypeLikelihood[[plind.d]][gen.d + 1, donorParent, a] *
+            object$genotypeLikelihood[[plind.r]][gen.r + 1, recurrentParent, a]
+        }
+        bestcombo <- which(thislikeli == max(thislikeli))
+        if(length(bestcombo) == 1){
+          likelyGen.don[as.character(pldcombos[i,"donor"]),a] <- 
+            unname(poss_matches[bestcombo, 1])
+          likelyGen.rec[as.character(pldcombos[i,"recurrent"]),a] <- 
+            unname(poss_matches[bestcombo, 2])
         }
       }
     }
