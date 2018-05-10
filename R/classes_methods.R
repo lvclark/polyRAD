@@ -455,6 +455,10 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     }
   }
   
+  # save corrected parental genotypes to object
+  object$likelyGeno_donor <- likelyGen.don
+  object$likelyGeno_recurrent <- likelyGen.rec
+  
   # function for deteriming ploidy of offspring (by index in possiblePloidies)
   offspringPloidy <- function(pld1, pld2){ 
     if(length(pld1) == length(pld2)){
@@ -674,6 +678,8 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
 
   object$priorProb <- OutPriors
   object$priorProbPloidies <- object$possiblePloidies[pldcombosExpand[,"final"]]
+  object$donorPloidies <- object$possiblePloidies[pldcombosExpand[,"donor"]]
+  object$recurrentPloidies <- object$possiblePloidies[pldcombosExpand[,"recurrent"]]
   attr(object, "priorType") <- "population" 
   # --> indicates prior probs are estimated for whole pop, not by taxa
   return(object)
@@ -931,7 +937,8 @@ GetProbableGenotypes <- function(object, ...){
 }
 GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
                                          omitCommonAllele = TRUE,
-                                         naIfZeroReads = FALSE, ...){
+                                         naIfZeroReads = FALSE, 
+                                         correctParentalGenos = TRUE, ...){
   if(!CanDoGetWeightedMeanGeno(object)){
     stop("Need posteriorProb and ploidyChiSq.")
   }
@@ -963,6 +970,16 @@ GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
     thispld = dim(object$posteriorProb[[p]])[1] - 1L
     outmat[,thesealleles] <- BestGenos(object$posteriorProb[[p]][,,allelesToExport[thesealleles]],
                                        thispld, nTaxa(object), length(thesealleles)) # Rcpp function
+    # correct parent genotypes if this is a mapping population
+    if(correctParentalGenos && !is.null(object$likelyGeno_donor) &&
+       !is.null(object$likelyGeno_recurrent)){
+      pld.d <- sum(object$donorPloidies[[p]])
+      pld.r <- sum(object$recurrentPloidies[[p]])
+      outmat[GetDonorParent(object), thesealleles] <- 
+        object$likelyGeno_donor[as.character(pld.d), thesealleles]
+      outmat[GetRecurrentParent(object), thesealleles] <- 
+        object$likelyGeno_recurrent[as.character(pld.r), thesealleles]
+    }
   }
   
   # put in NA for zero reads if necessary

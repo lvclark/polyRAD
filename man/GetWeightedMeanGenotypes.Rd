@@ -29,7 +29,8 @@ GetWeightedMeanGenotypes(object, ...)
 GetProbableGenotypes(object, ...)
 \method{GetProbableGenotypes}{RADdata}(object, omit1allelePerLocus = TRUE,
                      omitCommonAllele = TRUE,
-                     naIfZeroReads = FALSE, \dots)
+                     naIfZeroReads = FALSE, 
+                     correctParentalGenos = TRUE, \dots)
 }
 \arguments{
   \item{object}{
@@ -79,6 +80,14 @@ lowest \eqn{\chi ^ 2}{chi-squared} value is selected and is assumed to be
 the true inheritance mode.  If \code{FALSE}, inheritance modes are weighted
 by inverse \eqn{\chi ^ 2}{chi-squared} values for each allele, and mean
 genotypes that have been weighted across inheritance modes are returned.
+}
+\item{correctParentalGenos}{
+Logical.  If \code{TRUE} and if the dataset was processed with
+\code{\link{PipelineMapping2Parents}}, the parental genotypes that are output
+are corrected according to the progeny allele frequencies, using the 
+\code{likelyGeno_donor} and \code{likelyGeno_recurrent} slots in \code{object}.
+For the ploidy of the marker, the appropriate ploidy for the parents is 
+selected using the \code{donorPloidies} and \code{recurrentPloidies} slots.
 }
 }
 

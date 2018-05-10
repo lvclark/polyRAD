@@ -74,8 +74,10 @@ ploidy must be in \code{object$possiblePloidies} for a given combination
 to be examined.
 
 The most likely genotypes for the two parents are estimated using
-\code{\link{GetLikelyGen}}.  For each ploidy being examined, F1 genotype
-probabilities are then calculated.
+\code{\link{GetLikelyGen}}.  If parental gentoypes don't match progeny allele
+frequencies, the function attempts to correct the parental genotypes to the
+most likely combination that matches the allele frequency.
+For each ploidy being examined, F1 genotype probabilities are then calculated.
 
 Genotype probabilities are updated for each backcrossing generation, then each
 intermating generation, then each selfing generation.
@@ -91,7 +93,7 @@ intermated to produce the F2, one would instead use
 }
 \value{
 A \code{"RADdata"} object identical to that passed to the function, but with
-data stored in two new slots:
+data stored in six new slots:
 
 \item{priorProb }{A list of matrices, with one matrix per possible ploidy
 of offspring.  For each matrix, allele copy number (from zero to the total
@@ -101,6 +103,17 @@ of sampling an individual with that allele copy number from the population.}
 \code{object$possiblePloidies}, and the same length as 
 \code{object$priorProb}.  Each item in the list is a vector indicating the
 inheritance mode for the corresponding matrix in \code{object$priorProb}.}
+\item{donorPloidies }{A list in the same format as \code{object$possiblePloidies},
+with one item corresponding to each in object$priorProbPloidies, indicating
+the donor parent ploidy for that progeny ploidy.}
+\item{recurrentPloidies }{A list in the same format as \code{object$possiblePloidies},
+with one item corresponding to each in \code{object$priorProbPloidies}, indicating
+the recurrent parent ploidy for that progeny ploidy.}
+\item{likelyGeno_donor }{A matrix of the donor parent genotypes that were
+used for estimating genotype prior probabilities.  Formatted like the
+output of \code{\link{GetLikelyGen}}.}
+\item{likelyGeno_recurrent }{A matrix of the recurrent parent genotypes
+that were use for estimating gentoype prior probabilities.}
 }
 \author{
 Lindsay V. Clark
