@@ -20,16 +20,19 @@ IntegerMatrix BestGenos(NumericVector probs, int ploidy, int ntaxa, int nalleles
     taxon = i / ngen % ntaxa;
     allele = i / ngentimestaxa;
     
+    if(copynum > 0 && probs[i] == bestprob){
+      bestgen = NA_INTEGER; // NA if there is a tie
+    }
     if(copynum == 0 || probs[i] > bestprob){
-      bestgen = copynum;
+      bestgen = copynum;    // Update or start new with best genotype
       bestprob = probs[i];
       if(NumericVector::is_na(probs[i])){
-        bestgen = NA_INTEGER;
+        bestgen = NA_INTEGER; // NA if probs are missing
         bestprob = 0;
       }
     }
     if(copynum == ploidy){
-      bestgenos(taxon, allele) = bestgen;
+      bestgenos(taxon, allele) = bestgen; // Output before moving to next
     }
   }
   

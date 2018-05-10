@@ -976,9 +976,9 @@ GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
       pld.d <- sum(object$donorPloidies[[p]])
       pld.r <- sum(object$recurrentPloidies[[p]])
       outmat[GetDonorParent(object), thesealleles] <- 
-        object$likelyGeno_donor[as.character(pld.d), thesealleles]
+        object$likelyGeno_donor[as.character(pld.d), allelesToExport[thesealleles]]
       outmat[GetRecurrentParent(object), thesealleles] <- 
-        object$likelyGeno_recurrent[as.character(pld.r), thesealleles]
+        object$likelyGeno_recurrent[as.character(pld.r), allelesToExport[thesealleles]]
     }
   }
   
