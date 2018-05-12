@@ -923,6 +923,8 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
     wmgeno[nasofar] <- thesewm[nasofar]
     wmgeno[add] <- wmgeno[add] + thesewm[add]
   }
+  # where there was no good ploidy, put in missing data
+  wmgeno[,colSums(ploidyweights) == 0] <- NA
   
   if(naIfZeroReads){ # if there were zero reads for that locus, replace with NA
     wmgeno[object$locDepth[,as.character(object$alleles2loc)[altokeep]] == 0] <- NA
