@@ -21,7 +21,7 @@ polyRAD requires as input the sequence read depth at each allele for each sample
 
 Currently there are export functions for the following software.  Genotypes are exported as continuous rather than discrete variables.
 
-* [GAPIT](http://www.zzlab.net/GAPIT/)
+* [GAPIT](http://www.zzlab.net/GAPIT/) and [FarmCPU](http://www.zzlab.net/FarmCPU/)
 * [rrBLUP](https://cran.r-project.org/web/packages/rrBLUP/)
 * [TASSEL](http://www.maizegenetics.net/tassel)
 

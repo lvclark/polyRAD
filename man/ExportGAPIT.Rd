@@ -48,11 +48,12 @@ A character string indicating a file path to which to write.
 }
 }
 \details{
-\pkg{GAPIT}, \pkg{rrBLUP}, and \pkg{TASSEL} allow genotypes to be a continuous numeric variable.
+\pkg{GAPIT}, \pkg{FarmCPU}, \pkg{rrBLUP}, and \pkg{TASSEL} allow genotypes to 
+be a continuous numeric variable.
 \pkg{GAPIT} does not allow missing data, hence there is no \code{naIfZeroReads}
 argument for \code{ExportGAPIT}.  Genotypes are exported on a scale of -1
-to 1 for \pkg{rrBLUP}, on a scale of 0 to 2 for \pkg{GAPIT}, and on a scale of 
-0 to 1 for \pkg{TASSEL}.
+to 1 for \pkg{rrBLUP}, on a scale of 0 to 2 for \pkg{GAPIT} and \pkg{FarmCPU},
+and on a scale of 0 to 1 for \pkg{TASSEL}.
 
 For all functions, one allele per marker is dropped.  For \code{ExportGAPIT}
 and \code{Export_rrBLUP_GWAS}, chromosome and position are filled with dummy
@@ -67,9 +68,10 @@ For \code{ExportGAPIT}, a list:
 
 \item{GD }{A data frame with taxa in the first column and alleles (markers)
 in subsequent columns, containing the genotypes.  To be passed to the \code{GD}
-argument for \code{GAPIT}.}
+argument for \code{GAPIT} or \code{FarmCPU}.}
 \item{GM }{A data frame with the name, chromosome number, and position of
-every allele (marker).  To be passed to the \code{GM} argument for \code{GAPIT}.}
+every allele (marker).  To be passed to the \code{GM} argument for \code{GAPIT}
+or \code{FarmCPU}.}
 
 For \code{Export_rrBLUP_Amat}, a matrix with taxa in rows and alleles (markers)
 in columns, containing genotype data.  This can be passed to \code{A.mat} in
@@ -89,6 +91,12 @@ Lipka, A. E., Tian, F., Wang, Q., Peiffer, J., Li, M., Bradbury, P. J.,
 Gore, M. A., Buckler, E. S. and Zhang, Z. (2012) GAPIT: genome association 
 and prediction integrated tool.  \emph{Bioinformatics} \bold{28}, 2397--2399.
 
+\url{http://www.zzlab.net/FarmCPU/}
+
+Liu, X., Huang, M., Fan, B., Buckler, E. S., Zhang, Z. (2016) Iterative usage
+of fixed and random effects models for powerful and efficient genome-wide
+association studies.  \emph{PLoS Genetics} \bold{12}, e1005767.
+
 Endelman, J.B. (2011) Ridge Regression and Other Kernels for Genomic 
 Selection with R Package rrBLUP.  \emph{The Plant Genome} \bold{4}, 250--255.
 
@@ -102,8 +110,8 @@ traits in diverse samples. \emph{Bioinformatics} \bold{23}, 2633--2635.
 Lindsay V. Clark
 }
 \note{
-\pkg{rrBLUP} is available through CRAN, and \pkg{GAPIT} must be downloaded from
-the Zhang lab website.
+\pkg{rrBLUP} is available through CRAN, and \pkg{GAPIT} and \pkg{FarmCPU} must
+be downloaded from the Zhang lab website.
 
 In my experience with \pkg{TASSEL 5}, numerical genotype files that are too large do 
 not load/display properly.  If you run into this problem I recommend using
@@ -114,7 +122,7 @@ a kinship matrix using separate software such as \pkg{rrBLUP}.
 }
 
 \seealso{
-\code{\link{GetWeightedMeanGenotypes}})
+\code{\link{GetWeightedMeanGenotypes}}
 }
 \examples{
 # load example dataset
