@@ -1,4 +1,5 @@
-# additional polyRAD functions that perform calculations
+# additional polyRAD functions that perform calculations.
+# various intenal functions.
 
 # internal function to take allele frequencies and get prior probs under HWE
 # freqs is a vector of allele frequencies
@@ -132,3 +133,75 @@
   }
   return(outFreq)
 }
+
+# Internal function to get a consensus between two DNA sequences, using
+# IUPAC ambiguity codes.  Should work for either character strings
+# or DNAStrings.  Puts in ambiguity codes any time there is not 100%
+# consensus.
+.mergeNucleotides <- function(seq1, seq2, useBiostrings = TRUE){
+  if(useBiostrings){
+    dss <- Biostrings::DNAStringSet(c(as.character(seq1), as.character(seq2)))
+    out <- Biostrings::consensusString(dss, threshold = 0.01)
+  } else {
+    if(!is.character(seq1)) stop("Need Biostrings package.")
+    split1 <- strsplit(seq1, split = "")[[1]]
+    split2 <- strsplit(seq2, split = "")[[1]]
+    splitNew <- character(length(split1))
+    splitNew[split1 == split2] <- split1
+    
+    IUPAC_key <- list(M = list(c('A', 'C'), c('A', 'M'), c('C', 'M')), 
+                      R = list(c('A', 'G'), c('A', 'R'), c('G', 'R')), 
+                      W = list(c('A', 'T'), c('A', 'W'), c('T', 'W')), 
+                      S = list(c('C', 'G'), c('C', 'S'), c('G', 'S')),
+                      Y = list(c('C', 'T'), c('C', 'Y'), c('T', 'Y')),
+                      K = list(c('G', 'T'), c('G', 'K'), c('T', 'K')),
+                      V = list(c('A', 'S'), c('C', 'R'), c('G', 'M'),
+                               c('A', 'V'), c('C', 'V'), c('G', 'V')),
+                      H = list(c('A', 'Y'), c('C', 'W'), c('T', 'M'),
+                               c('A', 'H'), c('C', 'H'), c('T', 'H')),
+                      D = list(c('A', 'K'), c('G', 'W'), c('T', 'R'),
+                               c('A', 'D'), c('G', 'D'), c('T', 'D')),
+                      B = list(c('C', 'K'), c('G', 'Y'), c('T', 'S'),
+                               c('C', 'B'), c('G', 'B'), c('T', 'B')))
+    for(i in which(split1 != split2)){
+      nucset <- c(split1[i], split2[i])
+      splitNew[i] <- "N"
+      for(nt in names(IUPAC_key)){
+        for(matchset in IUPAC_key[[nt]]){
+          if(setequal(nucset, matchset)){
+            splitNew[i] <- nt
+            break
+          }
+        }
+      }
+    }
+    out <- paste(splitNew, collapse = "")
+  }
+  return(out)
+}
+
+# substitution matrix for distances between alleles in polyRAD.
+# Any partial match based on ambiguity counts as a complete match.
+polyRADsubmat <- matrix(c(0,1,1,1, 0,0,0,1,1,1, 0,0,0,1, 0, # A
+                          1,0,1,1, 0,1,1,0,0,1, 0,0,1,0, 0, # C
+                          1,1,0,1, 1,0,1,0,1,0, 0,1,0,0, 0, # G
+                          1,1,1,0, 1,1,0,1,0,0, 1,0,0,0, 0, # T
+                          0,0,1,1, 0,0,0,0,0,1, 0,0,0,0, 0, # M
+                          0,1,0,1, 0,0,0,0,1,0, 0,0,0,0, 0, # R
+                          0,1,1,0, 0,0,0,1,0,0, 0,0,0,0, 0, # W
+                          1,0,0,1, 0,0,1,0,0,0, 0,0,0,0, 0, # S
+                          1,0,1,0, 0,1,0,0,0,0, 0,0,0,0, 0, # Y
+                          1,1,0,0, 1,0,0,0,0,0, 0,0,0,0, 0, # K
+                          0,0,0,1, 0,0,0,0,0,0, 0,0,0,0, 0, # V
+                          0,0,1,0, 0,0,0,0,0,0, 0,0,0,0, 0, # H
+                          0,1,0,0, 0,0,0,0,0,0, 0,0,0,0, 0, # D
+                          1,0,0,0, 0,0,0,0,0,0, 0,0,0,0, 0, # B
+                          0,0,0,0, 0,0,0,0,0,0, 0,0,0,0, 0  # N
+                          ),
+                         nrow = 15, ncol = 15,
+                         dimnames = list(c('A', 'C', 'G', 'T', 'M', 'R', 'W', 
+                                           'S', 'Y', 'K', 'V', 'H', 'D', 'B', 
+                                           'N'),
+                                         c('A', 'C', 'G', 'T', 'M', 'R', 'W', 
+                                           'S', 'Y', 'K', 'V', 'H', 'D', 'B', 
+                                           'N')))

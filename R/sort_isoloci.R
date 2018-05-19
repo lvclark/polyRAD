@@ -88,13 +88,16 @@ ClusterAlleles <- function(depth, nucleotides, nclust){
   }
   # get distances between sequences
   if(requireNamespace("Biostrings", quietly = TRUE)){
-    nucdist <- Biostrings::stringDist(nucleotides)
+    nucdist <- -Biostrings::stringDist(nucleotides, method = "substitutionMatrix",
+                                      substitutionMatrix = -polyRADsubmat)
   } else {
     nucsplit <- strsplit(nucleotides, "")
     nucmat <- matrix(0L, nrow = nAl, ncol = nAl)
     for(i in 1:(nAl-1)){
       for(j in (i+1):nAl){
-        nucmat[i,j] <- nucmat[j,i] <- sum(nucsplit[[i]] != nucsplit[[j]])
+        nucmat[i,j] <- nucmat[j,i] <- sum(sapply(1:length(splitnucA),
+                                                 function(i) polyRADsubmat[nucsplit[[i]],
+                                                                           nucsplit[[j]]]))
       }
     }
     nucdist <- as.dist(nucmat)
