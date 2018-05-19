@@ -110,6 +110,13 @@ for installation instructions.
 If you anticipate running \code{VCF2RADdata} on the same file more than once,
 it is recommended to run \code{bgzip} and \code{indexTabix} from the package
 \pkg{Rsamtools} once before running \code{VCF2RADdata}.  See examples.
+
+\code{min.ind.with.minor.allele} is used for filtering SNPs as the VCF file is
+read.  Additionally, because phasing SNPs into haplotypes can cause some 
+haplotypes to fail to pass this threshold, \code{VCF2RADdata} internally runs
+\code{\link{MergeRareHaplotypes}} with 
+\code{min.ind.with.haplotype = min.ind.with.minor.allele} before returning the
+final \code{RADdata} object.
 }
 \value{
 A \code{\link{RADdata}} object.

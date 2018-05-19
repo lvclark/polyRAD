@@ -833,6 +833,9 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   message("Building RADdata object...")
   radout <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
                     contamRate, alleleNucleotides)
+  message("Merging rare haplotypes...")
+  radout <- MergeRareHaplotypes(radout, 
+                                min.ind.with.haplotype = min.ind.with.minor.allele)
   
   return(radout)
 }
@@ -937,5 +940,8 @@ readStacks1 <- function(allelesFile, matchesFolder,
   # build RADdata object
   radout <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
                     contamRate, alleleNucleotides)
+  message("Merging rare haplotypes...")
+  radout <- MergeRareHaplotypes(radout, 
+                                min.ind.with.haplotype = min.ind.with.minor.allele)
   return(radout)
 }

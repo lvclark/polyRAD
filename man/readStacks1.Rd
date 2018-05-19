@@ -28,7 +28,9 @@ reads in order to be retained.
 For filtering loci.  A locus must have at least this many samples with
 reads for the minor allele in order to be retained.  For loci with more
 than two alleles, at least two alleles must be present in at least this
-many individuals.
+many individuals.  This argument is also passed internally to the 
+\code{min.ind.with.haplotype} argument of \code{\link{MergeRareHaplotypes}}
+to consolidate reads from rare alleles.
 }
   \item{readAlignmentData}{
 If \code{TRUE}, the "tags" file from the Stacks catalog will be read,

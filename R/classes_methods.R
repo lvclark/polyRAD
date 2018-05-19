@@ -1736,3 +1736,96 @@ FindNearbyAlleles.RADdata <- function(object, locus, distance){
   
   return(allelesout)
 }
+
+# function to find rare tags and merge them in with other tags from the locus.
+MergeRareHaplotypes <- function(object, ...){
+  UseMethod("MergeRareHaplotypes", object)
+}
+MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
+                                        ...){
+  if(!is.null(object$alleleFreq)){
+    stop("Run MergeRareHaplotypes before running any pipeline functions.")
+  }
+  # find alleles that are rare
+  Nindwithal <- colSums(object$alleleDepth > 0)
+  rarealleles <- which(Nindwithal < min.ind.with.haplotype)
+  # numbers for corresponding loci
+  lociToFix <- unique(object$alleles2loc[rarealleles])
+  # alleles that will ultimately be removed
+  allelesToRemove <- integer(length(rarealleles))
+  remIndex <- 1L
+  # use Biostrings for nucleotide distance?
+  haveBiostrings <- requireNamespace("Biostrings", quietly = TRUE)
+  
+  # loop through loci that need fixing
+  for(L in lociToFix){
+    thesealleles <- which(object$alleles2loc == L)
+    theserare <- thesealleles[thesealleles %fin% rarealleles]
+    while(length(theserare) > 0){
+      thisAl <- theserare[1]
+      # get nucleotide distance between this allele and others
+      thesenuc <- object$alleleNucleotides[thesealleles]
+      if(haveBiostrings){
+        nucdist <- Biostrings::stringDist(thesenuc,
+                                          method = "substitutionMatrix",
+                                          substitutionMatrix = -polyRADsubmat)
+        nucdist <- -as.matrix(nucdist)[thesealleles == thisAl,]
+      } else {
+        splitnuc <- strsplit(thesenuc, split = "")
+        splitnucA <- splitnuc[[which(thesealleles == thisAl)]]
+        nucdist <- integer(length(thesealleles))
+        for(a in 1:length(thesealleles)){
+          nucdist[a] <- sum(sapply(1:length(splitnucA),
+                                   function(i) polyRADsubmat[splitnucA[i],
+                                                             splitnuc[[a]][i]]))
+        }
+      }
+      # find the closest allele
+      alToMerge <- thesealleles[nucdist == min(nucdist[-match(thisAl, thesealleles)])]
+      if(length(alToMerge) > 1){
+        # if multiple are closest, merge to the most common one
+        alToMerge <- alToMerge[which.max(Nindwithal[alToMerge])]
+      }
+      if(length(alToMerge) > 1){
+        # if still don't have one, pick at random
+        alToMerge <- sample(alToMerge, 1)
+      }
+      # merge read counts
+      object$alleleDepth[,alToMerge] <- object$alleleDepth[,alToMerge] +
+        object$alleleDepth[,thisAl]
+      object$antiAlleleDepth[,alToMerge] <-
+        object$antiAlleleDepth[,alToMerge] - object$alleleDepth[,thisAl]
+      object$depthRatio[,alToMerge] <- 
+        object$depthRatio[,alToMerge] + object$depthRatio[,thisAl]
+      object$depthSamplingPermutations[,alToMerge] <-
+        choose(object$locDepth[,as.character(L)], object$alleleDepth[,alToMerge])
+      Nindwithal[alToMerge] <- Nindwithal[alToMerge] + Nindwithal[thisAl]
+      # merge nucleotides
+      newNt <- .mergeNucleotides(object$alleleNucleotides[[alToMerge]],
+                                 object$alleleNucleotides[[thisAl]],
+                                 useBiostrings = haveBiostrings)
+      if(is(object$alleleNucleotides, "DNAStringSet")){
+        newNt <- DNAString(newNt)
+      }
+      object$alleleNucleotides[[alToMerge]] <- newNt
+      # remove this allele
+      thesealleles <- thesealleles[thesealleles != thisAl]
+      theserare <- thesealleles[Nindwithal[thesealleles] < 
+                                  min.ind.with.haplotype]
+      allelesToRemove[remIndex] <- thisAl
+      remIndex <- remIndex + 1L
+    } # end of while loop for merging rare alleles
+  } # end of loop through loci
+  
+  allelesToRemove <- allelesToRemove[1:(remIndex - 1L)]
+  
+  # update and return RADdata object
+  object$alleleDepth <- object$alleleDepth[,-allelesToRemove]
+  object$antiAlleleDepth <- object$antiAlleleDepth[,-allelesToRemove]
+  object$depthRatio <- object$depthRatio[,-allelesToRemove]
+  object$depthSamplingPermutations <- 
+    object$depthSamplingPermutations[,-allelesToRemove]
+  object$alleleNucleotides <- object$alleleNucleotides[-allelesToRemove]
+  object$alleles2loc <- object$alleles2loc[-allelesToRemove]
+  return(object)
+} # end of MergeRareHaplotypes
