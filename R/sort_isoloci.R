@@ -95,7 +95,7 @@ ClusterAlleles <- function(depth, nucleotides, nclust){
     nucmat <- matrix(0L, nrow = nAl, ncol = nAl)
     for(i in 1:(nAl-1)){
       for(j in (i+1):nAl){
-        nucmat[i,j] <- nucmat[j,i] <- sum(sapply(1:length(splitnucA),
+        nucmat[i,j] <- nucmat[j,i] <- sum(sapply(1:length(nucsplit[[i]]),
                                                  function(i) polyRADsubmat[nucsplit[[i]],
                                                                            nucsplit[[j]]]))
       }

@@ -1805,7 +1805,7 @@ MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
                                  object$alleleNucleotides[[thisAl]],
                                  useBiostrings = haveBiostrings)
       if(is(object$alleleNucleotides, "DNAStringSet")){
-        newNt <- DNAString(newNt)
+        newNt <- Biostrings::DNAString(newNt)
       }
       object$alleleNucleotides[[alToMerge]] <- newNt
       # remove this allele

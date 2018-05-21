@@ -1,5 +1,6 @@
 \name{MergeRareHaplotypes}
 \alias{MergeRareHaplotypes}
+\alias{MergeRareHaplotypes.RADdata}
 \title{
 Consolidate Reads from Rare Alleles
 }
@@ -47,8 +48,8 @@ Lindsay V. Clark
 }
 \examples{
 data(exampleRAD)
-exampleRAD2 <- MergeRareHaplotypes.RADdata(exampleRAD, 
-                                           min.ind.with.haplotype = 12)
+exampleRAD2 <- MergeRareHaplotypes(exampleRAD, 
+                                   min.ind.with.haplotype = 12)
 exampleRAD$alleleDepth[21:30,3:5]
 exampleRAD2$alleleDepth[21:30,3:4]
 exampleRAD$alleleNucleotides
