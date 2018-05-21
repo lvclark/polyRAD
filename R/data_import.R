@@ -904,7 +904,8 @@ readStacks1 <- function(allelesFile, matchesFolder,
     # determine whether to keep the locus
     keepLoc <- sum(rowSums(alleleDepth[,thesecol]) > 0) >= min.ind.with.reads
     if(keepLoc){
-      keepLoc <- sum(indperal[thesecol] >= min.ind.with.minor.allele) >= 2
+      commonAllele <- which.max(indperal[thesecol])
+      keepLoc <- sum(indperal[thesecol[-commonAllele]]) >= min.ind.with.minor.allele
     }
     # update list of alleles to remove
     if(!keepLoc) alRemove <- c(alRemove, thesecol)
@@ -943,5 +944,6 @@ readStacks1 <- function(allelesFile, matchesFolder,
   message("Merging rare haplotypes...")
   radout <- MergeRareHaplotypes(radout, 
                                 min.ind.with.haplotype = min.ind.with.minor.allele)
+  radout <- RemoveMonomorphicLoci(radout)
   return(radout)
 }

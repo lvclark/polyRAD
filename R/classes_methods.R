@@ -1812,3 +1812,16 @@ MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
   object$alleles2loc <- object$alleles2loc[-allelesToRemove]
   return(object)
 } # end of MergeRareHaplotypes
+
+# Function to remove monomorphic markers
+RemoveMonomorphicLoci <- function(object, ...){
+  UseMethod("RemoveMonomorphicLoci", object)
+}
+RemoveMonomorphicLoci.RADdata <- function(object, ...){
+  alleleTally <- table(object$alleles2loc)
+  locToKeep <- as.integer(names(alleleTally)[alleleTally > 1])
+  
+  object <- SubsetByLocus(object, locToKeep)
+  
+  return(object)
+}

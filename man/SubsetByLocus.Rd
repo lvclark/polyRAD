@@ -3,6 +3,8 @@
 \alias{SubsetByLocus.RADdata}
 \alias{SplitByChromosome}
 \alias{SplitByChromosome.RADdata}
+\alias{RemoveMonomorphicLoci}
+\alias{RemoveMonomorphicLoci.RADdata}
 \title{
 Create RADdata Objects with a Subset of Loci
 }
@@ -11,6 +13,7 @@ These functions take a \code{\link{RADdata}} object as input and generate smalle
 objects containing only the specified loci.  \code{SubsetByLocus} allows the
 user to specify which loci are kept, whereas \code{SplitByChromosome} creates
 multiple \code{RADdata} objects representing chromosomes or sets of chromosomes.
+\code{RemoveMonomorphicLoci} eliminates any loci with fewer than two alleles.
 }
 \usage{
 SubsetByLocus(object, ...)
@@ -19,6 +22,9 @@ SubsetByLocus(object, ...)
 SplitByChromosome(object, ...)
 \method{SplitByChromosome}{RADdata}(object, chromlist = NULL, chromlist.use.regex = FALSE, 
                   fileprefix = "splitRADdata", \dots)
+                  
+RemoveMonomorphicLoci(object, ...)
+\method{RemoveMonomorphicLoci}{RADdata}(object, \dots)
 }
 \arguments{
   \item{object}{
@@ -70,12 +76,14 @@ loaded one at a time to run analysis pipelines such as \code{\link{IteratePopStr
 run on each resulting \code{RADdata} object, and the resulting matrices
 concatenated with \code{cbind}.
 
-\code{SplitByChromosome} uses \code{SubsetByLocus} internally.
+\code{SplitByChromosome} and \code{RemoveMonomorphicLoci} use
+\code{SubsetByLocus} internally.
 }
 \value{
-\code{SubsetByLocus} returns a \code{RADdata} object with all the slots
-and attributes of \code{object}, but only containing the loci listed in
-\code{loci}.
+\code{SubsetByLocus} and \code{RemoveMonomorphicLoci} return a \code{RADdata}
+object with all the slots and attributes of \code{object}, but only 
+containing the loci listed in \code{loci}, or only loci with two or more
+alleles, respectively.
 
 \code{SplitByChromosome} returns a character vector containing file names
 where .RData files have been saved.  Each .RData file contains one 
@@ -106,6 +114,9 @@ splitfiles <- SplitByChromosome(exampleRAD, list(c(1, 4), c(6, 9)),
                                 fileprefix = tf)
 load(splitfiles[1])
 splitRADdata
+
+# filter out monomorphic loci (none removed in example)
+filterRAD <- RemoveMonomorphicLoci(exampleRAD)
 }
 
 \keyword{ manip }
