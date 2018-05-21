@@ -1749,6 +1749,8 @@ MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
   # find alleles that are rare
   Nindwithal <- colSums(object$alleleDepth > 0)
   rarealleles <- which(Nindwithal < min.ind.with.haplotype)
+  # don't do anything if there are no rare alleles
+  if(length(rarealleles) == 0) return(object)
   # numbers for corresponding loci
   lociToFix <- unique(object$alleles2loc[rarealleles])
   # alleles that will ultimately be removed
@@ -1756,7 +1758,7 @@ MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
   remIndex <- 1L
   # use Biostrings for nucleotide distance?
   haveBiostrings <- requireNamespace("Biostrings", quietly = TRUE)
-  
+
   # loop through loci that need fixing
   for(L in lociToFix){
     thesealleles <- which(object$alleles2loc == L)
