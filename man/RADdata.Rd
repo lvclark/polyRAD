@@ -45,17 +45,13 @@ A number ranging from zero to one (although in practice probably less than
 0.01) indicating the expected sample cross-contamination rate.
 }
   \item{alleleNucleotides}{
-A character vector or \code{DNAStringSet} with one value for each column of 
+A character vector with one value for each column of 
 \code{alleleDepth}, indicating the DNA sequence for that allele.  Typically 
 only the sequence at variable sites is provided, although intervening 
 non-variable sequence can also be provided.
 }
 }
-\details{
-If \pkg{Biostrings} is installed, the \code{alleleNucleotides} slot will be
-converted to a \code{DNAStringSet}.  Otherwise it will be left as a character
-vector.
-}
+
 \value{
 An object of the S3 class \dQuote{RADdata}.  The following slots are available
 using the \code{$} operator:

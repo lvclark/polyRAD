@@ -138,45 +138,40 @@
 # IUPAC ambiguity codes.  Should work for either character strings
 # or DNAStrings.  Puts in ambiguity codes any time there is not 100%
 # consensus.
-.mergeNucleotides <- function(seq1, seq2, useBiostrings = TRUE){
-  if(useBiostrings){
-    dss <- Biostrings::DNAStringSet(c(as.character(seq1), as.character(seq2)))
-    out <- Biostrings::consensusString(dss, threshold = 0.01)
-  } else {
-    if(!is.character(seq1)) stop("Need Biostrings package.")
-    split1 <- strsplit(seq1, split = "")[[1]]
-    split2 <- strsplit(seq2, split = "")[[1]]
-    splitNew <- character(length(split1))
-    splitNew[split1 == split2] <- split1
-    
-    IUPAC_key <- list(M = list(c('A', 'C'), c('A', 'M'), c('C', 'M')), 
-                      R = list(c('A', 'G'), c('A', 'R'), c('G', 'R')), 
-                      W = list(c('A', 'T'), c('A', 'W'), c('T', 'W')), 
-                      S = list(c('C', 'G'), c('C', 'S'), c('G', 'S')),
-                      Y = list(c('C', 'T'), c('C', 'Y'), c('T', 'Y')),
-                      K = list(c('G', 'T'), c('G', 'K'), c('T', 'K')),
-                      V = list(c('A', 'S'), c('C', 'R'), c('G', 'M'),
-                               c('A', 'V'), c('C', 'V'), c('G', 'V')),
-                      H = list(c('A', 'Y'), c('C', 'W'), c('T', 'M'),
-                               c('A', 'H'), c('C', 'H'), c('T', 'H')),
-                      D = list(c('A', 'K'), c('G', 'W'), c('T', 'R'),
-                               c('A', 'D'), c('G', 'D'), c('T', 'D')),
-                      B = list(c('C', 'K'), c('G', 'Y'), c('T', 'S'),
-                               c('C', 'B'), c('G', 'B'), c('T', 'B')))
-    for(i in which(split1 != split2)){
-      nucset <- c(split1[i], split2[i])
-      splitNew[i] <- "N"
-      for(nt in names(IUPAC_key)){
-        for(matchset in IUPAC_key[[nt]]){
-          if(setequal(nucset, matchset)){
-            splitNew[i] <- nt
-            break
-          }
+.mergeNucleotides <- function(seq1, seq2){
+  split1 <- strsplit(seq1, split = "")[[1]]
+  split2 <- strsplit(seq2, split = "")[[1]]
+  splitNew <- character(length(split1))
+  splitNew[split1 == split2] <- split1[split1 == split2]
+  
+  IUPAC_key <- list(M = list(c('A', 'C'), c('A', 'M'), c('C', 'M')), 
+                    R = list(c('A', 'G'), c('A', 'R'), c('G', 'R')), 
+                    W = list(c('A', 'T'), c('A', 'W'), c('T', 'W')), 
+                    S = list(c('C', 'G'), c('C', 'S'), c('G', 'S')),
+                    Y = list(c('C', 'T'), c('C', 'Y'), c('T', 'Y')),
+                    K = list(c('G', 'T'), c('G', 'K'), c('T', 'K')),
+                    V = list(c('A', 'S'), c('C', 'R'), c('G', 'M'),
+                             c('A', 'V'), c('C', 'V'), c('G', 'V')),
+                    H = list(c('A', 'Y'), c('C', 'W'), c('T', 'M'),
+                             c('A', 'H'), c('C', 'H'), c('T', 'H')),
+                    D = list(c('A', 'K'), c('G', 'W'), c('T', 'R'),
+                             c('A', 'D'), c('G', 'D'), c('T', 'D')),
+                    B = list(c('C', 'K'), c('G', 'Y'), c('T', 'S'),
+                             c('C', 'B'), c('G', 'B'), c('T', 'B')))
+  for(i in which(split1 != split2)){
+    nucset <- c(split1[i], split2[i])
+    splitNew[i] <- "N"
+    for(nt in names(IUPAC_key)){
+      for(matchset in IUPAC_key[[nt]]){
+        if(setequal(nucset, matchset)){
+          splitNew[i] <- nt
+          break
         }
       }
     }
-    out <- paste(splitNew, collapse = "")
   }
+  out <- paste(splitNew, collapse = "")
+
   return(out)
 }
 

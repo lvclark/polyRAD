@@ -87,7 +87,7 @@ ClusterAlleles <- function(depth, nucleotides, nclust){
     stop("Number of alleles does not match between depth and nucleotides")
   }
   # get distances between sequences
-  if(requireNamespace("Biostrings", quietly = TRUE)){
+  if(requireNamespace("Biostrings", quietly = TRUE)){ ## test efficiency; may just use non-Biostrings version
     nucdist <- -Biostrings::stringDist(nucleotides, method = "substitutionMatrix",
                                       substitutionMatrix = -polyRADsubmat)
   } else {

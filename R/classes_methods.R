@@ -40,9 +40,8 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   if(contamRate > 0.01){
     warning("contamRate higher than expected.")
   }
-  if(!(is.character(alleleNucleotides) | 
-       "DNAStringSet" %in% class(alleleNucleotides))){
-    stop("alleleNucleotides must be a character vector or DNAStringSet.")
+  if(!is.character(alleleNucleotides)){
+    stop("alleleNucleotides must be a character vector.")
   }
   if(length(alleleNucleotides) != length(alleles2loc)){
     stop("Length of alleleNucleotides must be same as length of alleles2loc.")
@@ -68,11 +67,6 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   # depth of reads for each locus that do NOT belong to a given allele
   antiAlleleDepth <- expandedLocDepth - alleleDepth
   dimnames(antiAlleleDepth)[[2]] <- dimnames(alleleDepth)[[2]]
-  
-  # convert alleleNucleotides to DNAStringSet if Bioconductor installed
-  if(requireNamespace("Biostrings", quietly = TRUE) && is.character(alleleNucleotides)){
-    alleleNucleotides <- Biostrings::DNAStringSet(alleleNucleotides)
-  }
   
   return(structure(list(alleleDepth = alleleDepth, alleles2loc = alleles2loc,
                         locTable = locTable, possiblePloidies = possiblePloidies,
@@ -1756,8 +1750,6 @@ MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
   # alleles that will ultimately be removed
   allelesToRemove <- integer(length(rarealleles))
   remIndex <- 1L
-  # use Biostrings for nucleotide distance?
-  haveBiostrings <- requireNamespace("Biostrings", quietly = TRUE)
 
   # loop through loci that need fixing
   for(L in lociToFix){
@@ -1767,20 +1759,13 @@ MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
       thisAl <- theserare[1]
       # get nucleotide distance between this allele and others
       thesenuc <- object$alleleNucleotides[thesealleles]
-      if(haveBiostrings){
-        nucdist <- Biostrings::stringDist(thesenuc,
-                                          method = "substitutionMatrix",
-                                          substitutionMatrix = -polyRADsubmat)
-        nucdist <- -as.matrix(nucdist)[thesealleles == thisAl,]
-      } else {
-        splitnuc <- strsplit(thesenuc, split = "")
-        splitnucA <- splitnuc[[which(thesealleles == thisAl)]]
-        nucdist <- integer(length(thesealleles))
-        for(a in 1:length(thesealleles)){
-          nucdist[a] <- sum(sapply(1:length(splitnucA),
-                                   function(i) polyRADsubmat[splitnucA[i],
-                                                             splitnuc[[a]][i]]))
-        }
+      splitnuc <- strsplit(thesenuc, split = "")
+      splitnucA <- splitnuc[[which(thesealleles == thisAl)]]
+      nucdist <- integer(length(thesealleles))
+      for(a in 1:length(thesealleles)){
+        nucdist[a] <- sum(sapply(1:length(splitnucA),
+                                 function(i) polyRADsubmat[splitnucA[i],
+                                                           splitnuc[[a]][i]]))
       }
       # find the closest allele
       alToMerge <- thesealleles[nucdist == min(nucdist[-match(thisAl, thesealleles)])]
@@ -1804,11 +1789,7 @@ MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
       Nindwithal[alToMerge] <- Nindwithal[alToMerge] + Nindwithal[thisAl]
       # merge nucleotides
       newNt <- .mergeNucleotides(object$alleleNucleotides[[alToMerge]],
-                                 object$alleleNucleotides[[thisAl]],
-                                 useBiostrings = haveBiostrings)
-      if(is(object$alleleNucleotides, "DNAStringSet")){
-        newNt <- Biostrings::DNAString(newNt)
-      }
+                                 object$alleleNucleotides[[thisAl]])
       object$alleleNucleotides[[alToMerge]] <- newNt
       # remove this allele
       thesealleles <- thesealleles[thesealleles != thisAl]

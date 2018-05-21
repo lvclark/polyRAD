@@ -661,7 +661,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
                                 dimnames = list(NULL, extracols)),
                          stringsAsFactors = FALSE)
   alleles2loc <- integer(expectedAlleles)
-  alleleNucleotides <- Biostrings::DNAStringSet(character(expectedAlleles))
+  alleleNucleotides <- character(expectedAlleles)
   # to track which allele we're on
   currAl <- 0L
   currLoc <- 0L
@@ -696,16 +696,16 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
                                                param = svparam))){
     thisNloc <- nrow(vcf) # number of loci in this chunk
     # reference alleles
-    thisRef <- VariantAnnotation::ref(vcf)
+    thisRef <- as.character(VariantAnnotation::ref(vcf))
     # alternative alleles; clean out ones w/o alt allele
     thisAltList <- Biostrings::DNAStringSetList(lapply(VariantAnnotation::alt(vcf), 
                                                        function(x) x[BiocGenerics::width(x) > 0])) 
     nAlt <- sapply(thisAltList, length) # n alt alleles per locus
     thisNallele <- thisNloc + sum(nAlt) # n alleles in this chunk
-    thisAlt <- unlist(thisAltList)
+    thisAlt <- as.character(unlist(thisAltList))
     
     # put reference and alternative alleles together into alleleNucleotides
-    thisAlleleNucleotides <- Biostrings::DNAStringSet(character(thisNallele))
+    thisAlleleNucleotides <- character(thisNallele)
     alsums <- cumsum(nAlt + 1)
     refpos <- c(1, alsums[-thisNloc] + 1)
     thisAlleleNucleotides[refpos] <- thisRef
