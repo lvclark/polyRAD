@@ -92,7 +92,10 @@ Lindsay V. Clark
 }
 
 \seealso{
-\code{\link{readHMC}}, \code{\link{readTagDigger}}
+Data import functions that internally call \code{RADdata}:
+
+\code{\link{readHMC}}, \code{\link{readTagDigger}}, 
+\code{\link{VCF2RADdata}}, \code{\link{readStacks1}}
 }
 \examples{
 # create the dataset
