@@ -1,6 +1,6 @@
 \name{EstimateContaminationRate}
 \alias{EstimateContaminationRate}
-\alias{EstimateConteminationRate.RADdata}
+\alias{EstimateContaminationRate.RADdata}
 \title{
 Estimate Sample Contamination Using Blanks
 }
