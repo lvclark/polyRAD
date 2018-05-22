@@ -1825,3 +1825,41 @@ RemoveMonomorphicLoci.RADdata <- function(object, ...){
   
   return(object)
 }
+
+# function to estimate contamination rate
+EstimateContaminationRate <- function(object, ...){
+  UseMethod("EstimateContaminationRate", object)
+}
+EstimateContaminationRate.RADdata <- function(object, multiplier = 1, ...){
+  blanks <- GetBlankTaxa(object)
+  if(length(blanks) == 0){
+    stop("Run SetBlankTaxa before running EstimateContaminationRate.")
+  }
+  if(length(multiplier) > 1 && length(multiplier) != length(blanks)){
+    stop("Need one value for multiplier, or one value per blank taxa.")
+  }
+  if(length(multiplier) > 1 && 
+     (is.null(names(multiplier)) || !all(blanks %in% names(multiplier)))){
+    stop("Names for multiplier vector should match names of blank taxa.")
+  }
+  
+  # get depths
+  nonblanks <- GetTaxa(object)[!GetTaxa(object) %in% blanks]
+  meandepth <- mean(rowMeans(object$locDepth[nonblanks,, drop = FALSE]))
+  
+  blankdepth <- rowMeans(object$locDepth[blanks,, drop = FALSE])
+  if(length(multiplier) == 1){
+    blankdepth <- blankdepth * multiplier
+  } else {
+    blankdepth <- blankdepth * multiplier[blanks]
+  }
+  meanblankdepth <- mean(blankdepth)
+  
+  # get contamination rate and assign to object
+  newcontam <- meanblankdepth/meandepth
+  object <- SetContamRate(object, newcontam)
+  
+  cat(paste("Contamination rate:", newcontam), sep = "\n")
+
+  return(object)
+}

@@ -6,7 +6,7 @@ AddGenotypePosteriorProb,  AddGenotypePriorProb_ByTaxa,
 AddGenotypePriorProb_HWE, AddGenotypePriorProb_LD,
 AddGenotypePriorProb_Mapping2Parents, AddPCA,
 AddPloidyChiSq, AddPloidyLikelihood, AddPriorTimesLikelihood,
-CanDoGetWeightedMeanGeno, ExportGAPIT,
+CanDoGetWeightedMeanGeno, EstimateContaminationRate, ExportGAPIT,
 Export_rrBLUP_Amat, Export_rrBLUP_GWAS, Export_TASSEL_Numeric,
 GetAlleleNames,
 GetBlankTaxa, GetContamRate, GetDonorParent, GetLikelyGen, 
@@ -42,6 +42,7 @@ S3method(AddPloidyChiSq, RADdata)
 S3method(AddPloidyLikelihood, RADdata)
 S3method(AddPriorTimesLikelihood, RADdata)
 S3method(CanDoGetWeightedMeanGeno, RADdata)
+S3method(EstimateContaminationRate, RADdata)
 S3method(GetAlleleNames, RADdata)
 S3method(GetBlankTaxa, RADdata)
 S3method(GetContamRate, RADdata)
