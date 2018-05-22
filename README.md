@@ -41,7 +41,7 @@ The tutorial document for the package is available [on Github](https://github.co
 
 ## Citation
 
-DOI for version 0.2: [![DOI](https://zenodo.org/badge/99379777.svg)](https://zenodo.org/badge/latestdoi/99379777)
+DOI for version 0.3: [![DOI](https://zenodo.org/badge/99379777.svg)](https://zenodo.org/badge/latestdoi/99379777)
 
 Version 0.1 was also presented in a poster:
 
