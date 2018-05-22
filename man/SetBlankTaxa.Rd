@@ -11,8 +11,9 @@ Functions to Assign Taxa to Specific Roles
 \description{
 These functions are used for assigning and retrieving taxa from a 
 \code{"\link{RADdata}"} object that serve particular roles in the dataset.
-Blank taxa can be used for estimating the contamination rate (function to
-be created), and the donor and recurrent parents are used for determining
+Blank taxa can be used for estimating the contamination rate (see 
+\code{\link{EstimateContaminationRate}}), and the donor and recurrent parents
+are used for determining
 expected genotype distributions in mapping populations.  Many functions
 in \pkg{polyRAD} will automatically exclude taxa from analysis if they
 have been assigned to one of these roles.
