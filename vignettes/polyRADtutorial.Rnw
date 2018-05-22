@@ -62,7 +62,7 @@ population is structured (i.e. what the genotype prior probabilities should be.)
 \item \texttt{IteratePopStructLD}
 \end{itemize}
 
-Lastly, for exporting the estimated genotypes to other software:
+For exporting the estimated genotypes to other software:
 
 \begin{itemize}
 \item \texttt{ExportGAPIT}
@@ -72,8 +72,23 @@ Lastly, for exporting the estimated genotypes to other software:
 \end{itemize}
 
 If you need continuous numerical genotypes exported in some other format, see 
-\texttt{GetWeightedMeanGenotypes}.  Also, \texttt{GetLikelyGen} returns the 
-most likely genotypes for a single sample.
+\texttt{GetWeightedMeanGenotypes}.  If you need discrete numerical genotypes, 
+see \texttt{GetProbableGenotypes}.  Also, \texttt{GetLikelyGen} returns the 
+most likely genotypes (based on read depth only) for a single sample.
+
+There are also various utilities for manipulating RADdata objects:
+
+\begin{itemize}
+\item \texttt{SubsetByTaxon}
+\item \texttt{SubsetByLocus}
+\item \texttt{SplitByChromosome}
+\item \texttt{MergeRareHaplotypes}
+\item \texttt{RemoveMonomorphicLoci}
+\item \texttt{EstimateContaminationRate}
+\item \texttt{StripDown}
+\end{itemize}
+
+See \texttt{?GetTaxa} for a list of accessor functions as well.
 
 \section{Estimating genotype probabilities in a mapping population}
 
@@ -263,7 +278,14 @@ mywm[c(297,2:6), 6:10]
 Note that the parent weighted mean genotypes were estimated using 
 gentoype likelihood only, ignoring the priors set for the progeny.  In 
 some places they may not match the progeny genotypes, indicating a
-likely error in parental genotype calling.
+likely error in parental genotype calling.  We can see the parental
+genotypes that were used for estimating progeny priors using
+\texttt{\$likelyGeno\_donor} and \texttt{\$likelyGeno\_recurrent}.
+
+<<>>=
+mydata$likelyGeno_donor[,11:20]
+mydata$likelyGeno_recurrent[,11:20]
+@
 
 \section{Estimating genotype probabilities in a diversity panel}
 
