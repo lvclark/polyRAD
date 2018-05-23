@@ -696,14 +696,17 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   while(nrow(vcf <- VariantAnnotation::readVcf(tfile, genome = genome, 
                                                param = svparam))){
     thisNloc <- nrow(vcf) # number of loci in this chunk
+    message("Unpacking data from VCF...")
     # reference alleles
     thisRef <- as.character(VariantAnnotation::ref(vcf))
     # alternative alleles; clean out ones w/o alt allele
-    thisAltList <- Biostrings::DNAStringSetList(lapply(VariantAnnotation::alt(vcf), 
-                                                       function(x) x[BiocGenerics::width(x) > 0])) 
+    thisAltList <- lapply(VariantAnnotation::alt(vcf), function(x){
+      char <- as.character(x)
+      char <- char[char != ""]
+      return(char)}) 
     nAlt <- sapply(thisAltList, length) # n alt alleles per locus
     thisNallele <- thisNloc + sum(nAlt) # n alleles in this chunk
-    thisAlt <- as.character(unlist(thisAltList))
+    thisAlt <- unlist(thisAltList)
     
     # put reference and alternative alleles together into alleleNucleotides
     thisAlleleNucleotides <- character(thisNallele)
