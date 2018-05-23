@@ -744,6 +744,10 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
       } else {
         keepLoc[i] <- sum(indperal[thiscol] >= min.ind.with.minor.allele) >= 2
       }
+      # get rid of funny stuff from TASSEL-GBSv2
+      if(keepLoc[i] && any(grepl("N", thisAlleleNucleotides[thiscol]))){
+        keepLoc[i] <- FALSE
+      }
       # cut the locus if it does not pass filtering
       if(!keepLoc[i]){
         remAl <- c(remAl, thiscol)
