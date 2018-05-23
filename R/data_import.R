@@ -692,6 +692,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
 
   # Read data one chunk at a time
   open(tfile)
+  message("Reading file...")
   while(nrow(vcf <- VariantAnnotation::readVcf(tfile, genome = genome, 
                                                param = svparam))){
     thisNloc <- nrow(vcf) # number of loci in this chunk
@@ -800,11 +801,21 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
     if(thisNloc > 0){
       # add data from this chunk to objects for whole dataset
       thisAlCol <- (1:thisNallele) + currAl
-      alleleDepth[,thisAlCol] <- thisAlDepth
+      if(currAl + thisNallele > ncol(alleleDepth)){
+        message("Exceeded expected number of alleles; processing may slow.")
+        alleleDepth <- cbind(alleleDepth[,1:currAl], thisAlDepth)
+      } else {
+        alleleDepth[,thisAlCol] <- thisAlDepth
+      }
       dimnames(alleleDepth)[[2]][thisAlCol] <- dimnames(thisAlDepth)[[2]]
       alleles2loc[thisAlCol] <- thisAlleles2loc + currLoc
       alleleNucleotides[thisAlCol] <- thisAlleleNucleotides
-      locTable[(1:thisNloc) + currLoc, ] <- thisLocTable
+      if(currLoc + thisNloc > nrow(locTable)){
+        message("Exceeded expected number of loci; processing may slow.")
+        locTable <- rbind(locTable[1:currLoc,], thisLocTable)
+      } else {
+        locTable[(1:thisNloc) + currLoc, ] <- thisLocTable
+      }
       row.names(locTable)[(1:thisNloc) + currLoc] <- row.names(thisLocTable)
       # update position in the output
       currAl <- currAl + thisNallele
@@ -813,6 +824,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
     
     # don't loop if we are using "which" in svparam
     if(is.na(yieldSize)) break
+    message("Reading file...")
   }
   close(tfile)
   
