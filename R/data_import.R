@@ -855,6 +855,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   message("Merging rare haplotypes...")
   radout <- MergeRareHaplotypes(radout, 
                                 min.ind.with.haplotype = min.ind.with.minor.allele)
+  radout <- RemoveMonomorphicLoci(radout)
   
   return(radout)
 }
