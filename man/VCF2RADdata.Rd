@@ -115,7 +115,8 @@ it is recommended to run \code{bgzip} and \code{indexTabix} from the package
 read.  Additionally, because phasing SNPs into haplotypes can cause some 
 haplotypes to fail to pass this threshold, \code{VCF2RADdata} internally runs
 \code{\link{MergeRareHaplotypes}} with 
-\code{min.ind.with.haplotype = min.ind.with.minor.allele} before returning the
+\code{min.ind.with.haplotype = min.ind.with.minor.allele}, then
+\code{\link{RemoveMonomorphicLoci}}, before returning the
 final \code{RADdata} object.
 }
 \value{

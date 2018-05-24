@@ -7,8 +7,8 @@ Consolidate Reads from Rare Alleles
 \description{
 \code{MergeRareHaplotypes} searches for rare alleles in a
 \code{"\link{RADdata}"} object, and merges them into the most similar allele
-at the same locus based on nucleotide sequence (or the most common if multiple
-are equally similar).  Read
+at the same locus based on nucleotide sequence (or the most common allele if
+multiple are equally similar).  Read
 depth is summed across merged alleles, and the \code{alleleNucleotides} slot
 of the \code{"RADdata"} object contains IUPAC ambiguity codes to indicate 
 nucleotide differences across merged alleles.  This function is designed to be
@@ -30,6 +30,14 @@ not be merged.
   \item{\dots}{
 Additional arguments; none implemented.
 }
+}
+
+\details{
+Alleles with zero reads across the entire dataset are removed by
+\code{MergeRareHaplotypes} without merging nucleotide sequences.  After
+merging, at least one allele is left, even if it has fewer than 
+\code{min.ind.with.haplotype} taxa with reads, as long as it has more than zero
+taxa with reads.
 }
 
 \value{
