@@ -1740,22 +1740,25 @@ MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
   if(!is.null(object$alleleFreq)){
     stop("Run MergeRareHaplotypes before running any pipeline functions.")
   }
+
   # find alleles that are rare
   Nindwithal <- colSums(object$alleleDepth > 0)
-  rarealleles <- which(Nindwithal < min.ind.with.haplotype)
-  # don't do anything if there are no rare alleles
-  if(length(rarealleles) == 0) return(object)
+  rarealleles <- which(Nindwithal < min.ind.with.haplotype &
+                         Nindwithal > 0)
+  # find alleles that are completely absent and remove them
+  zeroalleles <- which(Nindwithal == 0)
+  remIndex <- length(zeroalleles) + 1L
+
   # numbers for corresponding loci
   lociToFix <- unique(object$alleles2loc[rarealleles])
-  # alleles that will ultimately be removed
-  allelesToRemove <- integer(length(rarealleles))
-  remIndex <- 1L
+  # preallocate for other alleles to remove
+  allelesToRemove <- c(zeroalleles, integer(length(rarealleles)))
 
   # loop through loci that need fixing
   for(L in lociToFix){
     thesealleles <- which(object$alleles2loc == L)
     theserare <- thesealleles[thesealleles %fin% rarealleles]
-    while(length(theserare) > 0){
+    while(length(theserare) > 0 && length(thesealleles) > 1){
       thisAl <- theserare[1]
       # get nucleotide distance between this allele and others
       thesenuc <- object$alleleNucleotides[thesealleles]
@@ -1791,6 +1794,7 @@ MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
       newNt <- .mergeNucleotides(object$alleleNucleotides[[alToMerge]],
                                  object$alleleNucleotides[[thisAl]])
       object$alleleNucleotides[[alToMerge]] <- newNt
+      
       # remove this allele
       thesealleles <- thesealleles[thesealleles != thisAl]
       theserare <- thesealleles[Nindwithal[thesealleles] < 
@@ -1799,6 +1803,11 @@ MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
       remIndex <- remIndex + 1L
     } # end of while loop for merging rare alleles
   } # end of loop through loci
+  
+  # quit if there is nothing to remove
+  if(remIndex == 1L){
+    return(object)
+  }
   
   allelesToRemove <- allelesToRemove[1:(remIndex - 1L)]
   
