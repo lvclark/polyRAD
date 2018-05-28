@@ -723,12 +723,39 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
                                S4Vectors::mcols(vcf)[,extracols],
                                stringsAsFactors = FALSE)
     # set up depth matrix
-    thisAlDepth <- matrix(unlist(VariantAnnotation::geno(vcf)[[al.depth.field]]), 
-                          nrow = length(samples), ncol = thisNallele,
-                          dimnames = list(samples, 
-                                          paste(row.names(vcf)[thisAlleles2loc],
-                                                thisAlleleNucleotides, sep = "_")),
-                          byrow = TRUE)
+    thisDepthVal <- unlist(VariantAnnotation::geno(vcf)[[al.depth.field]])
+    thisAlNames <- paste(row.names(vcf)[thisAlleles2loc],
+                         thisAlleleNucleotides, sep = "_")
+    if(length(thisDepthVal) == length(samples) * thisNallele){
+      thisAlDepth <- matrix(thisDepthVal, 
+                            nrow = length(samples), ncol = thisNallele,
+                            dimnames = list(samples, thisAlNames),
+                            byrow = TRUE)
+    } else {
+      if(length(thisDepthVal) %% length(samples) != 0){
+        stop("Unexpected number of allele depth fields.")
+      }
+      # For issue seen with GATK where there may be more AD values than alleles
+      thisAlDepth <- matrix(thisDepthVal, nrow = length(samples),
+                            ncol = length(thisDepthVal) %/% length(samples),
+                            dimnames = list(samples, NULL),
+                            byrow = TRUE)
+      thisNADfield <- sapply(VariantAnnotation::geno(vcf)[[al.depth.field]][,1],
+                             length)
+      ADmismatchLoc <- which(thisNADfield != nAlt + 1)
+      # Trim down to right number of alleles, and put in zero reads so locus
+      # will be discarded.
+      remal <- integer(0)
+      for(L in ADmismatchLoc){
+        firstal <- sum(thisNADfield[1:(L - 1)]) + 1
+        lastal <- sum(thisNADfield[1:L])
+        thisAlDepth[, firstal:lastal] <- 0L
+        remal <- c(remal, (firstal:lastal)[-(1:(nAlt[L] + 1))])
+      }
+      thisAlDepth <- thisAlDepth[,-remal]
+      colnames(thisAlDepth) <- thisAlNames
+    }
+    
     # replace NA with zero
     thisAlDepth[is.na(thisAlDepth)] <- 0L
     # how many individuals have each allele
@@ -750,6 +777,18 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
       # get rid of funny stuff from TASSEL-GBSv2
       if(keepLoc[i] && any(grepl("N", thisAlleleNucleotides[thiscol]))){
         keepLoc[i] <- FALSE
+      }
+      # pad out indels, using VCF convention of listing nucleotide before indel
+      if(keepLoc[i] && 
+         length(unique(nchar(thisAlleleNucleotides[thiscol]))) > 1){
+        thisAN <- thisAlleleNucleotides[thiscol]
+        maxWidth <- max(nchar(thisAN))
+        for(a in 1:length(thisAN)){
+          while(nchar(thisAN[a]) < maxWidth){
+            thisAN[a] <- paste(thisAN[a], "-", sep = "")
+          }
+        }
+        thisAlleleNucleotides[thiscol] <- thisAN
       }
       # cut the locus if it does not pass filtering
       if(!keepLoc[i]){
