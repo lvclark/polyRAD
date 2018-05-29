@@ -617,7 +617,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
                                                                   geno = al.depth.field,
                                                                   samples = samples),
                         yieldSize = 5000, expectedAlleles = 5e5, 
-                        expectedLoci = 1e5){
+                        expectedLoci = 1e5, maxLoci = NA){
   
   # clean up parameters for import
   if(is.na(VariantAnnotation::vcfFixed(svparam))){
@@ -870,6 +870,8 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
     
     # don't loop if we are using "which" in svparam
     if(is.na(yieldSize)) break
+    # quit if we have a limit on how many loci to import.
+    if(!is.na(maxLoci) && currLoc >= maxLoci) break
     message("Reading file...")
   }
   close(tfile)

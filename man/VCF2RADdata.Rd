@@ -18,7 +18,8 @@ VCF2RADdata(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
             svparam = VariantAnnotation::ScanVcfParam(fixed = "ALT", info = NA,
                                                       geno = al.depth.field,
                                                       samples = samples), 
-            yieldSize = 5000, expectedAlleles = 5e+05, expectedLoci = 1e+05)
+            yieldSize = 5000, expectedAlleles = 5e+05, expectedLoci = 1e+05,
+            maxLoci = NA)
 }
 \arguments{
   \item{file}{
@@ -100,6 +101,13 @@ An integer indicating the approximate number of loci that are expected
 to be imported after filtering and phasing.  If this number is too low,
 the function may slow down considerably.  Increasing this number 
 increases the amount of RAM used by the function.
+}
+\item{maxLoci}{
+An integer indicating the approximate maximum number of loci to return.  If
+provided, the function will stop reading the file once it has found at least
+this many loci that pass filtering and phasing.  This argument is intended to
+be used for generating small \code{RADdata} objects for testing purposes, and
+should be left \code{NA} under normal circumstances.
 }
 }
 \details{
