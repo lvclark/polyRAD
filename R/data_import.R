@@ -747,7 +747,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
       # will be discarded.
       remal <- integer(0)
       for(L in ADmismatchLoc){
-        firstal <- sum(thisNADfield[1:(L - 1)]) + 1
+        firstal <- ifelse(L == 1, 1L, sum(thisNADfield[1:(L - 1)]) + 1)
         lastal <- sum(thisNADfield[1:L])
         thisAlDepth[, firstal:lastal] <- 0L
         remal <- c(remal, (firstal:lastal)[-(1:(nAlt[L] + 1))])
