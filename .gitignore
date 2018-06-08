@@ -49,3 +49,7 @@ Temporary Items
 .Rproj.user
 *.o
 *.dll
+
+# polyRAD project file
+polyRAD.Rproj
+
