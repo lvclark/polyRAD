@@ -37,7 +37,7 @@ replacing the file name with the one you just downloaded.
 
 ## Tutorial
 
-The tutorial document for the package is available [on Github](https://github.com/lvclark/polyRAD/raw/master/vignettes/polyRADtutorial.pdf).
+The tutorial document for the package is available [on Github](https://github.com/lvclark/polyRAD/raw/master/vignettes/polyRADtutorial.html).
 
 ## Citation
 
