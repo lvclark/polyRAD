@@ -5,4 +5,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.Rhistory$
-^vignettes/polyRADtutorial.html
+^vignettes/polyRADtutorial\.html$
+^vignettes/polyRADtutorial\.md$
+^vignettes/polyRADtutorial_files$
