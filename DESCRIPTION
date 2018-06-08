@@ -3,7 +3,8 @@ Version: 0.3-1
 Date: 2018-05-29
 Title: Genotype Calling with Uncertainty from Sequencing Data in Polyploids and Diploids
 Authors@R: c(person("Lindsay V.", "Clark", email = "lvclark@illinois.edu",
-                    role = c("aut", "cre")),
+                    role = c("aut", "cre"), 
+                    comment = c(ORCID = "0000-0002-3881-9252")),
              person("U.S. National Science Foundation", role = "fnd"))
 Author: Lindsay V. Clark [aut, cre],
   U.S. National Science Foundation [fnd]
