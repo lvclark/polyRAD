@@ -76,7 +76,7 @@ In this example, we'll import some data from an F1 mapping population of
 *Miscanthus sinensis* that were output by the
 [UNEAK](https://doi.org/10.1371/journal.pgen.1003215) pipeline. These
 data are from a study by Liu *et al.* (2015;
-[doi:10.1111/gcbb.12275](http://dx.doi.org/10.1111/gcbb.12275); data
+[doi:10.1111/gcbb.12275](https://doi.org/10.1111/gcbb.12275); data
 available at <http://hdl.handle.net/2142/79522>), and can be found in
 the "extdata" folder of the polyRAD installation. *Miscanthus* is an
 ancient tetraploid that has undergone diploidization. Given the ability
