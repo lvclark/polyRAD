@@ -15,7 +15,7 @@ vignette: >
 knitr::opts_chunk$set(echo = TRUE, fig.width = 6, fig.height = 6)
 ```
 
-## Introduction
+## Introduction <a name="introduction"></a>
 
 polyRAD is an R package that assists with genotype calling from DNA sequence
 datasets such as genotyping-by-sequencing (GBS) or restriction site-associated
@@ -33,7 +33,7 @@ A single `RADdata` object contains the entire dataset of read depth and
 locus information, as well as parameters that are estimated during the
 course of analysis.
 
-## Summary of available functions
+## Summary of available functions <a name="functions"></a>
 
 For any function named in this section, see its help page for more information.
 (For example by typing `?VCF2RADdata` into the R console.)
@@ -83,7 +83,7 @@ There are also various utilities for manipulating RADdata objects:
 
 See `?GetTaxa` for a list of accessor functions as well.
 
-## Estimating genotype probabilities in a mapping population
+## Estimating genotype probabilities in a mapping population <a name="mapping"></a>
 
 In this example, we'll import some data from an F1 mapping population
 of *Miscanthus sinensis* that were output by the 
@@ -216,9 +216,9 @@ mydata$priorProb[[2]][,11:20]
 ```
 
 Here we see some pretty big differences under the diploid and
-allotetraploid models.  For example, if TP24805 is behaving in a diploid
+allotetraploid models.  For example, if TP28405 is behaving in a diploid
 fashion we expect F2-like segregation since both parents were 
-heterozygous.  However, if TP24805 is behaving in an allotetraploid
+heterozygous.  However, if TP28405 is behaving in an allotetraploid
 fashion, we expect that both parents are homozygous at differing 
 paralogous loci, resulting in no segregation.
 
@@ -279,7 +279,7 @@ mydata$likelyGeno_donor[,11:20]
 mydata$likelyGeno_recurrent[,11:20]
 ```
 
-## Estimating genotype probabilities in a diversity panel
+## Estimating genotype probabilities in a diversity panel <a name="diversity"></a>
 
 Pipelines in polyRAD for processing a diversity panel (i.e. a germplasm
 collection, a set of samples collected in the wild, or a panel for
@@ -345,7 +345,12 @@ gradients of gene flow across many groups of individuals.  This dataset
 includes a very broad sampling of *Miscanthus* across Asia, so it
 is very appropriate to model population structure in this case.
 
+For this example, since random number generation is used internally by
+`IteratePopStruct` for probabalistic principal components analysis, I am
+setting a seed so that the vignette always renders in the same way.
+
 ```{r message = FALSE}
+set.seed(3908)
 mydataPopStruct <- IteratePopStruct(mydata, nPcsInit = 8, tol = 5e-03)
 ```
 
@@ -389,7 +394,7 @@ If you expect that your species has high linkage disequilibrium, the functions
 `IterateHWE` and `IteratePopStruct`, respectively, but also
 update priors based on genotypes at linked loci.
 
-## Considerations for RAM and processing time
+## Considerations for RAM and processing time <a name="considerations"></a>
 
 `RADdata` objects contain large matrices and arrays for storing read depth
 and the parameters that are estimated by the pipeline functions, and as a 

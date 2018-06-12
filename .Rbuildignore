@@ -8,3 +8,4 @@
 ^vignettes/polyRADtutorial\.html$
 ^vignettes/polyRADtutorial\.md$
 ^vignettes/polyRADtutorial_files$
+^vignettes/render_vignettes\.R$
