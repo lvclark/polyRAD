@@ -1,5 +1,6 @@
 \name{AddGenotypePriorProb_HWE}
 \alias{AddGenotypePriorProb_HWE}
+\alias{AddGenotypePriorProb_HWE.RADdata}
 \title{
 Estimate Genotype Prior Probabilities In the Absence of Population Structure
 }
@@ -11,7 +12,8 @@ frequencies in the \code{$priorProb} slot.  Inbreeding can also be simulated
 using the \code{selfing.rate} argument.
 }
 \usage{
-AddGenotypePriorProb_HWE(object, selfing.rate = 0, ...)
+AddGenotypePriorProb_HWE(object, ...)
+\method{AddGenotypePriorProb_HWE}{RADdata}(object, selfing.rate = 0, \dots)
 }
 \arguments{
   \item{object}{

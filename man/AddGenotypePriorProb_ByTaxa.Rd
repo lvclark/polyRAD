@@ -1,5 +1,6 @@
 \name{AddGenotypePriorProb_ByTaxa}
 \alias{AddGenotypePriorProb_ByTaxa}
+\alias{AddGenotypePriorProb_ByTaxa.RADdata}
 \title{
 Estimate Prior Genotype Probabilities on a Per-Taxon Basis
 }
@@ -11,7 +12,8 @@ each taxon, allele, and possible ploidy.  These are then stored in the
 \code{$priorProb} slot of the \code{"\link{RADdata}"} object.
 }
 \usage{
-AddGenotypePriorProb_ByTaxa(object, selfing.rate = 0, ...)
+AddGenotypePriorProb_ByTaxa(object, ...)
+\method{AddGenotypePriorProb_ByTaxa}{RADdata}(object, selfing.rate = 0, \dots)
 }
 \arguments{
   \item{object}{
