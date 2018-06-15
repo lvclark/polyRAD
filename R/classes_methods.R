@@ -503,105 +503,6 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     }
   }
 
-  # function to generate all gamete genotypes for a set of genotypes.
-  # alCopy is a vector of values ranging from zero to ploidy indicating 
-  # allele copy number.
-  # ploidy is the ploidy
-  # rnd indicates which round of the recursive algorithm we are on
-  # Output is a matrix.  Alleles are in columns, which should be treated
-  # independently.  Rows indicate gametes, with values indicating how many
-  # copies of the allele that gamete has.
-  makeGametes <- function(alCopy, ploidy, rnd = ploidy[1]/2){
-    if(rnd %% 1 != 0 || ploidy[1] < 2){
-      stop("Even numbered ploidy needed to simulate gametes.")
-    }
-    if(length(unique(ploidy)) != 1){
-      stop("Currently all subgenome ploidies must be equal.")
-    }
-    if(any(alCopy > sum(ploidy), na.rm = TRUE)){
-      stop("Cannot have alCopy greater than ploidy.")
-    }
-    if(length(ploidy) > 1){ # allopolyploids
-      thisAl <- matrix(0L, nrow = 1, ncol = length(alCopy))
-      for(pl in ploidy){
-        # get allele copies for this isolocus.  Currently simplified; 
-        # minimizes the number of isoloci to which an allele can belong.
-        ### update in the future ###
-        thisCopy <- alCopy
-        thisCopy[thisCopy > pl] <- pl
-        alCopy <- alCopy - thisCopy
-        # make gametes for this isolocus (recursive, goes to autopoly version)
-        thisIsoGametes <- makeGametes(thisCopy, pl, rnd)
-        # add to current gamete set
-        nGamCurr <- dim(thisAl)[1]
-        nGamNew <- dim(thisIsoGametes)[1]
-        thisAl <- thisAl[rep(1:nGamCurr, each = nGamNew),] + 
-          thisIsoGametes[rep(1:nGamNew, times = nGamCurr),]
-      }
-    } else { # autopolyploids
-      thisAl <- sapply(alCopy, function(x){
-        if(is.na(x)){
-          rep(NA, ploidy)
-        } else {
-          c(rep(0L, ploidy - x), rep(1L, x))
-        }})
-      if(rnd > 1){
-        # recursively add alleles to gametes for polyploid
-        nReps <- factorial(ploidy-1)/factorial(ploidy - rnd)
-        thisAl <- thisAl[rep(1:ploidy, each = nReps),]
-        for(i in 1:ploidy){
-          thisAl[((i-1)*nReps+1):(i*nReps),] <- 
-            thisAl[((i-1)*nReps+1):(i*nReps),] + 
-            makeGametes(alCopy - thisAl[i*nReps,], ploidy - 1, rnd - 1)
-        }
-      }
-    }
-    return(thisAl)
-  }
-  # function to get probability of a gamete with a given allele copy number,
-  # given output from makeGametes
-  gameteProb <- function(makeGamOutput, ploidy){
-    return(t(sapply(0:(sum(ploidy)/2), 
-                    function(x) colMeans(makeGamOutput == x))))
-  }
-  # function to take two sets of gamete probabilities (from two parents)
-  # and output genotype probabilities
-  progenyProb <- function(gamProb1, gamProb2){
-    outmat <- matrix(0L, nrow = dim(gamProb1)[1] + dim(gamProb2)[1] - 1,
-                     ncol = dim(gamProb1)[2])
-    for(i in 1:dim(gamProb1)[1]){
-      copy1 <- i - 1
-      for(j in 1:dim(gamProb2)[1]){
-        copy2 <- j - 1
-        thisrow <- copy1 + copy2 + 1
-        outmat[thisrow,] <- outmat[thisrow,] + gamProb1[i,] * gamProb2[j,]
-      }
-    }
-    return(outmat)
-  }
-  # function to get gamete probabilities for a population, given genotype priors
-  gameteProbPop <- function(priors, ploidy){
-    # get gamete probs for all possible genotypes
-    possGamProb <- gameteProb(makeGametes(1:dim(priors)[1] - 1, ploidy),ploidy)
-    # output matrix
-    outmat <- possGamProb %*% priors
-    return(outmat)
-  }
-  # function to adjust genotype probabilities from one generation of selfing
-  selfPop <- function(priors, ploidy){
-    # get gamete probs for all possible genotypes
-    possGamProb <- gameteProb(makeGametes(1:dim(priors)[1] - 1, ploidy),ploidy)
-    # progeny probs for all possible genotypes, selfed
-    possProgenyProb <- matrix(0, nrow = dim(priors)[1], 
-                              ncol = dim(possGamProb)[2])
-    for(i in 1:dim(possGamProb)[2]){
-      possProgenyProb[,i] <- progenyProb(possGamProb[,i,drop = FALSE],
-                                         possGamProb[,i,drop = FALSE])
-    }
-    # multiple progeny probs by prior probabilities of those genotypes
-    outmat <- possProgenyProb %*% priors
-    return(outmat)
-  }
   # get prior genotype probabilities for F1
   OutPriors <- list()
   length(OutPriors) <- dim(pldcombosExpand)[1]
@@ -610,9 +511,9 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     recurPld <- object$possiblePloidies[[pldcombosExpand[i,"recurrent"]]]
     theseDonorGen <- likelyGen.don[as.character(sum(donorPld)),]
     theseRecurGen <- likelyGen.rec[as.character(sum(recurPld)),]
-    donorGamProb <- gameteProb(makeGametes(theseDonorGen, donorPld), donorPld)
-    recurGamProb <- gameteProb(makeGametes(theseRecurGen, recurPld), recurPld)
-    OutPriors[[i]] <- progenyProb(donorGamProb, recurGamProb)
+    donorGamProb <- .gameteProb(.makeGametes(theseDonorGen, donorPld), donorPld)
+    recurGamProb <- .gameteProb(.makeGametes(theseRecurGen, recurPld), recurPld)
+    OutPriors[[i]] <- .progenyProb(donorGamProb, recurGamProb)
   }
   # backcross
   for(gen in bcloop){
@@ -624,12 +525,12 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
       ### consider just estimating recurrent gametes once since this is repetitive
       recurPld <- object$possiblePloidies[[pldcombosExpand[i,"recurrent"]]]
       theseRecurGen <- likelyGen.rec[as.character(sum(recurPld)),]
-      recurGamProb <- gameteProb(makeGametes(theseRecurGen, recurPld), recurPld)
+      recurGamProb <- .gameteProb(.makeGametes(theseRecurGen, recurPld), recurPld)
       # get gamete prob for current population
       currPld <- object$possiblePloidies[[pldcombosExpand[i,paste("BC", gen, sep = "")]]]
-      currGamProb <- gameteProbPop(OutPriorsLastGen[[i]], currPld)
+      currGamProb <- .gameteProbPop(OutPriorsLastGen[[i]], currPld)
       # update genotype priors
-      OutPriors[[i]] <- progenyProb(recurGamProb, currGamProb)
+      OutPriors[[i]] <- .progenyProb(recurGamProb, currGamProb)
     }
   }
   # intermate (random mating within the population)
@@ -644,8 +545,8 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     length(OutPriors) <- dim(pldcombosExpand)[1]
     for(i in 1:length(OutPriors)){
       currPld <- object$possiblePloidies[[pldcombosExpand[i,"final"]]]
-      currGamProb <- gameteProbPop(OutPriorsLastGen[[i]], currPld)
-      OutPriors[[i]] <- progenyProb(currGamProb, currGamProb)
+      currGamProb <- .gameteProbPop(OutPriorsLastGen[[i]], currPld)
+      OutPriors[[i]] <- .progenyProb(currGamProb, currGamProb)
     }
   }
   # self (everything in population is self-fertilized)
@@ -661,7 +562,7 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     length(OutPriors) <- dim(pldcombosExpand)[1]
     for(i in 1:length(OutPriors)){
       currPld <- object$possiblePloidies[[pldcombosExpand[i,"final"]]]
-      OutPriors[[i]] <- selfPop(OutPriorsLastGen[[i]], currPld)
+      OutPriors[[i]] <- .selfPop(OutPriorsLastGen[[i]], currPld)
     }
   }
   
