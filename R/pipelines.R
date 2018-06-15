@@ -1,6 +1,7 @@
 # Wrapper functions that run multiple steps in a pipeline for polyRAD
 
-IterateHWE <- function(object, tol = 1e-5, excludeTaxa = GetBlankTaxa(object)){
+IterateHWE <- function(object, selfing.rate = 0, tol = 1e-5, 
+                       excludeTaxa = GetBlankTaxa(object)){
   if(!"RADdata" %in% class(object)){
     stop("RADdata object needed.")
   }
@@ -19,7 +20,7 @@ IterateHWE <- function(object, tol = 1e-5, excludeTaxa = GetBlankTaxa(object)){
   while(meanDiff > tol){
     message(paste("Starting iteration", nIter))
     oldAlFreq <- object$alleleFreq
-    object <- AddGenotypePriorProb_HWE(object)
+    object <- AddGenotypePriorProb_HWE(object, selfing.rate)
     object <- AddGenotypeLikelihood(object)
     object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePosteriorProb(object)
@@ -32,7 +33,7 @@ IterateHWE <- function(object, tol = 1e-5, excludeTaxa = GetBlankTaxa(object)){
   return(object)
 }
 
-IterateHWE_LD <- function(object, tol = 1e-5, 
+IterateHWE_LD <- function(object, selfing.rate = 0, tol = 1e-5, 
                           excludeTaxa = GetBlankTaxa(object),
                           LDdist = 1e4, minLDcorr = 0.2){
   if(!"RADdata" %in% class(object)){
@@ -50,7 +51,7 @@ IterateHWE_LD <- function(object, tol = 1e-5,
   
   message("Performing preliminary genotype estimation.")
   object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
-  object <- AddGenotypePriorProb_HWE(object)
+  object <- AddGenotypePriorProb_HWE(object, selfing.rate)
   object <- AddGenotypeLikelihood(object)
   object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
   object <- AddGenotypePosteriorProb(object)
@@ -63,7 +64,7 @@ IterateHWE_LD <- function(object, tol = 1e-5,
   while(meanDiff > tol){
     message(paste("Starting iteration", nIter))
     oldAlFreq <- object$alleleFreq
-    object <- AddGenotypePriorProb_HWE(object)
+    object <- AddGenotypePriorProb_HWE(object, selfing.rate)
     object <- AddGenotypePriorProb_LD(object, type = "hwe")
     object <- AddGenotypeLikelihood(object)
     object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
@@ -77,7 +78,7 @@ IterateHWE_LD <- function(object, tol = 1e-5,
   return(object)
 }
 
-IteratePopStruct <- function(object, tol = 1e-3, 
+IteratePopStruct <- function(object, selfing.rate = 0, tol = 1e-3, 
                              excludeTaxa = GetBlankTaxa(object),
                              nPcsInit = 10, minfreq = 0.0001){
   if(!"RADdata" %in% class(object)){
@@ -103,7 +104,7 @@ IteratePopStruct <- function(object, tol = 1e-3,
     message(paste("PCs used:", dim(object$PCA)[2]))
     oldAlFreq <- object$alleleFreqByTaxa
     object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
-    object <- AddGenotypePriorProb_ByTaxa(object)
+    object <- AddGenotypePriorProb_ByTaxa(object, selfing.rate)
     object <- AddGenotypeLikelihood(object)
     object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePosteriorProb(object)
@@ -127,7 +128,7 @@ IteratePopStruct <- function(object, tol = 1e-3,
 # minLDcorr is the minimum correlation coefficient between the residuals of 
 # allelic values after regression on PCA axes, with the values of a nearby 
 # allele, for that allele to be used in genotype prediction.
-IteratePopStructLD <- function(object, tol = 1e-3, 
+IteratePopStructLD <- function(object, selfing.rate = 0, tol = 1e-3, 
                              excludeTaxa = GetBlankTaxa(object),
                              nPcsInit = 10, minfreq = 0.0001,
                              LDdist = 1e4, minLDcorr = 0.2){
@@ -151,7 +152,7 @@ IteratePopStructLD <- function(object, tol = 1e-3,
   object <- AddAlleleFreqByTaxa(object)
   message("Performing preliminary genotype estimation.")
   object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
-  object <- AddGenotypePriorProb_ByTaxa(object)
+  object <- AddGenotypePriorProb_ByTaxa(object, selfing.rate)
   object <- AddGenotypeLikelihood(object)
   object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
   object <- AddGenotypePosteriorProb(object)
@@ -171,7 +172,7 @@ IteratePopStructLD <- function(object, tol = 1e-3,
     message(paste("PCs used:", dim(object$PCA)[2]))
     oldAlFreq <- object$alleleFreqByTaxa
     object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
-    object <- AddGenotypePriorProb_ByTaxa(object)
+    object <- AddGenotypePriorProb_ByTaxa(object, selfing.rate)
     object <- AddGenotypePriorProb_LD(object, type = "popstruct")
     object <- AddGenotypeLikelihood(object)
     object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)

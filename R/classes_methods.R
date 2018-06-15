@@ -583,7 +583,7 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
 AddGenotypePriorProb_HWE <- function(object, ...){
   UseMethod("AddGenotypePriorProb_HWE", object)
 }
-AddGenotypePriorProb_HWE.RADdata <- function(object, ...){
+AddGenotypePriorProb_HWE.RADdata <- function(object, selfing.rate = 0, ...){
   if(is.null(object$alleleFreq) || attr(object, "alleleFreqType") != "HWE"){
     stop("Allele frequencies not estimated under HWE.")
   }
@@ -591,7 +591,8 @@ AddGenotypePriorProb_HWE.RADdata <- function(object, ...){
   length(priors) <- length(object$possiblePloidies)
   
   for(i in 1:length(priors)){
-    priors[[i]] <- .HWEpriors(object$alleleFreq, object$possiblePloidies[[i]])
+    priors[[i]] <- .HWEpriors(object$alleleFreq, object$possiblePloidies[[i]],
+                              selfing.rate)
   }
   
   object$priorProb <- priors
@@ -1006,7 +1007,7 @@ AddAlleleFreqByTaxa.RADdata <- function(object, minfreq = 0.0001, ...){
 AddGenotypePriorProb_ByTaxa <- function(object, ...){
   UseMethod("AddGenotypePriorProb_ByTaxa", object)
 }
-AddGenotypePriorProb_ByTaxa.RADdata <- function(object, ...){
+AddGenotypePriorProb_ByTaxa.RADdata <- function(object, selfing.rate = 0, ...){
   if(is.null(object$alleleFreqByTaxa)){
     stop("Need to run AddAlleleFreqByTaxa first.")
   }
@@ -1022,7 +1023,8 @@ AddGenotypePriorProb_ByTaxa.RADdata <- function(object, ...){
                                          GetAlleleNames(object)))
     for(j in 1:nTaxa(object)){
       priors[[i]][,j,] <- .HWEpriors(object$alleleFreqByTaxa[j,], 
-                                     object$possiblePloidies[[i]])
+                                     object$possiblePloidies[[i]],
+                                     selfing.rate)
     }
   }
   

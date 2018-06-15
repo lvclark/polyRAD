@@ -4,17 +4,35 @@
 # internal function to take allele frequencies and get prior probs under HWE
 # freqs is a vector of allele frequencies
 # ploidy is a vector indicating the ploidy
-.HWEpriors <- function(freqs, ploidy){
+.HWEpriors <- function(freqs, ploidy, selfing.rate){
   if(length(unique(ploidy)) != 1){
     stop("All subgenomes must be same ploidy")
+  }
+  if(selfing.rate < 0 || selfing.rate > 1){
+    stop("selfing.rate must not be less than zero or more than one.")
   }
   nsubgen <- length(ploidy)
   if(nsubgen == 1){ # for diploid/autopolyploid, or single subgenome with recursion
     priors <- matrix(NA, nrow = ploidy+1, ncol = length(freqs),
                      dimnames = list(as.character(0:ploidy), names(freqs)))
     antifreqs <- 1 - freqs
+    # genotype probabilities under random mating
     for(i in 0:ploidy){
       priors[i+1,] <- choose(ploidy, i) * freqs ^ i * antifreqs ^ (ploidy - i)
+    }
+    # adjust for self fertilization if applicable
+    if(selfing.rate > 0 && selfing.rate < 1){
+      sm <- .selfmat(ploidy)
+      # Equation 6 from de Silva et al. 2005 (doi:10.1038/sj.hdy.6800728)
+      priors <- (1 - selfing.rate) * 
+        solve(diag(ploidy + 1) - selfing.rate * sm, priors)
+      rownames(priors) <- as.character(0:ploidy)
+    }
+    if(selfing.rate == 1){
+      priors <- matrix(0, nrow = ploidy+1, ncol = length(freqs),
+                       dimnames = list(as.character(0:ploidy), names(freqs)))
+      priors[1,] <- antifreqs
+      priors[ploidy + 1, ] <- freqs
     }
   } else {
     remainingfreqs <- freqs
@@ -26,7 +44,7 @@
       # allele frequencies reserved for remaining subgenomes
       remainingfreqs <- remainingfreqs - thesefreqs
       # priors just for this subgenome
-      thesepriors <- .HWEpriors(nsubgen * thesefreqs, pld)
+      thesepriors <- .HWEpriors(nsubgen * thesefreqs, pld, selfing.rate)
       
       # multiply by priors already calculated to get overall priors
       oldpriors <- priors

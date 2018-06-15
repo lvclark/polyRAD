@@ -5,18 +5,22 @@ Estimate Prior Genotype Probabilities on a Per-Taxon Basis
 }
 \description{
 Using local allele frequencies estimated by \code{\link{AddAlleleFreqByTaxa}}
-and assuming Hardy-Weinberg Equilibruim on a local scale,
+and assuming Hardy-Weinberg Equilibruim or inbreeding on a local scale,
 \code{AddGenotypePriorProb_ByTaxa} estimates prior genotype probabilities at
 each taxon, allele, and possible ploidy.  These are then stored in the
 \code{$priorProb} slot of the \code{"\link{RADdata}"} object.
 }
 \usage{
-AddGenotypePriorProb_ByTaxa(object, ...)
+AddGenotypePriorProb_ByTaxa(object, selfing.rate = 0, ...)
 }
 \arguments{
   \item{object}{
 A \code{"\link{RADdata}"} object.  \code{\link{AddAlleleFreqByTaxa}} should have
 already been run.
+}
+\item{selfing.rate}{
+A number ranging from zero to one indicating the frequency of
+self-fertilization in the species.
 }
   \item{\dots}{
 Additional arguments (none implemented).
@@ -39,7 +43,10 @@ Lindsay V. Clark
 }
 
 \seealso{
-\code{\link{AddGenotypePriorProb_HWE}}, \code{\link{AddGenotypePriorProb_Mapping2Parents}},
+\code{\link{AddGenotypePriorProb_HWE}} for equations used for genotype prior
+probability estimation.
+
+\code{\link{AddGenotypePriorProb_Mapping2Parents}},
 \code{\link{AddGenotypeLikelihood}}
 }
 \examples{
@@ -57,6 +64,11 @@ exampleRAD$priorProb[[1]][,1,]
 exampleRAD$priorProb[[2]][,1,]
 exampleRAD$priorProb[[1]][,2,]
 exampleRAD$priorProb[[2]][,2,]
+
+# try it with inbreeding
+exampleRAD <- AddGenotypePriorProb_ByTaxa(exampleRAD, selfing.rate = 0.5)
+
+exampleRAD$priorProb[[1]][,1,]
 }
 
 \keyword{ distribution }

@@ -12,12 +12,16 @@ until allele frequencies stabilize to within a user-defined threshold.  Genotype
 posterior probabilities can then be exported for downstream analysis.
 }
 \usage{
-IterateHWE(object, tol = 1e-05, excludeTaxa = GetBlankTaxa(object))
-IterateHWE_LD(object, tol = 1e-05, excludeTaxa = GetBlankTaxa(object),
+IterateHWE(object, selfing.rate = 0, tol = 1e-05,
+           excludeTaxa = GetBlankTaxa(object))
+IterateHWE_LD(object, selfing.rate = 0, tol = 1e-05, 
+              excludeTaxa = GetBlankTaxa(object),
               LDdist = 1e4, minLDcorr = 0.2)
-IteratePopStruct(object, tol = 1e-03, excludeTaxa = GetBlankTaxa(object),
+IteratePopStruct(object, selfing.rate = 0, tol = 1e-03,
+                 excludeTaxa = GetBlankTaxa(object),
                  nPcsInit = 10, minfreq = 0.0001)
-IteratePopStructLD(object, tol = 1e-03, excludeTaxa = GetBlankTaxa(object),
+IteratePopStructLD(object, selfing.rate = 0, tol = 1e-03,
+                   excludeTaxa = GetBlankTaxa(object),
                    nPcsInit = 10, minfreq = 0.0001, LDdist = 1e4, 
                    minLDcorr = 0.2)
 }
@@ -25,6 +29,10 @@ IteratePopStructLD(object, tol = 1e-03, excludeTaxa = GetBlankTaxa(object),
 \arguments{
   \item{object}{
 A \code{"\link{RADdata}"} object.
+}
+\item{selfing.rate}{
+A number ranging from zero to one indicating the frequency of
+self-fertilization in the species.
 }
   \item{tol}{
 A number indicating when the iteration should end.  It indicates the maximum mean 
@@ -56,7 +64,7 @@ for genotype estimation; see \code{\link{AddAlleleLinkages}}.
 
 \details{
 For \code{IterateHWE}, the following functions are run iteratively,
-assuming Hardy-Weinberg Equilibrium:
+assuming no population structure:
 \code{\link{AddAlleleFreqHWE}}, 
 \code{\link{AddGenotypePriorProb_HWE}}, \code{\link{AddGenotypeLikelihood}},
 \code{\link{AddPloidyChiSq}}, and \code{\link{AddGenotypePosteriorProb}}.
