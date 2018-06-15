@@ -288,17 +288,24 @@ polyRADsubmat <- matrix(c(0,1,1,1, 0,0,0,1,1,1, 0,0,0,1, 0,1, # A
   outmat <- possGamProb %*% priors
   return(outmat)
 }
+# function just to make selfing matrix.
+# Every parent genotype is a column.  The frequency of its offspring after
+# selfing is in rows.
+.selfmat <- function(ploidy){
+  # get gamete probs for all possible genotypes
+  possGamProb <- .gameteProb(.makeGametes(0:ploidy, ploidy), ploidy)
+  # genotype probabilities after selfing each possible genotype
+  outmat <- matrix(0, nrow = ploidy + 1, ncol = ploidy + 1)
+  for(i in 1:(ploidy + 1)){
+    outmat[,i] <- .progenyProb(possGamProb[,i,drop = FALSE],
+                               possGamProb[,i,drop = FALSE])
+  }
+  return(outmat)
+}
 # function to adjust genotype probabilities from one generation of selfing
 .selfPop <- function(priors, ploidy){
-  # get gamete probs for all possible genotypes
-  possGamProb <- .gameteProb(.makeGametes(1:dim(priors)[1] - 1, ploidy),ploidy)
   # progeny probs for all possible genotypes, selfed
-  possProgenyProb <- matrix(0, nrow = dim(priors)[1], 
-                            ncol = dim(possGamProb)[2])
-  for(i in 1:dim(possGamProb)[2]){
-    possProgenyProb[,i] <- .progenyProb(possGamProb[,i,drop = FALSE],
-                                        possGamProb[,i,drop = FALSE])
-  }
+  possProgenyProb <- .selfmat(ploidy)
   # multiple progeny probs by prior probabilities of those genotypes
   outmat <- possProgenyProb %*% priors
   return(outmat)
