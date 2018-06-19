@@ -1057,8 +1057,12 @@ AddGenotypePriorProb_LD.RADdata <- function(object, type, ...){
   
   # Loop through the possible ploidies
   for(pldIndex in 1:nPld){
-    # set up array
-    object$priorProbLD[[pldIndex]] <- 
+    # set up array to be put into priorProbLD slot.
+    # (Setting up the array *in* the slot caused a mysterious problem
+    # where object would get copied to a new memory address on each
+    # iteration through the alleles, but only when the Rcpp function
+    # ThirdDimProd was used instead of apply.)
+    thisarr <- 
       array(dim = dim(object$posteriorProb[[pldIndex]]),
             dimnames = dimnames(object$posteriorProb[[pldIndex]]))
     # number of possible genotypes
@@ -1067,7 +1071,7 @@ AddGenotypePriorProb_LD.RADdata <- function(object, type, ...){
     for(a in 1:nAlleles(object)){
       atab <- object$alleleLinkages[[a]]
       if(length(atab$allele) == 0){ # no linked alleles
-        object$priorProbLD[[pldIndex]][,,a] <- 1/ngen
+        thisarr[,,a] <- 1/ngen
       } else {             # linked alleles exist
         # get posterior probabilities for linked alleles
         thispost <- object$posteriorProb[[pldIndex]][,, atab$allele, drop = FALSE]
@@ -1117,14 +1121,16 @@ AddGenotypePriorProb_LD.RADdata <- function(object, type, ...){
         
         # multiply across alleles to get priors
         if(length(atab$allele) == 1){
-          object$priorProbLD[[pldIndex]][,,a] <- thispost[,, 1]
+          thisarr[,,a] <- thispost[,, 1]
         } else {
-          thisLDprior <- apply(thispost, c(1, 2), prod)
+#          thisLDprior <- apply(thispost, c(1, 2), prod) # non-compiled version
+          thisLDprior <- ThirdDimProd(thispost, ngen, nTaxa(object)) # Rcpp function
           thisLDprior <- sweep(thisLDprior, 2, colSums(thisLDprior), "/")
-          object$priorProbLD[[pldIndex]][,,a] <- thisLDprior
+          thisarr[,,a] <- thisLDprior
         }
       } # end of chunk for if there are linked alleles
     } # end of loop through alleles
+    object$priorProbLD[[pldIndex]] <- thisarr
   } # end of loop through ploidies
   
   return(object)

@@ -13,3 +13,7 @@ BestPloidies <- function(chisq) {
     .Call('_polyRAD_BestPloidies', PACKAGE = 'polyRAD', chisq)
 }
 
+ThirdDimProd <- function(probs, ploidy, ntaxa) {
+    .Call('_polyRAD_ThirdDimProd', PACKAGE = 'polyRAD', probs, ploidy, ntaxa)
+}
+

@@ -42,11 +42,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ThirdDimProd
+NumericMatrix ThirdDimProd(NumericVector probs, int ploidy, int ntaxa);
+RcppExport SEXP _polyRAD_ThirdDimProd(SEXP probsSEXP, SEXP ploidySEXP, SEXP ntaxaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type probs(probsSEXP);
+    Rcpp::traits::input_parameter< int >::type ploidy(ploidySEXP);
+    Rcpp::traits::input_parameter< int >::type ntaxa(ntaxaSEXP);
+    rcpp_result_gen = Rcpp::wrap(ThirdDimProd(probs, ploidy, ntaxa));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_polyRAD_AlleleProbExp", (DL_FUNC) &_polyRAD_AlleleProbExp, 2},
     {"_polyRAD_BestGenos", (DL_FUNC) &_polyRAD_BestGenos, 4},
     {"_polyRAD_BestPloidies", (DL_FUNC) &_polyRAD_BestPloidies, 1},
+    {"_polyRAD_ThirdDimProd", (DL_FUNC) &_polyRAD_ThirdDimProd, 3},
     {NULL, NULL, 0}
 };
 
