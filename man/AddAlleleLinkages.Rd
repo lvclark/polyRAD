@@ -106,7 +106,6 @@ Lindsay V. Clark
 }
 \examples{
 # load example dataset
-require(Biostrings)
 data(Msi01genes)
 
 # Run non-LD pop structure pipeline
