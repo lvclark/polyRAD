@@ -69,6 +69,13 @@ assuming no population structure:
 \code{\link{AddGenotypePriorProb_HWE}}, \code{\link{AddGenotypeLikelihood}},
 \code{\link{AddPloidyChiSq}}, and \code{\link{AddGenotypePosteriorProb}}.
 
+\code{IterateHWE_LD} runs each of the functions listed for \code{IterateHWE}
+once, then runs \code{\link{AddAlleleLinkages}}.  It then runs
+\code{\link{AddAlleleFreqHWE}}, \code{\link{AddGenotypePriorProb_HWE}},
+\code{\link{AddGenotypePriorProb_LD}}, \code{\link{AddGenotypeLikelihood}},
+\code{\link{AddPloidyChiSq}}, and \code{\link{AddGenotypePosteriorProb}}
+iteratively until allele frequencies converge.
+
 For \code{IteratePopStruct}, the following functions are run iteratively,
 modeling population structure:
 \code{\link{AddPCA}}, \code{\link{AddAlleleFreqByTaxa}}, 
