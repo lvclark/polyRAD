@@ -1781,3 +1781,61 @@ EstimateContaminationRate.RADdata <- function(object, multiplier = 1, ...){
 
   return(object)
 }
+
+# function to return some useful info on the locus
+LocusInfo <- function(object, ...){
+  UseMethod("LocusInfo", object)
+}
+LocusInfo.RADdata(object, locus, genome = NULL, annotation = NULL, verbose = TRUE){
+  if(length(locus) != 1){
+    stop("LocusInfo function is designed for just one locus.")
+  }
+  # identify the number for the locus
+  locnum <- fastmatch::fmatch(locus, GetLoci(object))
+  # check if it is an allele name instead
+  if(is.na(locnum)){
+    alnum <- fastmatch::fmatch(locus, GetAlleleNames(object))
+    if(is.na(alnum)){
+      stop("'locus' does not match any locus or allele in 'object'.")
+    }
+    locnum <- object$alleles2loc[alnum]
+  }
+  
+  # basic info on loci and alleles
+  out <- list()
+  out$Locus <- GetLoci(object)[locnum]
+  if(verbose) cat(out$Locus, sep = "\n")
+  aligned <- "Chr" %in% names(object$locTable)
+  if(aligned){
+    out$Chromosome <- object$locTable$Chr[locnum]
+    out$Position <- object$locTable$Pos[locnum]
+    if(verbose) cat(c(paste("Chromosome:", out$Chromosome),
+                      paste("Position:", out$Position)), sep = "\n")
+  }
+  alnums <- which(object$alleles2loc == locnum)
+  out$Alleles <- GetAlleleNames(object)[alnums]
+  out$Haplotypes <- object$alleleNucleotides[alnums]
+  if(verbose){
+    cat(paste(length(out$Alleles), "alleles"), sep = "\n")
+    cat(out$Haplotypes, sep = "\n") # possibly move this to later, to print table of hap info
+  }
+  
+  # allele frequencies if existing
+  if(!is.null(object$alleleFreq)){
+    out$Frequencies <- object$allelFreq[alnums]
+  }
+  
+  # functional annotation
+  if(!is.null(genome) && !is.null(annotation)){
+    if(!requireNamespace(VariantAnnotation, quitely = TRUE)){
+      stop("VariantAnnotation package needed if genome and annotation are provided.")
+    }
+    if(attr(object$alleleNucleotides, "Variable_sites_only")){
+      # warning that we can't get functional annotation of alleles
+      # add genes that are near the locus
+    }
+    # get functional annotation of alleles
+  }
+  
+  return(out)
+}
