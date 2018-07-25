@@ -10,7 +10,7 @@ Genotypes derived from genotyping-by-sequencing (GBS) and restriction site-assoc
 
 ## Why polyRAD?
 
-If you're like me, you don't want to waste a lot of money sequencing your DNA samples at a higher depth than is necessary.  You would rather spend that money adding more samples to the project, or using a different restriction enzyme to get more markers!  You may have also noticed (especially in double-digest systems) that some loci get sequenced at a much higher depth than others, which means that if you sequence the same library a second time, you aren't likely to get a lot of reads for the loci that need it most.  So how can we get the maximum amount of information out of seqeuncing data where many loci are low depth?  And, for example, if we only have five reads, how can we estimate allele dosage in a heterozygous octoploid?
+If you're like me, you don't want to waste a lot of money sequencing your DNA samples at a higher depth than is necessary.  You would rather spend that money adding more samples to the project, or using a different restriction enzyme to get more markers!  You may have also noticed that some loci get sequenced at a much higher depth than others, which means that if you sequence the same library a second time, you aren't likely to get a lot of reads for the loci that need it most.  So how can we get the maximum amount of information out of seqeuncing data where many loci are low depth?  And, for example, if we only have five reads, how can we estimate allele dosage in a heterozygous octoploid?
 
 The answer that polyRAD provides is a Bayesian genotype caller with many options for specifying genotype prior probabilties.  When read depth is low, **accurate priors make a big difference in the accuracy of genotype calls.**  And because some genotype calls are going to be uncertain no matter how sophisticated our algorithm is, polyRAD can export genotypes as continuous numeric variables reflecting the probabilities of all possible allele copy numbers.  This includes genotypes with zero reads, where the priors themselves are used for imputation.
 
@@ -26,7 +26,7 @@ The answer that polyRAD provides is a Bayesian genotype caller with many options
 * Based on likely parental genotypes and allele frequencies in the progeny, polyRAD determines the segregation pattern of each marker.
 * If the loci have known positions in a reference genome or on a map, linked markers can be used for updating priors.
 
-In particular, by taking advantage of population structure and linkage, high depth markers are used by polyRAD to improve the accuracy of genotyping at low depth markers.  All pipelines allow autopolyploidy, allopolyploidy, or some mixture of the two.  And because non-model organisms need some love, reference genomes are optional.
+In particular, by using population structure and linkage to inform genotype priors on a per-individual basis, high depth markers are used by polyRAD to improve the accuracy of genotyping at low depth markers.  All pipelines allow autopolyploidy, allopolyploidy, or some mixture of the two.  And because non-model organisms need some love, reference genomes are optional.
 
 ## Formats supported
 
