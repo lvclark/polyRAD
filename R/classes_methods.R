@@ -1786,7 +1786,7 @@ EstimateContaminationRate.RADdata <- function(object, multiplier = 1, ...){
 LocusInfo <- function(object, ...){
   UseMethod("LocusInfo", object)
 }
-LocusInfo.RADdata(object, locus, genome = NULL, annotation = NULL, verbose = TRUE){
+LocusInfo.RADdata <- function(object, locus, genome = NULL, annotation = NULL, verbose = TRUE){
   if(length(locus) != 1){
     stop("LocusInfo function is designed for just one locus.")
   }
@@ -1827,7 +1827,7 @@ LocusInfo.RADdata(object, locus, genome = NULL, annotation = NULL, verbose = TRU
   
   # functional annotation
   if(!is.null(genome) && !is.null(annotation)){
-    if(!requireNamespace(VariantAnnotation, quitely = TRUE)){
+    if(!requireNamespace("VariantAnnotation", quietly = TRUE)){
       stop("VariantAnnotation package needed if genome and annotation are provided.")
     }
     if(attr(object$alleleNucleotides, "Variable_sites_only")){
