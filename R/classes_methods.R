@@ -1786,7 +1786,7 @@ EstimateContaminationRate.RADdata <- function(object, multiplier = 1, ...){
 LocusInfo <- function(object, ...){
   UseMethod("LocusInfo", object)
 }
-LocusInfo.RADdata <- function(object, locus, genome = NULL, annotation = NULL, verbose = TRUE){
+LocusInfo.RADdata <- function(object, locus, genome = NULL, annotation = NULL, verbose = TRUE, ...){
   if(length(locus) != 1){
     stop("LocusInfo function is designed for just one locus.")
   }
@@ -1817,24 +1817,81 @@ LocusInfo.RADdata <- function(object, locus, genome = NULL, annotation = NULL, v
   out$Haplotypes <- object$alleleNucleotides[alnums]
   if(verbose){
     cat(paste(length(out$Alleles), "alleles"), sep = "\n")
-    cat(out$Haplotypes, sep = "\n") # possibly move this to later, to print table of hap info
   }
   
   # allele frequencies if existing
   if(!is.null(object$alleleFreq)){
-    out$Frequencies <- object$allelFreq[alnums]
+    out$Frequencies <- object$alleleFreq[alnums]
   }
   
   # functional annotation
-  if(!is.null(genome) && !is.null(annotation)){
+  if(!is.null(annotation) && aligned){
     if(!requireNamespace("VariantAnnotation", quietly = TRUE)){
-      stop("VariantAnnotation package needed if genome and annotation are provided.")
+      stop("VariantAnnotation and other BioConductor packages needed if genome and annotation are provided.")
     }
-    if(attr(object$alleleNucleotides, "Variable_sites_only")){
-      # warning that we can't get functional annotation of alleles
-      # add genes that are near the locus
+    getfunc <- TRUE
+    # get correct chromosome name
+    chr <- out$Chr # chromosome name
+    chrToMatch <- GenomeInfoDb::seqlevels(annotation) # chrom. in TxDb
+    if(!chr %in% chrToMatch){
+      chr2 <- grep(paste("^(Chr|chr|CHR)(omosome|OMOSOME)?0?", chr, "$", sep = ""),
+                   chrToMatch, value = TRUE)
+      if(length(chr2) == 1){
+        chr <- chr2
+      } else {
+        warning("Could not match chromosome between RADdata and annotation.")
+        getfunc <- FALSE # stop looking for functional annotation
+      }
     }
-    # get functional annotation of alleles
+    if(getfunc){
+      nal <- length(out$Alleles)
+      # set up GRanges for where this marker is
+      gr <- GenomicRanges::GRanges(rep(chr, nal), 
+                                   IRanges::IRanges(rep(out$Pos, nal), 
+                                                    rep(out$Pos + nchar(out$Haplotypes[1]) - 1, nal)),
+                                   strand = rep("+", nal))
+      
+      varsite <- attr(object$alleleNucleotides, "Variable_sites_only")
+      if(((isTRUE(varsite) || is.null(varsite)) &&
+          nchar(out$Haplotypes[1]) > 1) || 
+         is.null(genome)){
+        # warning that we can't get functional annotation of alleles
+        if(is.null(genome)){
+          warning("No reference genome provided; will not search for protein coding changes.")
+        } else {
+          warning("Haplotypes were imported as variable sites only; will not search for protein coding changes.")
+        }
+        # add genes overlapping the locus
+        mygenes <- unique(GenomicFeatures::transcriptsByOverlaps(annotation, gr)$tx_name)
+        out$Transcripts <- mygenes
+        # print genes to console
+        if(verbose){
+          cat(c("Transcripts:", out$Transcripts), sep = "\n")
+        }
+      } else { # get functional annotation of alleles
+        # alleles as DNAStrings
+        ds <- Biostrings::DNAStringSet(out$Haplotypes)
+        # predict coding changes
+        message("Predicting protein coding changes...")
+        out$PredictCoding <- VariantAnnotation::predictCoding(gr, annotation, genome, ds)
+        # print results to console
+        if(verbose && length(out$PredictCoding) > 0){
+          cat(paste("Gene:", out$PredictCoding$GENEID[1]), sep = "\n")
+        }
+      }
+    }
+  } # end of search for functional annotation
+  
+  # print haplotypes
+  if(verbose){
+    stringsprint <- out$Haplotypes
+    if(!is.null(out$PredictCoding) && nal == length(out$PredictCoding)){
+      stringsprint <- paste(stringsprint, out$PredictCoding$CONSEQUENCE)
+    }
+    if(!is.null(out$Frequencies)){
+      stringsprint <- paste(stringsprint, round(out$Frequencies, 2))
+    }
+    cat(stringsprint, sep = "\n")
   }
   
   return(out)
