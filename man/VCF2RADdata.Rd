@@ -145,7 +145,7 @@ Lindsay V. Clark
 \code{\link{MakeTasselVcfFilter}} for filtering to a smaller VCF file before
 reading with \code{VCF2RADdata}.
 
-Other data import functions:  \code{\link{readStacks1}}, \code{\link{readHMC}},
+Other data import functions:  \code{\link{readStacks}}, \code{\link{readHMC}},
 \code{\link{readTagDigger}}
 }
 \examples{

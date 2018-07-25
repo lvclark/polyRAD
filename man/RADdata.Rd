@@ -95,7 +95,7 @@ Lindsay V. Clark
 Data import functions that internally call \code{RADdata}:
 
 \code{\link{readHMC}}, \code{\link{readTagDigger}}, 
-\code{\link{VCF2RADdata}}, \code{\link{readStacks1}}
+\code{\link{VCF2RADdata}}, \code{\link{readStacks}}
 }
 \examples{
 # create the dataset

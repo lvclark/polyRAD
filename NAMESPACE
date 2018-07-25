@@ -14,7 +14,7 @@ GetLocDepth, GetLoci, GetProbableGenotypes, GetRecurrentParent,
 GetTaxa, GetWeightedMeanGenotypes, IterateHWE, IterateHWE_LD,
 IteratePopStruct, IteratePopStructLD, MakeTasselVcfFilter,
 MergeRareHaplotypes, nTaxa, nAlleles, nLoci, OneAllelePerMarker, 
-PipelineMapping2Parents, RADdata, readHMC, readStacks1, readTagDigger,
+PipelineMapping2Parents, RADdata, readHMC, readStacks, readTagDigger,
 RemoveMonomorphicLoci,
 SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent,
 SplitByChromosome, StripDown, SubsetByLocus, SubsetByTaxon, VCF2RADdata)

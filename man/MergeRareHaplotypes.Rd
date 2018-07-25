@@ -52,7 +52,7 @@ Lindsay V. Clark
 }
 
 \seealso{
-\code{\link{SubsetByLocus}}, \code{\link{VCF2RADdata}}, \code{\link{readStacks1}}
+\code{\link{SubsetByLocus}}, \code{\link{VCF2RADdata}}, \code{\link{readStacks}}
 }
 \examples{
 data(exampleRAD)

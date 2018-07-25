@@ -902,20 +902,65 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
 }
 
 # Function to import from Stacks 1.48
-readStacks1 <- function(allelesFile, matchesFolder,
-                        min.ind.with.reads = 200,
-                        min.ind.with.minor.allele = 10,
-                        readAlignmentData = FALSE,
-                        possiblePloidies = list(2),
-                        contamRate = 0.001){
+readStacks <- function(allelesFile, matchesFolder, version = 2, 
+                       min.ind.with.reads = 200,
+                       min.ind.with.minor.allele = 10,
+                       readAlignmentData = FALSE,
+                       sumstatsFile = "populations.sumstats.tsv",
+                       possiblePloidies = list(2),
+                       contamRate = 0.001){
+  # get columns depending on version number
+  if(!version %in% c(1,2)){
+    stop("Version must be equal to 1 or 2.")
+  }
+  if(version == 2){
+    # for catalog alleles file
+    hapcol <- 3
+    loccol <- 2
+    afcols <- list(NULL, integer(0), character(0), NULL, NULL)
+    # for matches file
+    mloccol <- 1
+    msamcol <- 2
+    mhapcol <- 4
+    mdepcol <- 5
+    mfcols <- list(integer(0), integer(0), NULL, character(0), integer(0),
+                   NULL)
+    # for sumstats file
+    sloccol <- 1
+    schrcol <- 2
+    sposcol <- 3
+    sfcols <- list(integer(0), character(0), integer(0), NULL, NULL, NULL,
+                   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                   NULL, NULL, NULL, NULL, NULL, NULL)
+  } else {
+    # for catalog alleles file
+    hapcol <- 4
+    loccol <- 3
+    afcols <- list(NULL, NULL, integer(0), character(0), NULL, NULL)
+    # for matches file
+    mloccol <- 3
+    msamcol <- 4
+    mhapcol <- 6
+    mdepcol <- 7
+    mfcols <- list(NULL, NULL, integer(0), integer(0), NULL, character(0),
+                   integer(0), NULL)
+    # for catalog tags file
+    tloccol <- 3
+    tchrcol <- 4
+    tposcol <- 5
+    tstrcol <- 6
+    tfcols <- list(NULL, NULL, integer(0), character(0), integer(0),
+                   character(0), NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                   NULL)
+  }
+  
   # read in catalog.alleles.tsv file
-  af <- scan(allelesFile, what = list(NULL, NULL, integer(0), character(0),
-                                      NULL, NULL),
+  af <- scan(allelesFile, what = afcols,
              sep = "\t", comment.char = "#", na.strings = character(0))
   # get locus names (numbers) and haplotypes for variable sites
-  keep <- af[[4]] != ""
-  locNames <- af[[3]][keep]
-  alleleNucleotides <- af[[4]][keep]
+  keep <- af[[hapcol]] != ""
+  locNames <- af[[loccol]][keep]
+  alleleNucleotides <- af[[hapcol]][keep]
   attr(alleleNucleotides, "Variable_sites_only") <- TRUE
   alleleNames <- paste(locNames, alleleNucleotides, sep = "_")
   
@@ -934,16 +979,15 @@ readStacks1 <- function(allelesFile, matchesFolder,
   # read sstacks files
   for(i in 1:length(sampleNames)){
     mf <- scan(sstacksFiles[i], 
-               what = list(NULL, NULL, integer(0), integer(0), NULL, character(0),
-                           integer(0), NULL), sep = "\t", comment.char = "#", 
+               what = mfcols, sep = "\t", comment.char = "#", 
                na.strings = character(0))
-    keep <- mf[[6]] != "consensus"
-    theseLocNames <- mf[[3]][keep]
-    theseAlNuc <- mf[[6]][keep]
-    theseDepth <- mf[[7]][keep]
+    keep <- mf[[mhapcol]] != "consensus"
+    theseLocNames <- mf[[mloccol]][keep]
+    theseAlNuc <- mf[[mhapcol]][keep]
+    theseDepth <- mf[[mdepcol]][keep]
     theseAlNames <- paste(theseLocNames, theseAlNuc, sep = "_")
     alleleDepth[i, theseAlNames] <- theseDepth
-    reorder[mf[[4]][1]] <- i
+    reorder[mf[[msamcol]][1]] <- i
   }
   alleleDepth <- alleleDepth[reorder,]
   
@@ -980,17 +1024,24 @@ readStacks1 <- function(allelesFile, matchesFolder,
   # Get chromosome and position
   uniqueLocNames <- unique(locNames)
   if(readAlignmentData){
-    tagFile <- sub("alleles", "tags", allelesFile)
-    tf <- scan(tagFile, 
-               what = list(NULL, NULL, integer(0), character(0),
-                           integer(0), character(0), NULL, NULL, NULL, NULL,
-                           NULL, NULL, NULL, NULL),
-               sep = "\t", comment.char = "#", na.strings = character(0))
-    keeprows <- fastmatch::fmatch(uniqueLocNames, tf[[3]])
-    locTable <- data.frame(row.names = as.character(uniqueLocNames),
-                           Chr = tf[[4]][keeprows],
-                           Pos = tf[[5]][keeprows],
-                           Strand = tf[[6]][keeprows])
+    if(version == 1){
+      tagFile <- sub("alleles", "tags", allelesFile)
+      tf <- scan(tagFile, what = tfcols,
+                 sep = "\t", comment.char = "#", na.strings = character(0))
+      keeprows <- fastmatch::fmatch(uniqueLocNames, tf[[tloccol]])
+      locTable <- data.frame(row.names = as.character(uniqueLocNames),
+                             Chr = tf[[tchrcol]][keeprows],
+                             Pos = tf[[tposcol]][keeprows],
+                             Strand = tf[[tstrcol]][keeprows])
+    }
+    if(version == 2){
+      sf <- scan(sumstatsFile, what = sfcols,
+                 sep = "\t", comment.char = "#", na.strings = character(0))
+      keeprows <- fastmatch::fmatch(uniqueLocNames, sf[[sloccol]])
+      locTable <- data.frame(row.names = as.character(uniqueLocNames),
+                             Chr = sf[[schrcol]][keeprows],
+                             Pos = sf[[sposcol]][keeprows])
+    }
   } else {
     # no alignment data
     locTable <- data.frame(row.names = as.character(uniqueLocNames))
