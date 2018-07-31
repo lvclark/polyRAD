@@ -13,10 +13,11 @@ mdlines <- readLines("polyRADtutorial.md")
 
 mdlines <- c("# polyRAD tutorial", "", "## Table of Contents",
              "* [Introduction](#introduction)", 
-             "* [Summary of Available Functions](#functions)",
+             "* [Summary of available functions](#functions)",
              "* [Estimating genotype probabilities in a mapping population](#mapping)",
              "* [Estimating genotype probabilities in a diversity panel](#diversity)",
-             "* [Considerations for RAM and processing time](#considerations)", "",
+             "* [Considerations for RAM and processing time](#considerations)",
+             "* [Citing polyRAD](#citation)", "",
              mdlines)
 
 cat(mdlines, sep = "\n", file = "polyRADtutorial.md")

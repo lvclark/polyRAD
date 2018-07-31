@@ -534,3 +534,11 @@ GD.all <- cbind(GAPITlist[[1]]$GD, GAPITlist[[2]]$GD[,-1],
                 GAPITlist[[9]]$GD[,-1], GAPITlist[[10]]$GD[,-1])
 #save(GD.all, GM.all, file = "180525GM_GD_all_polyRAD.RData") # 1076888 markers
 ```
+
+## Citing polyRAD <a name="citation"></a>
+
+A preprint is available describing polyRAD:
+
+Clark LV, Lipka AE, and Sacks EJ (2018) polyRAD: Genotype calling with
+uncertainty from sequencing data in polyploids and diploids.  bioRxiv,
+doi:[10.1101/380899](https://doi.org/10.1101/380899).

@@ -1,0 +1,6 @@
+bibentry(bibtype = "Article",
+         title = "polyRAD: Genotype calling with uncertainty from sequencing data in polyploids and diploids",
+         author = c(person("Lindsay V.", "Clark", email = "lvclark@illinois.edu""),
+                    person("Alexander E.", "Lipka", email = "alipka@illinois.edu"),
+                    person("Erik J.", "Sacks", email = "esacks@illinois.edu"")),
+         journal = "bioRxiv", year = 2018, note = "Preprint", doi = "https://doi.org/10.1101/380899")
