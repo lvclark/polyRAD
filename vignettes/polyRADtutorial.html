@@ -12,7 +12,7 @@
 
 <meta name="author" content="Lindsay V. Clark, University of Illinois, Urbana-Champaign" />
 
-<meta name="date" content="2018-06-12" />
+<meta name="date" content="2018-07-31" />
 
 <title>polyRAD Tutorial</title>
 
@@ -280,7 +280,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">polyRAD Tutorial</h1>
 <h4 class="author"><em>Lindsay V. Clark, University of Illinois, Urbana-Champaign</em></h4>
-<h4 class="date"><em>12 June 2018</em></h4>
+<h4 class="date"><em>31 July 2018</em></h4>
 
 
 <div id="TOC">
@@ -290,6 +290,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <li><a href="#estimating-genotype-probabilities-in-a-mapping-population">Estimating genotype probabilities in a mapping population <a name="mapping"></a></a></li>
 <li><a href="#estimating-genotype-probabilities-in-a-diversity-panel">Estimating genotype probabilities in a diversity panel <a name="diversity"></a></a></li>
 <li><a href="#considerations-for-ram-and-processing-time">Considerations for RAM and processing time <a name="considerations"></a></a></li>
+<li><a href="#citing-polyrad">Citing polyRAD <a name="citation"></a></a></li>
 </ul>
 </div>
 
@@ -305,7 +306,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <ul>
 <li><code>VCF2RADdata</code></li>
 <li><code>readTagDigger</code></li>
-<li><code>readStacks1</code></li>
+<li><code>readStacks</code></li>
 <li><code>readHMC</code></li>
 </ul>
 <p>More generally, the <code>RADdata</code> function is used for constructing RADdata objects; see the help page for that function for more information on what data are needed.</p>
@@ -334,6 +335,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <li><code>RemoveMonomorphicLoci</code></li>
 <li><code>EstimateContaminationRate</code></li>
 <li><code>StripDown</code></li>
+<li><code>LocusInfo</code></li>
 </ul>
 <p>See <code>?GetTaxa</code> for a list of accessor functions as well.</p>
 </div>
@@ -567,7 +569,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 ## Possible ploidies:
 ## Autodiploid (2)
 ## Allotetraploid (2 2)</code></pre>
-<p>We can iteratively estimate genotype probabilities assuming Hardy-Weinberg equilibrium. The argument <code>tol</code> is set to a higher value than the default here in order to help the tutorial run more quickly.</p>
+<p>We can iteratively estimate genotype probabilities assuming Hardy-Weinberg equilibrium. The argument <code>tol</code> is set to a higher value than the default here in order to help the tutorial run more quickly. Since <em>Miscanthus</em> is highly outcrossing, we will leave the <code>selfing.rate</code> argument at its default of zero.</p>
 <div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb52-1" data-line-number="1">mydataHWE &lt;-<span class="st"> </span><span class="kw">IterateHWE</span>(mydata, <span class="dt">tol =</span> <span class="fl">1e-3</span>)</a></code></pre></div>
 <p>Let’s take a look at allele frequencies:</p>
 <div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb53-1" data-line-number="1"><span class="kw">hist</span>(mydataHWE<span class="op">$</span>alleleFreq, <span class="dt">breaks =</span> <span class="dv">20</span>)</a></code></pre></div>
@@ -721,6 +723,11 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb60-94" data-line-number="94">                GAPITlist[[<span class="dv">7</span>]]<span class="op">$</span>GD[,<span class="op">-</span><span class="dv">1</span>], GAPITlist[[<span class="dv">8</span>]]<span class="op">$</span>GD[,<span class="op">-</span><span class="dv">1</span>], </a>
 <a class="sourceLine" id="cb60-95" data-line-number="95">                GAPITlist[[<span class="dv">9</span>]]<span class="op">$</span>GD[,<span class="op">-</span><span class="dv">1</span>], GAPITlist[[<span class="dv">10</span>]]<span class="op">$</span>GD[,<span class="op">-</span><span class="dv">1</span>])</a>
 <a class="sourceLine" id="cb60-96" data-line-number="96"><span class="co">#save(GD.all, GM.all, file = &quot;180525GM_GD_all_polyRAD.RData&quot;) # 1076888 markers</span></a></code></pre></div>
+</div>
+<div id="citing-polyrad" class="section level2">
+<h2>Citing polyRAD <a name="citation"></a></h2>
+<p>A preprint is available describing polyRAD:</p>
+<p>Clark LV, Lipka AE, and Sacks EJ (2018) polyRAD: Genotype calling with uncertainty from sequencing data in polyploids and diploids. bioRxiv, <a href="https://doi.org/10.1101/380899">doi:10.1101/380899</a>.</p>
 </div>
 
 

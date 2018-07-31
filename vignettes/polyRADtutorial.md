@@ -2,10 +2,11 @@
 
 ## Table of Contents
 * [Introduction](#introduction)
-* [Summary of Available Functions](#functions)
+* [Summary of available functions](#functions)
 * [Estimating genotype probabilities in a mapping population](#mapping)
 * [Estimating genotype probabilities in a diversity panel](#diversity)
 * [Considerations for RAM and processing time](#considerations)
+* [Citing polyRAD](#citation)
 
 ## Introduction <a name="introduction"></a>
 
@@ -35,7 +36,7 @@ Several functions are available for import of read depth data and
 
   - `VCF2RADdata`
   - `readTagDigger`
-  - `readStacks1`
+  - `readStacks`
   - `readHMC`
 
 More generally, the `RADdata` function is used for constructing RADdata
@@ -73,6 +74,7 @@ There are also various utilities for manipulating RADdata objects:
   - `RemoveMonomorphicLoci`
   - `EstimateContaminationRate`
   - `StripDown`
+  - `LocusInfo`
 
 See `?GetTaxa` for a list of accessor functions as
 well.
@@ -523,6 +525,8 @@ mydata
 We can iteratively estimate genotype probabilities assuming
 Hardy-Weinberg equilibrium. The argument `tol` is set to a higher value
 than the default here in order to help the tutorial run more quickly.
+Since *Miscanthus* is highly outcrossing, we will leave the
+`selfing.rate` argument at its default of zero.
 
 ``` r
 mydataHWE <- IterateHWE(mydata, tol = 1e-3)
@@ -765,3 +769,11 @@ GD.all <- cbind(GAPITlist[[1]]$GD, GAPITlist[[2]]$GD[,-1],
                 GAPITlist[[9]]$GD[,-1], GAPITlist[[10]]$GD[,-1])
 #save(GD.all, GM.all, file = "180525GM_GD_all_polyRAD.RData") # 1076888 markers
 ```
+
+## Citing polyRAD <a name="citation"></a>
+
+A preprint is available describing polyRAD:
+
+Clark LV, Lipka AE, and Sacks EJ (2018) polyRAD: Genotype calling with
+uncertainty from sequencing data in polyploids and diploids. bioRxiv,
+[doi:10.1101/380899](https://doi.org/10.1101/380899).
