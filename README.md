@@ -47,6 +47,19 @@ Currently there are export functions for the following software.  Genotypes are 
 
 ## Installation
 
+polyRAD depends on some Bioconductor packages.  Before attempting to install polyRAD, run
+
+```
+source("https://bioconductor.org/biocLite.R")
+biocLite("pcaMethods")
+```
+
+If you plan to import from VCF, also run
+
+```
+biocLite("VariantAnnotation")
+```
+
 polyRAD is not yet on CRAN.  To install, go to the [releases](https://github.com/lvclark/polyRAD/releases) page and download the binary for the latest release.  This is polyRAD_0.x.tar.gz if you are on Mac or Linux, or polyRAD_0.x.zip if you are on Windows.  Don't unzip the file.  Move it into your working directory in R, then run
 
 ```
