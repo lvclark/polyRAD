@@ -46,22 +46,22 @@ Lindsay V. Clark
 }
 
 \examples{
+# make the filtering function
+filterfun <- MakeTasselVcfFilter(300, 15)
+
+\dontrun{
 require(VariantAnnotation)
 # get the example VCF installed with polyRAD
 exampleVCF <- system.file("extdata", "Msi01genes.vcf", package = "polyRAD")
 
-# zip and index the file using Tabix
-tempbgz <- tempfile(fileext = ".bgz") # temporary file for example
-bgzip(exampleVCF, dest = tempbgz)
-indexTabix(tempbgz, format = "vcf")
-
-# make the filtering function
-filterfun <- MakeTasselVcfFilter(300, 15)
+# zip and index the file using Tabix (if not done already)
+exampleBGZ <- bgzip(exampleVCF)
+indexTabix(exampleBGZ, format = "vcf")
 
 # filter to a new file
-tempvcf <- tempfile(fileext = ".vcf") # temporary file for example
-filterVcf(tempbgz, destination = tempvcf, 
+filterVcf(exampleBGZ, destination = "Msi01genes_filtered.vcf", 
           prefilters = FilterRules(list(filterfun)))
+}
 }
 
 \keyword{ file }

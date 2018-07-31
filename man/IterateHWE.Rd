@@ -149,14 +149,14 @@ exampleRAD <- IteratePopStruct(exampleRAD, nPcsInit = 3)
 GetWeightedMeanGenotypes(exampleRAD)
 
 # dataset for LD pipeline
-require(Biostrings)
 data(Msi01genes)
 
 # run HWE + LD pipeline
 mydata1 <- IterateHWE_LD(Msi01genes)
 
 # run pop. struct + LD pipeline
-mydata2 <- IteratePopStructLD(Msi01genes)
+# (tolerance raised to make example run faster)
+mydata2 <- IteratePopStructLD(Msi01genes, tol = 0.01)
 }
 
 \keyword{ iteration }
