@@ -43,7 +43,7 @@ alignment information into a RADdata object:
 
 * `VCF2RADdata`
 * `readTagDigger`
-* `readStacks1`
+* `readStacks`
 * `readHMC`
 
 More generally, the `RADdata` function is used for constructing RADdata
@@ -80,6 +80,7 @@ There are also various utilities for manipulating RADdata objects:
 * `RemoveMonomorphicLoci`
 * `EstimateContaminationRate`
 * `StripDown`
+* `LocusInfo`
 
 See `?GetTaxa` for a list of accessor functions as well.
 
@@ -326,6 +327,8 @@ mydata
 We can iteratively estimate genotype probabilities assuming 
 Hardy-Weinberg equilibrium.  The argument `tol` is set to a higher
 value than the default here in order to help the tutorial run more quickly.
+Since *Miscanthus* is highly outcrossing, we will leave the `selfing.rate`
+argument at its default of zero.
 
 ```{r message = FALSE}
 mydataHWE <- IterateHWE(mydata, tol = 1e-3)
