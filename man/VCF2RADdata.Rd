@@ -149,15 +149,19 @@ Other data import functions:  \code{\link{readStacks}}, \code{\link{readHMC}},
 \code{\link{readTagDigger}}
 }
 \examples{
-require(VariantAnnotation)
-
 # get the example VCF installed with polyRAD
 exampleVCF <- system.file("extdata", "Msi01genes.vcf", package = "polyRAD")
 
-\dontrun{
-# Compress and index the VCF before reading
-vcfBG <- bgzip(exampleVCF)
-indexTabix(vcfBG, "vcf")
+\donttest{
+# loading VariantAnnotation namespace takes >10s,
+# so is excluded from CRAN checks
+
+require(VariantAnnotation)
+
+# Compress and index the VCF before reading, if not already done
+if(!file.exists(paste(exampleVCF, "bgz", sep = "."))){
+  vcfBG <- bgzip(exampleVCF)
+  indexTabix(vcfBG, "vcf")
 }
 
 # Read into RADdata object
@@ -169,6 +173,7 @@ mysv <- ScanVcfParam(fixed = "ALT", info = NA, geno = "AD",
                      which = GRanges("01", IRanges(1, 200000)))
 myRAD2 <- VCF2RADdata(exampleVCF, expectedLoci = 100, expectedAlleles = 500,
                       svparam = mysv, yieldSize = NA_integer_)
+}
 }
 
 \keyword{ file }
