@@ -18,7 +18,7 @@ Description: Read depth data from genotyping-by-sequencing (GBS) or restriction
   site-associated DNA sequencing (RAD-seq) are imported and used to make Bayesian
   probability estimates of genotypes in polyploids or diploids.  The genotype 
   probabilities, or genotypes sampled from those probabilties, can then be exported
-  for downstream analysis.  polyRAD is described by Clark et al. (2018)
+  for downstream analysis.  'polyRAD' is described by Clark et al. (2018)
   <doi:10.1101/380899>.
 License: GPL (>= 2)
 URL: https://github.com/lvclark/polyRAD
