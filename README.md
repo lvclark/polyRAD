@@ -60,13 +60,16 @@ If you plan to import from VCF, also run
 biocLite("VariantAnnotation")
 ```
 
-polyRAD is not yet on CRAN.  To install, go to the [releases](https://github.com/lvclark/polyRAD/releases) page and download the binary for the latest release.  This is polyRAD_0.x.tar.gz if you are on Mac or Linux, or polyRAD_0.x.zip if you are on Windows.  Don't unzip the file.  Move it into your working directory in R, then run
+polyRAD can then be installed from CRAN with
 
 ```
-install.packages("polyRAD_0.x.zip", repos = NULL)
+install.packages("polyRAD")
 ```
 
-replacing the file name with the one you just downloaded.
+Alternatively, if there are new features not yet on the CRAN version that you
+want to use, you can install the development version here on GitHub at your own
+risk.  There are R packages such as `devtools` and `githubinstall` that 
+facilitate installing directly from GitHub.
 
 ## Tutorial
 
@@ -79,7 +82,8 @@ polyRAD is described in a preprint manuscript:
 Clark LV, Lipka AE, and Sacks EJ (2018) polyRAD: Genotype calling with uncertainty from sequencing data in
 polyploids and diploids.  bioRxiv, doi:[10.1101/380899](https://doi.org/10.1101/380899)
 
-DOI for version 0.4: [![DOI](https://zenodo.org/badge/99379777.svg)](https://zenodo.org/badge/latestdoi/99379777)
+Citable Zenodo DOI for the software:
+[![DOI](https://zenodo.org/badge/99379777.svg)](https://zenodo.org/badge/latestdoi/99379777)
 
 Version 0.1 was also presented in a poster:
 
