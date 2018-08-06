@@ -3,6 +3,7 @@
 \alias{Export_rrBLUP_Amat}
 \alias{Export_rrBLUP_GWAS}
 \alias{Export_TASSEL_Numeric}
+\alias{Export_polymapR}
 \title{
 Export RADdata Object for Use by Other R Packages
 }
@@ -12,7 +13,9 @@ After a \code{"\link{RADdata}"} object has been run through a pipeline such as
 the genotypes (weighted across all possible genotypes by
 \code{\link{GetWeightedMeanGenotypes}}) to other R packages that can
 perform genome-wide association and genomic prediction using genotypes
-as a continuous numeric variable.
+as a continuous numeric variable.  \code{Export_polymapR} uses
+\code{\link{GetProbableGenotypes}} to export discrete genotypes for
+\pkg{polymapR} after processing with \code{\link{PipelineMapping2Parents}}.
 }
 \usage{
 ExportGAPIT(object, onePloidyPerAllele = FALSE)
@@ -22,6 +25,7 @@ Export_rrBLUP_GWAS(object, naIfZeroReads = FALSE,
                    onePloidyPerAllele = FALSE)
 Export_TASSEL_Numeric(object, file, naIfZeroReads = FALSE,
                       onePloidyPerAllele = FALSE)
+Export_polymapR(object, naIfZeroReads = TRUE)
 }
 \arguments{
   \item{object}{
@@ -62,6 +66,10 @@ allele names are exported, but no chromosome or position information per se.
 
 If the chromosomes in \code{object$locTable} are in character format,
 \code{ExportGAPIT} will attempt to extract chromosome numbers.
+
+Because \pkg{polymapR} allows only one ploidy, there must only be one possible
+ploidy for the progeny in the \code{RADdata} object (possibly with different
+ploidies for the parents, \emph{e.g.} 4x x 2x = 3x).
 }
 \value{
 For \code{ExportGAPIT}, a list:
@@ -83,6 +91,10 @@ and the remaining columns each represent one taxon and contain the genotype
 data.  This can be passed to the \code{GWAS} function in \pkg{rrBLUP}.
 
 \code{Export_TASSEL_Numeric} writes a file but does not return an object.
+
+For \code{Export_polymapR}, a matrix of integers indicating the most probable 
+allele copy number, with markers in rows and individuals in columns.  The 
+parents are listed first, followed by all progeny.
 }
 \references{
 \url{http://zzlab.net/GAPIT/}
@@ -103,15 +115,21 @@ Selection with R Package rrBLUP.  \emph{The Plant Genome} \bold{4}, 250--255.
 \url{http://www.maizegenetics.net/tassel}
 
 Bradbury, P. J., Zhang, Z., Kroon, D. E., Casstevens, T. M., Ramdoss, Y. 
-and Buckler, E.S. (2007) TASSEL: Software for association mapping of complex 
+and Buckler, E. S. (2007) TASSEL: Software for association mapping of complex 
 traits in diverse samples. \emph{Bioinformatics} \bold{23}, 2633--2635.
+
+Bourke, P., van Geest, G., Voorrips, R. E., Jansen, J., Kranenberg, T.,
+Shahin, A., Visser, R. G. F., Arens, P., Smulders, M. J. M. and Maliepaard, C.
+(2017) polymapR: linkage analysis and genetic map construction from F1 
+populations of outcrossing polyploids. \emph{bioRxiv}
+https://doi.org/10.1101/228817
 }
 \author{
 Lindsay V. Clark
 }
 \note{
-\pkg{rrBLUP} is available through CRAN, and \pkg{GAPIT} and \pkg{FarmCPU} must
-be downloaded from the Zhang lab website.
+\pkg{rrBLUP} and \pkg{polymapR} are available through CRAN, and \pkg{GAPIT}
+and \pkg{FarmCPU} must be downloaded from the Zhang lab website.
 
 In my experience with \pkg{TASSEL 5}, numerical genotype files that are too large do 
 not load/display properly.  If you run into this problem I recommend using
@@ -140,6 +158,19 @@ example_rrBLUP_GWAS <- Export_rrBLUP_GWAS(exampleRAD)
 # export to TASSEL
 outfile <- tempfile() # temporary file for example
 Export_TASSEL_Numeric(exampleRAD, outfile)
+
+# for mapping populations
+data(exampleRAD_mapping)
+
+# specify donor and recurrent parents
+exampleRAD_mapping <- SetDonorParent(exampleRAD_mapping, "parent1")
+exampleRAD_mapping <- SetRecurrentParent(exampleRAD_mapping, "parent2")
+
+# run the pipeline
+exampleRAD_mapping <- PipelineMapping2Parents(exampleRAD_mapping)
+
+# convert to polymapR format
+examplePMR <- Export_polymapR(exampleRAD_mapping)
 }
 
 \keyword{ manip }

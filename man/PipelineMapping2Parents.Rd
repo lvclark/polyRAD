@@ -98,8 +98,8 @@ Lindsay V. Clark
 }
 
 \seealso{
-\code{\link{GetWeightedMeanGenotypes}} for exporting genotypes from 
-the resulting object.
+\code{\link{GetWeightedMeanGenotypes}} or \code{\link{Export_polymapR}} for
+exporting genotypes from the resulting object.
 
 \code{\link{StripDown}} to remove memory-hogging slots that are no longer
 needed after the pipeline has been run.
