@@ -160,3 +160,24 @@ Export_TASSEL_Numeric <- function(object, file, naIfZeroReads = FALSE,
   write.table(round(numgen, 3), file = file, row.names = TRUE, col.names = FALSE,
               append = TRUE, sep = "\t", quote = FALSE)
 }
+
+Export_polymapR <- function(object, naIfZeroReads = TRUE){
+  if(!is(object, "RADdata")){
+    stop("RADdata object needed")
+  }
+  if(length(object$posteriorProb) > 1){
+    stop("Only one ploidy allowed for Export_polymapR.")
+  }
+  
+  out <- t(GetProbableGenotypes(object, naIfZeroReads = naIfZeroReads,
+                                correctParentalGenos = TRUE)[[1]])
+  
+  # make sure parents are first
+  don <- GetDonorParent(object)
+  rec <- GetRecurrentParent(object)
+  progeny <- GetTaxa(object)[!GetTaxa(object) %in% 
+                               c(don, rec, GetBlankTaxa(object))]
+  neworder <- c(don, rec, progeny)
+  
+  return(out[, neworder])
+}
