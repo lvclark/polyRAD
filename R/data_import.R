@@ -1059,3 +1059,127 @@ readStacks <- function(allelesFile, matchesFolder, version = 2,
   radout <- RemoveMonomorphicLoci(radout)
   return(radout)
 }
+
+# read in from the TASSEL GBSv2 database with minimal processing.
+# get counts matrix output by GetTagTaxaDistFromDBPlugin, plus SAM file.
+readTASSELGBSv2 <- function(tagtaxadistFile, samFile, min.ind.with.reads = 200,
+                            min.ind.with.minor.allele = 10,
+                            possiblePloidies = list(2), contamRate = 0.001){
+  # read the SAM file
+  message("Reading SAM file...")
+  samcon <- file(samFile, open = 'rt')
+  chunksize <- 1e4
+  samflag <- integer(0)
+  samchr <- character(0)
+  sampos <- integer(0) ## double check that position does not need to be adjusted on bottom strand
+  samseq <- character(0)
+  while(length(samlines <- readLines(samcon, chunksize))){
+    samlines <- samlines[!startsWith(samlines, "@")]
+    samsplit <- strsplit(samlines, "\t")
+    samflag <- c(samflag, as.integer(sapply(samsplit, function(x) x[2])))
+    samchr <- c(samchr, as.character(sapply(samsplit, function(x) x[3])))
+    sampos <- c(sampos, as.integer(sapply(samsplit, function(x) x[4])))
+    samseq <- c(samseq, as.character(sapply(samsplit, function(x) x[10])))
+  }
+  close(samcon)
+  samind <- seq_along(samflag) # index for the tags
+  
+  # eliminate unaligned tags
+  aligned <- bitwAnd(samflag, 4) == 0
+  samflag <- samflag[aligned]
+  samchr <- samchr[aligned]
+  sampos <- sampos[aligned]
+  samseq <- samseq[aligned]
+  samind <- samind[aligned]
+  
+  # get strand
+  samstrand <- ifelse(bitwAnd(samflag, 16) == 0, "top", "bot")
+  
+  # combine to make marker names
+  sammrkr <- paste(samchr, sampos, samstrand, sep = "-")
+  
+  # find all non-monomorphic markers
+  mrkrTable <- table(sammrkr)
+  polymrkr <- names(mrkrTable)[mrkrTable > 1]
+  # subset to get only tags belonging to polymorphic markers
+  polytags <- sammrkr %fin% polymrkr
+  samflag <- samflag[polytags]
+  samchr <- samchr[polytags]
+  sampos <- sampos[polytags]
+  samseq <- samseq[polytags]
+  samind <- samind[polytags]
+  samstrand <- samstrand[polytags]
+  sammrkr <- sammrkr[polytags]
+  
+  # build locTable
+  lookup <- fastmatch::fmatch(polymrkr, sammrkr)
+  locTable <- data.frame(row.names = polymrkr, Chr = samchr[lookup],
+                         Pos = sampos[lookup], Strand = samstrand[lookup],
+                         stringsAsFactors = FALSE)
+  locTable <- locTable[order(locTable$Chr, locTable$Pos),]
+  
+  # open tagtaxadist file
+  ttdcon <- file(tagtaxadistFile, open = 'rt')
+  # get taxa names
+  taxa <- scan(ttdcon, what = character(), sep = "\t", nlines = 1)[-1]
+  # set up matrix to contain read counts
+  alleleDepth <- matrix(0L, nrow = length(taxa), ncol = length(sammrkr),
+                        dimnames = list(taxa, paste(sammrkr, samseq, sep = "_")))
+  # setup for reading file in a loop
+  whatlist <- list(0L)[rep(1, length(taxa))]
+  whatlist <- c(list(""), whatlist) ## might change "" to NULL if we don't care about seq
+  chunksize <- 1e4
+  # read first chunk
+  dataIn <- scan(ttdcon, what = whatlist, sep = "\t", nlines = chunksize)
+  nread <- length(dataIn[[1]]) # number of tags read
+  lastTag <- 0
+  # loop through file
+  while(nread){
+    # convert imported data to matrix
+    datamat <- matrix(unlist(dataIn[[-1]]), nrow = length(taxa), ncol = nread,
+                      byrow = TRUE)
+    # find the tags we will keep
+    thesetags <- samind > lasttag & samind <= lastTag + nread
+    # add to matrix
+    alleleDepth[, thesetags] <- datamat[, samind[thesetags] - lastTag]
+    # read next chunk
+    dataIn <- scan(ttdcon, what = whatlist, sep = "\t", nlines = chunksize)
+    nread <- length(dataIn[[1]]) # number of tags read
+    lastTag <- lastTag + nread
+  }
+  # close tagtaxadist file
+  close(ttdcon)
+  
+  # filter loci
+  lociToRemove <- integer(0)
+  tagsToRemove <- integer(0)
+  for(i in 1:nrow(locTable)){
+    thesealleles <- which(sammrkr == row.names(locTable)[i])
+    thesepres <- datamat[,thesealleles] > 0 # presence or absence of alleles in individuals
+    if(sum(rowSums(thesepres) > 0) < min.ind.with.reads ||
+       sum(colSums(thesepres) >= min.ind.with.minor.allele) < 2){
+      lociToRemove <- c(lociToRemove, i)
+      tagsToRemove <- c(tagsToRemove, thesealleles)
+    }
+  }
+  locTable <- locTable[-lociToRemove,]
+  alleleDepth <- alleleDepth[,-tagsToRemove]
+  sammrkr <- sammrkr[-tagsToRemove]
+  samseq <- samseq[-tagsToRemove]
+  
+  # build vector to match alleles to loci
+  alleles2loc <- fastmatch::fmatch(sammrkr, rownames(locTable))
+  # sort alleles to keep things tidy
+  tagorder <- order(alleles2loc)
+  alleles2loc <- sort(alleles2loc)
+  alleleDepth <- alleleDepth[,tagorder]
+  samseq <- samseq[tagorder]
+  
+  # build RADdata object
+  radout <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
+                    contamRate, samseq)
+  radout <- MergeRareHaplotypes(radout, 
+                                min.ind.with.haplotype = min.ind.with.minor.allele)
+  radout <- RemoveMonomorphicLoci(radout)
+  return(radout)
+}
