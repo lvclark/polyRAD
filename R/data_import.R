@@ -1060,28 +1060,43 @@ readStacks <- function(allelesFile, matchesFolder, version = 2,
   return(radout)
 }
 
-# read in from the TASSEL GBSv2 database with minimal processing.
-# get counts matrix output by GetTagTaxaDistFromDBPlugin, plus SAM file.
+# Read in from the TASSEL GBSv2 database with minimal processing.
+# Use counts matrix output by GetTagTaxaDistFromDBPlugin, plus SAM file.
 readTASSELGBSv2 <- function(tagtaxadistFile, samFile, min.ind.with.reads = 200,
                             min.ind.with.minor.allele = 10,
-                            possiblePloidies = list(2), contamRate = 0.001){
+                            possiblePloidies = list(2), contamRate = 0.001,
+                            chromosomes = NULL){
   # read the SAM file
   message("Reading SAM file...")
+  expectedTags <- round(file.size(samFile)/325) # approx. number of seq. tags
   samcon <- file(samFile, open = 'rt')
-  chunksize <- 1e4
-  samflag <- integer(0)
-  samchr <- character(0)
-  sampos <- integer(0) ## double check that position does not need to be adjusted on bottom strand
-  samseq <- character(0)
+  chunksize <- 1e5
+  samflag <- integer(expectedTags)
+  samchr <- character(expectedTags)
+  sampos <- integer(expectedTags)
+  samseq <- character(expectedTags)
+  lastTag <- 0
   while(length(samlines <- readLines(samcon, chunksize))){
     samlines <- samlines[!startsWith(samlines, "@")]
+    nread <- length(samlines)
+    if(nread == 0) next
     samsplit <- strsplit(samlines, "\t")
-    samflag <- c(samflag, as.integer(sapply(samsplit, function(x) x[2])))
-    samchr <- c(samchr, as.character(sapply(samsplit, function(x) x[3])))
-    sampos <- c(sampos, as.integer(sapply(samsplit, function(x) x[4])))
-    samseq <- c(samseq, as.character(sapply(samsplit, function(x) x[10])))
+    samflag[(1:nread) + lastTag] <- 
+      as.integer(sapply(samsplit, function(x) x[2]))
+    samchr[(1:nread) + lastTag] <- 
+      as.character(sapply(samsplit, function(x) x[3]))
+    sampos[(1:nread) + lastTag] <- 
+      as.integer(sapply(samsplit, function(x) x[4]))
+    samseq[(1:nread) + lastTag] <- 
+      as.character(sapply(samsplit, function(x) x[10]))
+    lastTag <- lastTag + nread
   }
   close(samcon)
+  samflag <- samflag[1:lastTag]
+  samchr <- samchr[1:lastTag]
+  sampos <- sampos[1:lastTag]
+  samseq <- samseq[1:lastTag]
+  
   samind <- seq_along(samflag) # index for the tags
   
   # eliminate unaligned tags
@@ -1092,11 +1107,30 @@ readTASSELGBSv2 <- function(tagtaxadistFile, samFile, min.ind.with.reads = 200,
   samseq <- samseq[aligned]
   samind <- samind[aligned]
   
+  # subset to desired chromosomes
+  if(!is.null(chromosomes)){
+    chrnotfound <- chromosomes[!chromosomes %fin% samchr]
+    if(length(chrnotfound) > 0){
+      warning(paste("Chromosomes not found:", paste(chrnotfound, collapse = " ")))
+    }
+    chrmatch <- samchr %fin% chromosomes
+    if(sum(chrmatch) == 0){
+      stop("No chromosome names from SAM file match those provided.")
+    }
+    samflag <- samflag[chrmatch]
+    samchr <- samchr[chrmatch]
+    sampos <- sampos[chrmatch]
+    samseq <- samseq[chrmatch]
+    samind <- samind[chrmatch]
+  }
+  
   # get strand
   samstrand <- ifelse(bitwAnd(samflag, 16) == 0, "top", "bot")
+  # get tag sequence length
+  samtlen <- nchar(samseq)
   
   # combine to make marker names
-  sammrkr <- paste(samchr, sampos, samstrand, sep = "-")
+  sammrkr <- paste(samchr, sampos, samstrand, samtlen, sep = "-")
   
   # find all non-monomorphic markers
   mrkrTable <- table(sammrkr)
@@ -1109,41 +1143,47 @@ readTASSELGBSv2 <- function(tagtaxadistFile, samFile, min.ind.with.reads = 200,
   samseq <- samseq[polytags]
   samind <- samind[polytags]
   samstrand <- samstrand[polytags]
+  samtlen <- samtlen[polytags]
   sammrkr <- sammrkr[polytags]
   
   # build locTable
   lookup <- fastmatch::fmatch(polymrkr, sammrkr)
   locTable <- data.frame(row.names = polymrkr, Chr = samchr[lookup],
                          Pos = sampos[lookup], Strand = samstrand[lookup],
+                         SequenceLength = samtlen[lookup],
                          stringsAsFactors = FALSE)
   locTable <- locTable[order(locTable$Chr, locTable$Pos),]
   
   # open tagtaxadist file
+  message("Reading TagTaxaDist file...")
   ttdcon <- file(tagtaxadistFile, open = 'rt')
   # get taxa names
-  taxa <- scan(ttdcon, what = character(), sep = "\t", nlines = 1)[-1]
+  taxa <- scan(ttdcon, what = character(), sep = "\t", nlines = 1, 
+               quiet = TRUE)[-1]
   # set up matrix to contain read counts
   alleleDepth <- matrix(0L, nrow = length(taxa), ncol = length(sammrkr),
                         dimnames = list(taxa, paste(sammrkr, samseq, sep = "_")))
   # setup for reading file in a loop
   whatlist <- list(0L)[rep(1, length(taxa))]
   whatlist <- c(list(""), whatlist) ## might change "" to NULL if we don't care about seq
-  chunksize <- 1e4
+  chunksize <- 1e5
   # read first chunk
-  dataIn <- scan(ttdcon, what = whatlist, sep = "\t", nlines = chunksize)
+  dataIn <- scan(ttdcon, what = whatlist, sep = "\t", nlines = chunksize,
+                 quiet = TRUE)
   nread <- length(dataIn[[1]]) # number of tags read
   lastTag <- 0
   # loop through file
   while(nread){
     # convert imported data to matrix
-    datamat <- matrix(unlist(dataIn[[-1]]), nrow = length(taxa), ncol = nread,
+    datamat <- matrix(unlist(dataIn[-1]), nrow = length(taxa), ncol = nread,
                       byrow = TRUE)
     # find the tags we will keep
-    thesetags <- samind > lasttag & samind <= lastTag + nread
+    thesetags <- samind > lastTag & samind <= lastTag + nread
     # add to matrix
     alleleDepth[, thesetags] <- datamat[, samind[thesetags] - lastTag]
     # read next chunk
-    dataIn <- scan(ttdcon, what = whatlist, sep = "\t", nlines = chunksize)
+    dataIn <- scan(ttdcon, what = whatlist, sep = "\t", nlines = chunksize,
+                   quiet = TRUE)
     nread <- length(dataIn[[1]]) # number of tags read
     lastTag <- lastTag + nread
   }
@@ -1151,11 +1191,12 @@ readTASSELGBSv2 <- function(tagtaxadistFile, samFile, min.ind.with.reads = 200,
   close(ttdcon)
   
   # filter loci
+  message("Filtering loci...")
   lociToRemove <- integer(0)
   tagsToRemove <- integer(0)
   for(i in 1:nrow(locTable)){
     thesealleles <- which(sammrkr == row.names(locTable)[i])
-    thesepres <- datamat[,thesealleles] > 0 # presence or absence of alleles in individuals
+    thesepres <- alleleDepth[,thesealleles] > 0 # presence or absence of alleles in individuals
     if(sum(rowSums(thesepres) > 0) < min.ind.with.reads ||
        sum(colSums(thesepres) >= min.ind.with.minor.allele) < 2){
       lociToRemove <- c(lociToRemove, i)
@@ -1166,6 +1207,7 @@ readTASSELGBSv2 <- function(tagtaxadistFile, samFile, min.ind.with.reads = 200,
   alleleDepth <- alleleDepth[,-tagsToRemove]
   sammrkr <- sammrkr[-tagsToRemove]
   samseq <- samseq[-tagsToRemove]
+  if(nrow(locTable) == 0) stop("No loci passed filtering threshold.")
   
   # build vector to match alleles to loci
   alleles2loc <- fastmatch::fmatch(sammrkr, rownames(locTable))
@@ -1176,6 +1218,8 @@ readTASSELGBSv2 <- function(tagtaxadistFile, samFile, min.ind.with.reads = 200,
   samseq <- samseq[tagorder]
   
   # build RADdata object
+  message("Building RADdata object...")
+  attr(samseq, "Variable_sites_only") <- FALSE
   radout <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
                     contamRate, samseq)
   radout <- MergeRareHaplotypes(radout, 
