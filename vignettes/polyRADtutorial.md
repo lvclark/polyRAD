@@ -38,6 +38,7 @@ Several functions are available for import of read depth data and
   - `readTagDigger`
   - `readStacks`
   - `readHMC`
+  - `readTASSELGBSv2`
 
 More generally, the `RADdata` function is used for constructing RADdata
 objects; see the help page for that function for more information on

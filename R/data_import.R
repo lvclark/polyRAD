@@ -1203,10 +1203,12 @@ readTASSELGBSv2 <- function(tagtaxadistFile, samFile, min.ind.with.reads = 200,
       tagsToRemove <- c(tagsToRemove, thesealleles)
     }
   }
-  locTable <- locTable[-lociToRemove,]
-  alleleDepth <- alleleDepth[,-tagsToRemove]
-  sammrkr <- sammrkr[-tagsToRemove]
-  samseq <- samseq[-tagsToRemove]
+  if(length(lociToRemove) > 0){
+    locTable <- locTable[-lociToRemove,]
+    alleleDepth <- alleleDepth[,-tagsToRemove]
+    sammrkr <- sammrkr[-tagsToRemove]
+    samseq <- samseq[-tagsToRemove]
+  }
   if(nrow(locTable) == 0) stop("No loci passed filtering threshold.")
   
   # build vector to match alleles to loci

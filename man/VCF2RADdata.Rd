@@ -146,7 +146,7 @@ Lindsay V. Clark
 reading with \code{VCF2RADdata}.
 
 Other data import functions:  \code{\link{readStacks}}, \code{\link{readHMC}},
-\code{\link{readTagDigger}}
+\code{\link{readTagDigger}}, \code{\link{readTASSELGBSv2}}
 }
 \examples{
 # get the example VCF installed with polyRAD

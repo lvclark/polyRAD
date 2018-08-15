@@ -45,6 +45,7 @@ alignment information into a RADdata object:
 * `readTagDigger`
 * `readStacks`
 * `readHMC`
+* `readTASSELGBSv2`
 
 More generally, the `RADdata` function is used for constructing RADdata
 objects; see the help page for that function for more information on what 

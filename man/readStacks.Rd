@@ -85,7 +85,7 @@ This function has been tested with output from Stacks 1.47.
 
 \seealso{
 \code{\link{VCF2RADdata}}, \code{\link{readTagDigger}},
-\code{\link{readHMC}}
+\code{\link{readHMC}}, \code{\link{readTASSELGBSv2}}
 }
 \examples{
 \dontrun{

@@ -73,7 +73,8 @@ Lindsay V. Clark
 }
 
 \seealso{
-\code{\link{readHMC}}, \code{\link{readStacks}}, \code{\link{VCF2RADdata}}
+\code{\link{readHMC}}, \code{\link{readStacks}}, \code{\link{VCF2RADdata}},
+\code{\link{readTASSELGBSv2}}
 }
 \examples{
 # for this example we'll create dummy files
