@@ -46,6 +46,10 @@ Currently there are export functions for the following software.  Genotypes are 
 * [rrBLUP](https://cran.r-project.org/web/packages/rrBLUP/)
 * [TASSEL](http://www.maizegenetics.net/tassel)
 
+There is an export function for discrete genotypes for the following software:
+
+* [polymapR](https://cran.r-project.org/package=polymapR)
+
 ## Installation
 
 polyRAD depends on some Bioconductor packages.  Before attempting to install polyRAD, run
