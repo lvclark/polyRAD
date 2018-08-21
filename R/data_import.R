@@ -1068,34 +1068,15 @@ readTASSELGBSv2 <- function(tagtaxadistFile, samFile, min.ind.with.reads = 200,
                             chromosomes = NULL){
   # read the SAM file
   message("Reading SAM file...")
-  expectedTags <- round(file.size(samFile)/325) # approx. number of seq. tags
-  samcon <- file(samFile, open = 'rt')
-  chunksize <- 1e5
-  samflag <- integer(expectedTags)
-  samchr <- character(expectedTags)
-  sampos <- integer(expectedTags)
-  samseq <- character(expectedTags)
-  lastTag <- 0
-  while(length(samlines <- readLines(samcon, chunksize))){
-    samlines <- samlines[!startsWith(samlines, "@")]
-    nread <- length(samlines)
-    if(nread == 0) next
-    samsplit <- strsplit(samlines, "\t")
-    samflag[(1:nread) + lastTag] <- 
-      as.integer(sapply(samsplit, function(x) x[2]))
-    samchr[(1:nread) + lastTag] <- 
-      as.character(sapply(samsplit, function(x) x[3]))
-    sampos[(1:nread) + lastTag] <- 
-      as.integer(sapply(samsplit, function(x) x[4]))
-    samseq[(1:nread) + lastTag] <- 
-      as.character(sapply(samsplit, function(x) x[10]))
-    lastTag <- lastTag + nread
-  }
-  close(samcon)
-  samflag <- samflag[1:lastTag]
-  samchr <- samchr[1:lastTag]
-  sampos <- sampos[1:lastTag]
-  samseq <- samseq[1:lastTag]
+  samwhat <- list(NULL, 0L, "", 0L, NULL, NULL, NULL, NULL, NULL, "", NULL,
+                  NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
+  samchunk <- scan(samFile, what = samwhat, comment.char = "@", sep = "\t",
+                   fill = TRUE, quiet = TRUE)
+  samflag <- samchunk[[2]]
+  samchr <- samchunk[[3]]
+  sampos <- samchunk[[4]]
+  samseq <- samchunk[[10]]
+  rm(samchunk)
   
   samind <- seq_along(samflag) # index for the tags
   
