@@ -1735,11 +1735,48 @@ MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
 RemoveMonomorphicLoci <- function(object, ...){
   UseMethod("RemoveMonomorphicLoci", object)
 }
-RemoveMonomorphicLoci.RADdata <- function(object, ...){
+RemoveMonomorphicLoci.RADdata <- function(object, verbose = TRUE, ...){
   alleleTally <- table(object$alleles2loc)
   locToKeep <- as.integer(names(alleleTally)[alleleTally > 1])
   
+  if(verbose){
+    message(paste(length(locToKeep), "markers retained out of", nLoci(object),
+                  "originally."))
+  }
+  
   object <- SubsetByLocus(object, locToKeep)
+  
+  return(object)
+}
+
+# Function to remove high-depth markers (likely paralogs)
+RemoveHighDepthLoci <- function(object, ...){
+  UseMethod("RemoveHighDepthLoci", object)
+}
+RemoveHighDepthLoci.RADdata <- function(object, max.SD.above.mean = 2,
+                                        verbose = TRUE, ...){
+  # get total depth for each locus
+  totdepth <- colSums(object$locDepth)
+  stopifnot(all(!is.na(totdepth))) # there should never be NA values
+  # mean and SD for depth
+  meandepth <- mean(totdepth)
+  sddepth <- sd(totdepth)
+  # identify markers to keep
+  cutoff <- meandepth + max.SD.above.mean * sddepth
+  tokeep <- as.integer(names(totdepth)[totdepth <= cutoff])
+  # subset object
+  object <- SubsetByLocus(object, tokeep)
+  
+  if(verbose){
+    message(paste(length(tokeep), "markers retained out of", length(totdepth),
+                  "originally."))
+    graphics::hist(totdepth/nTaxa(object), col = "lightgrey",
+                   main = "Histogram of mean read depth", xlab = "Depth")
+    graphics::abline(v = cutoff/nTaxa(object), col = "blue")
+    graphics::text("Cutoff", x = cutoff/nTaxa(object), 
+                   y = mean(graphics::par("yaxp")[1:2]),
+                   col = "blue", pos = 2, srt = 90)
+  }
   
   return(object)
 }

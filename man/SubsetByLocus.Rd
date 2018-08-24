@@ -5,6 +5,8 @@
 \alias{SplitByChromosome.RADdata}
 \alias{RemoveMonomorphicLoci}
 \alias{RemoveMonomorphicLoci.RADdata}
+\alias{RemoveHighDepthLoci}
+\alias{RemoveHighDepthLoci.RADdata}
 \title{
 Create RADdata Objects with a Subset of Loci
 }
@@ -14,6 +16,8 @@ objects containing only the specified loci.  \code{SubsetByLocus} allows the
 user to specify which loci are kept, whereas \code{SplitByChromosome} creates
 multiple \code{RADdata} objects representing chromosomes or sets of chromosomes.
 \code{RemoveMonomorphicLoci} eliminates any loci with fewer than two alleles.
+\code{RemoveHighDepthLoci} eliminates loci that have especially high read
+depth in order to eliminate false loci originating from repetitive sequence.
 }
 \usage{
 SubsetByLocus(object, ...)
@@ -24,7 +28,10 @@ SplitByChromosome(object, ...)
                   fileprefix = "splitRADdata", \dots)
                   
 RemoveMonomorphicLoci(object, ...)
-\method{RemoveMonomorphicLoci}{RADdata}(object, \dots)
+\method{RemoveMonomorphicLoci}{RADdata}(object, verbose = TRUE, \dots)
+
+RemoveHighDepthLoci(object, ...)
+\method{RemoveHighDepthLoci}{RADdata}(object, max.SD.above.mean = 2, verbose = TRUE, \dots)
 }
 \arguments{
   \item{object}{
@@ -55,6 +62,16 @@ chromosome names will be used.
   \item{fileprefix}{
 A character string indicating the prefix of .RData files to export.  
 }
+\item{max.SD.above.mean}{
+The maximum number of standard deviations above the mean read depth that a
+locus can be in order to be retained.
+}
+\item{verbose}{
+If \code{TRUE}, print out information about the original number of loci and
+the number of loci that were retained.  For \code{RemoveHighDepthLoci}, a
+histogram is also plotted showing mean depth per locus, and the cutoff for
+removing loci.
+}
   \item{\dots}{
 Additional arguments (none implemented).
 }
@@ -76,14 +93,15 @@ loaded one at a time to run analysis pipelines such as \code{\link{IteratePopStr
 run on each resulting \code{RADdata} object, and the resulting matrices
 concatenated with \code{cbind}.
 
-\code{SplitByChromosome} and \code{RemoveMonomorphicLoci} use
-\code{SubsetByLocus} internally.
+\code{SplitByChromosome}, \code{RemoveMonomorphicLoci}, and 
+\code{RemoveHighDepthLoci} use \code{SubsetByLocus} internally.
 }
 \value{
-\code{SubsetByLocus} and \code{RemoveMonomorphicLoci} return a \code{RADdata}
+\code{SubsetByLocus}, \code{RemoveMonomorphicLoci}, and 
+\code{RemoveHighDepthLoci} return a \code{RADdata}
 object with all the slots and attributes of \code{object}, but only 
-containing the loci listed in \code{loci}, or only loci with two or more
-alleles, respectively.
+containing the loci listed in \code{loci}, only loci with two or more
+alleles, or only loci without abnormally high depth, respectively.
 
 \code{SplitByChromosome} returns a character vector containing file names
 where .RData files have been saved.  Each .RData file contains one 
@@ -117,6 +135,9 @@ splitRADdata
 
 # filter out monomorphic loci (none removed in example)
 filterRAD <- RemoveMonomorphicLoci(exampleRAD)
+
+# filter out high depth loci (none removed in this example)
+filterRAD2 <- RemoveHighDepthLoci(filterRAD)
 }
 
 \keyword{ manip }

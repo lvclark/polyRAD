@@ -15,12 +15,12 @@ GetTaxa, GetWeightedMeanGenotypes, IterateHWE, IterateHWE_LD,
 IteratePopStruct, IteratePopStructLD, LocusInfo, MakeTasselVcfFilter,
 MergeRareHaplotypes, nTaxa, nAlleles, nLoci, OneAllelePerMarker, 
 PipelineMapping2Parents, RADdata, readHMC, readStacks, readTagDigger,
-readTASSELGBSv2, RemoveMonomorphicLoci,
+readTASSELGBSv2, RemoveHighDepthLoci, RemoveMonomorphicLoci,
 SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent,
 SplitByChromosome, StripDown, SubsetByLocus, SubsetByTaxon, VCF2RADdata)
 
 importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom",
-           "hclust", "cutree", "as.dist", "cor", "residuals", "lm.fit")
+           "hclust", "cutree", "as.dist", "cor", "residuals", "lm.fit", "sd")
 importFrom("utils", "read.csv", "write.table")
 importFrom("fastmatch", "%fin%")
 importFrom("methods", "is")
@@ -60,6 +60,7 @@ S3method(nAlleles, RADdata)
 S3method(nLoci, RADdata)
 S3method(nTaxa, RADdata)
 S3method(OneAllelePerMarker, RADdata)
+S3method(RemoveHighDepthLoci, RADdata)
 S3method(RemoveMonomorphicLoci, RADdata)
 S3method(SetBlankTaxa, RADdata)
 S3method(SetContamRate, RADdata)

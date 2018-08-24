@@ -74,6 +74,7 @@ There are also various utilities for manipulating RADdata objects:
   - `SplitByChromosome`
   - `MergeRareHaplotypes`
   - `RemoveMonomorphicLoci`
+  - `RemoveHighDepthLoci`
   - `EstimateContaminationRate`
   - `StripDown`
   - `LocusInfo`
