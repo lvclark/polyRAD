@@ -52,7 +52,7 @@ inheritance modes that could be observed among loci in the recurrent
 parent.
 }
   \item{minLikelihoodRatio}{
-The minimum likelihood ration for determining parental genotypes with
+The minimum likelihood ratio for determining parental genotypes with
 confidence, to be passed to \code{\link{GetLikelyGen}} for both
 parental taxa.
 }
@@ -98,6 +98,9 @@ Lindsay V. Clark
 }
 
 \seealso{
+\code{\link{SetDonorParent}} and \code{SetRecurrentParent} to indicate which
+individuals are the parents before running the function.
+
 \code{\link{GetWeightedMeanGenotypes}} or \code{\link{Export_polymapR}} for
 exporting genotypes from the resulting object.
 
