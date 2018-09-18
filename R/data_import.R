@@ -634,10 +634,12 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   if(!identical(VariantAnnotation::vcfGeno(svparam), "AD")){
     warning("Allele depth field not set to AD.")
   }
-  if(is.na(VariantAnnotation::vcfSamples(svparam)[1])){
-    stop("Samples needed in order to create RADdata object.  Omit samples from svparam to include all.")
+  if(!is.na(VariantAnnotation::vcfSamples(svparam)[1])){
+    samples <- VariantAnnotation::vcfSamples(svparam)
   }
-  samples <- VariantAnnotation::vcfSamples(svparam)
+  if(!all(samples %in% VariantAnnotation::samples(VariantAnnotation::scanVcfHeader(file)))){
+    stop("Not all samples given in argument found in file.")
+  }
   
   # determine what extra columns to add to locTable
   extracols <- c(VariantAnnotation::vcfFixed(svparam),
