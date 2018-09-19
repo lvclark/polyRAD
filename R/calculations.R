@@ -100,6 +100,13 @@
     if(!is.null(object$priorProbLD)){
       results[[i]] <- results[[i]] * object$priorProbLD[[i]]
     }
+    # find any that total to zero (within taxon x allele) and replace with priors
+    totzero <- which(colSums(results[[i]]) == 0)
+    if(length(totzero) > 0){
+      for(a in 1:dim(thispriorarr)[1]){
+        results[[i]][a,,][totzero] <- thispriorarr[a,,][totzero]
+      }
+    }
     # in a mapping population, don't use priors for parents
     if(!is.null(attr(object, "donorParent")) &&
        !is.null(attr(object, "recurrentParent"))){
