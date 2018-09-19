@@ -2,6 +2,9 @@
 
 This R package is ready for use, although new features are still being developed.  See the [list of future features](https://github.com/lvclark/polyRAD/wiki/todo) to see where it is headed.
 
+polyRAD is part of an upcoming suite of interoperable software called the
+[ploidyverse](https://github.com/ploidyverse).
+
 I'm always interested in new collaboration!  If you find polyRAD to be helpful in your research, let me know if you'd be interested in sharing your data and results for coauthorship in the publication describing the software.  I would also like to hear your feature requests.  Contact: Lindsay Clark, University of Illinois, Urbana-Champaign.
 
 ## Purpose
