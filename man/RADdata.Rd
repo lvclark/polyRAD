@@ -119,6 +119,10 @@ mydata$GPS <- data.frame(row.names = attr(mydata, "taxa"),
                          Lat = c(43.12, 43.40, 43.05, 43.27),
                          Long = -c(70.85, 70.77, 70.91, 70.95))
 mydata$GPS
+
+# If you have NA in your alleleDepth matrix to indicate zero reads,
+# perform the following before running the RADdata constructor:
+mydepth[is.na(mydepth)] <- 0L
 }
 
 \keyword{ methods }
