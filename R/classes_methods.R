@@ -1194,6 +1194,63 @@ AddAlleleLinkages.RADdata <- function(object, type, linkageDist, minCorr,
   return(object)
 } # end of AddAlleleLinkages function
 
+# Function to get a normalized proportion of reads belonging to each allele
+# at each locus.
+AddNormalizedDepthProp <- function(object, ...){
+  UseMethod("AddNormalizedDepthProp", object)
+}
+AddNormalizedDepthProp.RADdata <- function(object, ...){
+  # get the total number of reads per individual
+  depthPerInd <- rowSums(object$locDepth)
+  # get proportion of total reads for a taxon belonging to each allele
+  propDepthAl <- sweep(object$alleleDepth, 1, depthPerInd, "/")
+  totAl <- colSums(propDepthAl, na.rm = TRUE)
+  # get proportion of total reads for a taxon belonging to other alleles at locus
+  propDepthAnti <- sweep(object$antiAlleleDepth, 1, depthPerInd, "/")
+  totAnti <- colSums(propDepthAnti, na.rm = TRUE)
+  # get normalized proportion of reads for a locus belonging to an allele
+  object$normalizedDepthProp <- totAl/(totAl + totAnti)
+  
+  return(object)
+}
+# function to estimate bias of each allele at each locus
+# equivalent to h in Gerard et al. (2018)
+AddAlleleBias <- function(object, ...){
+  UseMethod("AddAlleleBias", object)
+}
+AddAlleleBias.RADdata <- function(object, maxbias = 4, ...){
+  if(is.null(object$normalizedDepthProp)){
+    object <- AddNormalizedDepthProp(object)
+  }
+  
+  # estimate bias directly from data
+  bias <- ((1 - object$normalizedDepthProp)/(1 - object$alleleFreq))/
+    (object$normalizedDepthProp / object$alleleFreq)
+  
+  # # total depth per locus
+  # locdepth <- colSums(object$alleleDepth + object$antiAlleleDepth)
+  # # normalized total depth per allele
+  # normdepth <- round(object$normalizedDepthProp * locdepth)
+  # # probability of seeing apparent bias that extreme if there is no bias
+  # p_no_bias <- numeric(length(bias))
+  # biaspos <- object$normalizedDepthProp > object$alleleFreq
+  # p_no_bias[biaspos] <- pbinom(normdepth[biaspos], locdepth[biaspos],
+  #                              object$alleleFreq[biaspos], lower.tail = FALSE)
+  # p_no_bias[!biaspos] <- pbinom(normdepth[!biaspos], locdepth[!biaspos],
+  #                              object$alleleFreq[!biaspos], lower.tail = TRUE)
+  # 
+  # # correct bias based on that probability
+  # ## (this might not be the best method; set prior instead?)
+  # corr_log_bias <- log(bias) * (1 - p_no_bias)
+  # object$alleleBias <- exp(corr_log_bias)
+  # object$alleleBias[object$alleleBias > maxbias] <- maxbias
+  # object$alleleBias[object$alleleBias < 1/maxbias] <- 1/maxbias
+  
+  object$alleleBias <- bias
+  
+  return(object)
+}
+
 #### Accessors ####
 GetTaxa <- function(object, ...){
   UseMethod("GetTaxa", object)
