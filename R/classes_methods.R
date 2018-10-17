@@ -59,8 +59,9 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   
   expandedLocDepth <- locDepth[,as.character(alleles2loc), drop = FALSE]
   
-  # get number of permutations of order in which each allele could have been sampled from total depth from that locus
-  depthSamplingPermutations <- choose(expandedLocDepth, alleleDepth)
+  # get log of number of permutations of order in which each allele could have
+  # been sampled from total depth from that locus.
+  depthSamplingPermutations <- lchoose(expandedLocDepth, alleleDepth)
   dimnames(depthSamplingPermutations)[[2]] <- dimnames(alleleDepth)[[2]]
   # for each allele and taxon, get proportion of reads for that locus
   depthRatio <- alleleDepth/expandedLocDepth
