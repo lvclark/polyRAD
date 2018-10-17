@@ -1194,6 +1194,8 @@ AddAlleleLinkages.RADdata <- function(object, type, linkageDist, minCorr,
   return(object)
 } # end of AddAlleleLinkages function
 
+## The functions AddNormalizedDepthProp and AddAlleleBias are not currently
+## used in polyRAD, but may be incorporated into future pipelines.
 # Function to get a normalized proportion of reads belonging to each allele
 # at each locus.
 AddNormalizedDepthProp <- function(object, ...){
