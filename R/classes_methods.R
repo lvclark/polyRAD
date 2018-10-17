@@ -209,7 +209,7 @@ AddAlleleFreqHWE.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object),
 AddGenotypeLikelihood <- function(object, ...){
   UseMethod("AddGenotypeLikelihood", object)
 }
-AddGenotypeLikelihood.RADdata <- function(object, ...){
+AddGenotypeLikelihood.RADdata <- function(object, overdispersion = 10, ...){
   if(is.null(object$alleleFreq)){
     cat("Allele frequencies not found; estimating under HWE from depth ratios.",
         sep = "\n")
@@ -233,6 +233,9 @@ AddGenotypeLikelihood.RADdata <- function(object, ...){
       alleleProb[j,] <- sampleReal[j] + sampleContam
     }
     antiAlleleProb <- 1 - alleleProb
+    # multiply probabilities by overdispersion factor for betabinomial
+    alleleProb <- alleleProb * overdispersion
+    antiAlleleProb <- antiAlleleProb * overdispersion
     
     # get likelihoods
     object$genotypeLikelihood[[i]] <- array(0, dim = c(ploidies[i]+1, 
@@ -241,41 +244,20 @@ AddGenotypeLikelihood.RADdata <- function(object, ...){
                                                        GetTaxa(object),
                                                        GetAlleleNames(object)))
     for(j in 1:(ploidies[i]+1)){
+      # likelihoods under beta-binomial distribution
       object$genotypeLikelihood[[i]][j,,] <- 
-        object$depthSamplingPermutations * 
-          AlleleProbExp(object$alleleDepth, alleleProb[j,]) * 
-            AlleleProbExp(object$antiAlleleDepth, antiAlleleProb[j,]) # Rcpp function
-#          t(apply(object$alleleDepth, 1, function(x) alleleProb[j,] ^ x) * 
-#            apply(object$antiAlleleDepth, 1, function(x) antiAlleleProb[j,] ^ x)) # non-C version of above two lines
-      # when depth is too high, use dbinom instead.
-      toRecalculate <- which(is.na(object$genotypeLikelihood[[i]][j,,]) |
-                               object$genotypeLikelihood[[i]][j,,] == Inf,
-                             arr.ind = TRUE)
-      if(dim(toRecalculate)[1] == 0) next
-      for(k in 1:dim(toRecalculate)[1]){
-        # note repetitive code below
-        taxon <- toRecalculate[k,1]
-        allele <- toRecalculate[k,2]
-        object$genotypeLikelihood[[i]][j,taxon,allele] <-
-          dbinom(object$alleleDepth[taxon,allele],
-                 object$locDepth[taxon, as.character(object$alleles2loc[allele])],
-                 alleleProb[j,allele])
-      }
+        exp(object$depthSamplingPermutations +
+        sweep(lbeta(sweep(object$alleleDepth, 2, alleleProb[j,], "+"),
+                    sweep(object$antiAlleleDepth, 2, antiAlleleProb[j,], "+")),
+              2, lbeta(alleleProb[j,], antiAlleleProb[j,]), "-"))
     }
     # fix likelihoods where all are zero
     totlik <- colSums(object$genotypeLikelihood[[i]])
     toRecalculate <- which(totlik == 0, arr.ind = TRUE)
     if(dim(toRecalculate)[1] > 0){
       for(k in 1:dim(toRecalculate)[1]){
-        for(j in 1:(ploidies[i] + 1)){
-          # note repetitive code from just above
-          taxon <- toRecalculate[k,1]
-          allele <- toRecalculate[k,2]
-          object$genotypeLikelihood[[i]][j,taxon,allele] <-
-            dbinom(object$alleleDepth[taxon,allele],
-                   object$locDepth[taxon, as.character(object$alleles2loc[allele])],
-                   alleleProb[j,allele])
-        }
+        taxon <- toRecalculate[k,1]
+        allele <- toRecalculate[k,2]
         # for rare cases where likelihood still not estimated, set to one
         if(sum(object$genotypeLikelihood[[i]][, taxon, allele]) == 0){
           object$genotypeLikelihood[[i]][, taxon, allele] <- 1
