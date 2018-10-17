@@ -22,7 +22,7 @@ PipelineMapping2Parents(object, n.gen.backcrossing = 0,
                                             GetRecurrentParent(object), 
                                             GetBlankTaxa(object)),
                         useLinkage = TRUE, linkageDist = 1e7,
-                        minLinkageCorr = 0.5)
+                        minLinkageCorr = 0.5, overdispersion = 10)
 }
 \arguments{
   \item{object}{
@@ -78,6 +78,9 @@ A number ranging from zero to one.  Indicates the minimum correlation
 coeffienct between weighted mean genotypes at two alleles in order for linkage
 data to be used for updating genotype priors. Ignored if 
 \code{useLinkage = FALSE}.
+}
+\item{overdispersion}{
+Overdispersion parameter; see \code{\link{AddGenotypeLikelihood}}.
 }
 }
 \details{

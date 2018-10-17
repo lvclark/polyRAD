@@ -1,7 +1,8 @@
 # Wrapper functions that run multiple steps in a pipeline for polyRAD
 
 IterateHWE <- function(object, selfing.rate = 0, tol = 1e-5, 
-                       excludeTaxa = GetBlankTaxa(object)){
+                       excludeTaxa = GetBlankTaxa(object),
+                       overdispersion = 10){
   if(!"RADdata" %in% class(object)){
     stop("RADdata object needed.")
   }
@@ -21,7 +22,7 @@ IterateHWE <- function(object, selfing.rate = 0, tol = 1e-5,
     message(paste("Starting iteration", nIter))
     oldAlFreq <- object$alleleFreq
     object <- AddGenotypePriorProb_HWE(object, selfing.rate)
-    object <- AddGenotypeLikelihood(object)
+    object <- AddGenotypeLikelihood(object, overdispersion = overdispersion)
     object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePosteriorProb(object)
     object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
@@ -35,7 +36,8 @@ IterateHWE <- function(object, selfing.rate = 0, tol = 1e-5,
 
 IterateHWE_LD <- function(object, selfing.rate = 0, tol = 1e-5, 
                           excludeTaxa = GetBlankTaxa(object),
-                          LDdist = 1e4, minLDcorr = 0.2){
+                          LDdist = 1e4, minLDcorr = 0.2,
+                          overdispersion = 10){
   if(!"RADdata" %in% class(object)){
     stop("RADdata object needed.")
   }
@@ -52,7 +54,7 @@ IterateHWE_LD <- function(object, selfing.rate = 0, tol = 1e-5,
   message("Performing preliminary genotype estimation.")
   object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
   object <- AddGenotypePriorProb_HWE(object, selfing.rate)
-  object <- AddGenotypeLikelihood(object)
+  object <- AddGenotypeLikelihood(object, overdispersion = overdispersion)
   object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
   object <- AddGenotypePosteriorProb(object)
   object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
@@ -66,7 +68,7 @@ IterateHWE_LD <- function(object, selfing.rate = 0, tol = 1e-5,
     oldAlFreq <- object$alleleFreq
     object <- AddGenotypePriorProb_HWE(object, selfing.rate)
     object <- AddGenotypePriorProb_LD(object, type = "hwe")
-    object <- AddGenotypeLikelihood(object)
+    object <- AddGenotypeLikelihood(object, overdispersion = overdispersion)
     object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePosteriorProb(object)
     object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
@@ -80,7 +82,8 @@ IterateHWE_LD <- function(object, selfing.rate = 0, tol = 1e-5,
 
 IteratePopStruct <- function(object, selfing.rate = 0, tol = 1e-3, 
                              excludeTaxa = GetBlankTaxa(object),
-                             nPcsInit = 10, minfreq = 0.0001){
+                             nPcsInit = 10, minfreq = 0.0001,
+                             overdispersion = 10){
   if(!"RADdata" %in% class(object)){
     stop("RADdata object needed.")
   }
@@ -105,7 +108,7 @@ IteratePopStruct <- function(object, selfing.rate = 0, tol = 1e-3,
     oldAlFreq <- object$alleleFreqByTaxa
     object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePriorProb_ByTaxa(object, selfing.rate)
-    object <- AddGenotypeLikelihood(object)
+    object <- AddGenotypeLikelihood(object, overdispersion = overdispersion)
     object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePosteriorProb(object)
     object <- AddPCA(object, nPcsInit = dim(object$PCA)[2] + 1,
@@ -131,7 +134,8 @@ IteratePopStruct <- function(object, selfing.rate = 0, tol = 1e-3,
 IteratePopStructLD <- function(object, selfing.rate = 0, tol = 1e-3, 
                              excludeTaxa = GetBlankTaxa(object),
                              nPcsInit = 10, minfreq = 0.0001,
-                             LDdist = 1e4, minLDcorr = 0.2){
+                             LDdist = 1e4, minLDcorr = 0.2,
+                             overdispersion = 10){
   if(!"RADdata" %in% class(object)){
     stop("RADdata object needed.")
   }
@@ -153,7 +157,7 @@ IteratePopStructLD <- function(object, selfing.rate = 0, tol = 1e-3,
   message("Performing preliminary genotype estimation.")
   object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
   object <- AddGenotypePriorProb_ByTaxa(object, selfing.rate)
-  object <- AddGenotypeLikelihood(object)
+  object <- AddGenotypeLikelihood(object, overdispersion = overdispersion)
   object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
   object <- AddGenotypePosteriorProb(object)
   object <- AddPCA(object, nPcsInit = dim(object$PCA)[2] + 1,
@@ -174,7 +178,7 @@ IteratePopStructLD <- function(object, selfing.rate = 0, tol = 1e-3,
     object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePriorProb_ByTaxa(object, selfing.rate)
     object <- AddGenotypePriorProb_LD(object, type = "popstruct")
-    object <- AddGenotypeLikelihood(object)
+    object <- AddGenotypeLikelihood(object, overdispersion = overdispersion)
     object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePosteriorProb(object)
     object <- AddPCA(object, nPcsInit = dim(object$PCA)[2] + 1,
@@ -203,7 +207,8 @@ PipelineMapping2Parents <- function(object,
                                                     GetRecurrentParent(object),
                                                     GetBlankTaxa(object)),
                                     useLinkage = TRUE, linkageDist = 1e7,
-                                    minLinkageCorr = 0.5){
+                                    minLinkageCorr = 0.5,
+                                    overdispersion = 10){
   if(useLinkage && (is.null(object$locTable$Chr) ||
                     is.null(object$locTable$Pos))){
     stop("Set useLinkage = FALSE if alignment data unavailable.")
@@ -220,7 +225,7 @@ PipelineMapping2Parents <- function(object,
                                  allowedDeviation = freqAllowedDeviation,
                                  excludeTaxa = freqExcludeTaxa)
   # calculations for rest of pipeline
-  object <- AddGenotypeLikelihood(object)
+  object <- AddGenotypeLikelihood(object, overdispersion = overdispersion)
   object <- AddGenotypePriorProb_Mapping2Parents(object, donorParent = donorParent,
                                                  recurrentParent = recurrentParent,
                                                  n.gen.backcrossing = n.gen.backcrossing,

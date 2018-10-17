@@ -13,17 +13,21 @@ posterior probabilities can then be exported for downstream analysis.
 }
 \usage{
 IterateHWE(object, selfing.rate = 0, tol = 1e-05,
-           excludeTaxa = GetBlankTaxa(object))
+           excludeTaxa = GetBlankTaxa(object),
+           overdispersion = 10)
 IterateHWE_LD(object, selfing.rate = 0, tol = 1e-05, 
               excludeTaxa = GetBlankTaxa(object),
-              LDdist = 1e4, minLDcorr = 0.2)
+              LDdist = 1e4, minLDcorr = 0.2,
+              overdispersion = 10)
 IteratePopStruct(object, selfing.rate = 0, tol = 1e-03,
                  excludeTaxa = GetBlankTaxa(object),
-                 nPcsInit = 10, minfreq = 0.0001)
+                 nPcsInit = 10, minfreq = 0.0001,
+                 overdispersion = 10)
 IteratePopStructLD(object, selfing.rate = 0, tol = 1e-03,
                    excludeTaxa = GetBlankTaxa(object),
                    nPcsInit = 10, minfreq = 0.0001, LDdist = 1e4, 
-                   minLDcorr = 0.2)
+                   minLDcorr = 0.2,
+                   overdispersion = 10)
 }
 
 \arguments{
@@ -59,6 +63,9 @@ linkage disequilibrium with a given allele.
 The minimum correlation coefficient between two alleles 
 for linkage disequilibrium between those alleles to be used by the pipeline
 for genotype estimation; see \code{\link{AddAlleleLinkages}}.
+}
+\item{overdispersion}{
+Overdispersion parameter; see \code{\link{AddGenotypeLikelihood}}.
 }
 }
 
