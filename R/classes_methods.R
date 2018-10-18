@@ -583,6 +583,25 @@ AddGenotypePriorProb_HWE.RADdata <- function(object, selfing.rate = 0, ...){
   return(object)
 }
 
+AddGenotypePriorProb_Even <- function(object, ...){
+  UseMethod("AddGenotypePriorProb_Even", object)
+}
+AddGenotypePriorProb_Even.RADdata <- function(object, ...){
+  priors <- list()
+  length(priors) <- length(object$possiblePloidies)
+  for(i in 1:length(priors)){
+    thispld <- sum(object$possiblePloidies[[i]])
+    priors[[i]] <- matrix(1/(thispld + 1), nrow = thispld + 1, 
+                          ncol = nAlleles(object),
+                          dimnames = list(as.character(0:thispld),
+                                          GetAlleleNames(object)))
+  }
+  object$priorProb <- priors
+  object$priorProbPloidies <- object$possiblePloidies
+  attr(object, "priorType") <- "population"
+  return(object)
+}
+
 AddPloidyLikelihood <- function(object, ...){
   UseMethod("AddPloidyLikelihood", object)
 }

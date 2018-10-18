@@ -3,6 +3,7 @@ useDynLib(polyRAD)
 export(AddAlleleFreqByTaxa, AddAlleleFreqHWE, AddAlleleFreqMapping,
        AddAlleleLinkages, AddGenotypeLikelihood,  
 AddGenotypePosteriorProb,  AddGenotypePriorProb_ByTaxa,
+AddGenotypePriorProb_Even,
 AddGenotypePriorProb_HWE, AddGenotypePriorProb_LD,
 AddGenotypePriorProb_Mapping2Parents, AddPCA,
 AddPloidyChiSq, AddPloidyLikelihood, AddPriorTimesLikelihood,
@@ -34,6 +35,7 @@ S3method(AddAlleleLinkages, RADdata)
 S3method(AddGenotypeLikelihood, RADdata)
 S3method(AddGenotypePosteriorProb, RADdata)
 S3method(AddGenotypePriorProb_ByTaxa, RADdata)
+S3method(AddGenotypePriorProb_Even, RADdata)
 S3method(AddGenotypePriorProb_HWE, RADdata)
 S3method(AddGenotypePriorProb_LD, RADdata)
 S3method(AddGenotypePriorProb_Mapping2Parents, RADdata)
