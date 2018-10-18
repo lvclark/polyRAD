@@ -1738,7 +1738,7 @@ MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
       object$depthRatio[,alToMerge] <- 
         object$depthRatio[,alToMerge] + object$depthRatio[,thisAl]
       object$depthSamplingPermutations[,alToMerge] <-
-        choose(object$locDepth[,as.character(L)], object$alleleDepth[,alToMerge])
+        lchoose(object$locDepth[,as.character(L)], object$alleleDepth[,alToMerge])
       Nindwithal[alToMerge] <- Nindwithal[alToMerge] + Nindwithal[thisAl]
       # merge nucleotides
       newNt <- .mergeNucleotides(object$alleleNucleotides[[alToMerge]],
