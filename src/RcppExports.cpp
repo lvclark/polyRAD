@@ -44,13 +44,10 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport SEXP _polyRAD_AlleleProbExp(SEXP, SEXP);
-
 static const R_CallMethodDef CallEntries[] = {
     {"_polyRAD_BestGenos", (DL_FUNC) &_polyRAD_BestGenos, 4},
     {"_polyRAD_BestPloidies", (DL_FUNC) &_polyRAD_BestPloidies, 1},
     {"_polyRAD_ThirdDimProd", (DL_FUNC) &_polyRAD_ThirdDimProd, 3},
-    {"_polyRAD_AlleleProbExp", (DL_FUNC) &_polyRAD_AlleleProbExp, 2},
     {NULL, NULL, 0}
 };
 
