@@ -1,5 +1,6 @@
 \name{AddGenotypeLikelihood}
 \alias{AddGenotypeLikelihood}
+\alias{AddGenotypeLikelihood.RADdata}
 \title{
 Estimate Genotype Likelihoods in a RADdata object
 }
@@ -9,7 +10,9 @@ For each possible allele copy number across each possible ploidy in each taxon,
 distribution of read counts that are recorded for that taxon and locus.
 }
 \usage{
-AddGenotypeLikelihood(object, overdispersion = 10, ...)
+AddGenotypeLikelihood(object, ...)
+
+\method{AddGenotypeLikelihood}{RADdata}(object, overdispersion = 10, \dots)
 }
 \arguments{
   \item{object}{
