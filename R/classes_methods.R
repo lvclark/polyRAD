@@ -210,8 +210,7 @@ AddGenotypeLikelihood <- function(object, ...){
 }
 AddGenotypeLikelihood.RADdata <- function(object, ...){
   if(is.null(object$alleleFreq)){
-    cat("Allele frequencies not found; estimating under HWE from depth ratios.",
-        sep = "\n")
+    message("Allele frequencies not found; estimating under HWE from depth ratios.")
     object <- AddAlleleFreqHWE(object)
   }
   alFreq <- object$alleleFreq
