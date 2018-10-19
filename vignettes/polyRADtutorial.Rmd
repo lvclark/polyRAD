@@ -157,17 +157,49 @@ the code below.  The advantage of including alignment data is that gentoypes
 at linked markers are used for imputing missing or correcting erroneous
 genotypes.
 
-Now we can run the pipeline.
+Now we can perform a preliminary run of the pipeline.
 We'll specify that we don't want to include the parents or doubled haploid
 lines in the estimation of allele frequencies or evaluation of genotype
-frequenecies (`excludeTaxa` argument). The
+frequencies (`excludeTaxa` argument). The
 `allowedDeviation` argument indicates how different the apparent
 allele frequency (based on read depth ratios) can be from an expected
 allele frequency (determined based on ploidy and mapping population type) 
 and still be classified as that allele frequency. The default settings assume an
 F1 population, but the population type can be adjusted using the
 `n.gen.backcrossing`, `n.gen.intermating`, and
-`n.gen.selfing` arguments.
+`n.gen.selfing` arguments.  Since this first run is for a rough estimate of
+genotypes, we'll set `useLinkage = FALSE` to save a little computational time.
+
+```{r}
+mydata2 <- PipelineMapping2Parents(mydata, 
+                                  freqExcludeTaxa = c("Kaskade-Justin", 
+                                                      "Zebrinus-Justin",
+                                                     "IGR-2011-001",
+                                                     "p196-150A-c", 
+                                                     "p877-348-b"),
+                                  freqAllowedDeviation = 0.06,
+                                  useLinkage = FALSE)
+```
+
+We can use these preliminary estimates to determine whether we need to adjust
+the overdispersion parameter.  Exactly how much does read depth distribution
+deviate from what would be expected under binomial distibution?  The 
+`TestOverdispersion` function will help us here.  We will use the `qqman`
+package to visualize the results.
+
+```{r}
+library(qqman)
+overdispersionP <- TestOverdispersion(mydata2, to_test = 6:10)
+qq(overdispersionP[["6"]])
+qq(overdispersionP[["7"]])
+qq(overdispersionP[["8"]])
+qq(overdispersionP[["9"]])
+qq(overdispersionP[["10"]])
+```
+
+It looks like `9` follows the red line most closely, so we'll use that for the
+overdispersion parameter.  Now we can re-run the pipeline to properly call the
+genotypes.
 
 ```{r}
 mydata <- PipelineMapping2Parents(mydata, 
@@ -177,7 +209,7 @@ mydata <- PipelineMapping2Parents(mydata,
                                                      "p196-150A-c", 
                                                      "p877-348-b"),
                                   freqAllowedDeviation = 0.06,
-                                  useLinkage = TRUE)
+                                  useLinkage = TRUE, overdispersion = 9)
 ```
 
 We can examine the allele frequencies.
@@ -327,6 +359,18 @@ mydata <- VCF2RADdata(myVCF, possiblePloidies = list(2, c(2,2)),
 mydata
 ```
 
+For natural populations and diversity panels, we can run `TestOverdispersion`
+before performing any genotype calling.
+
+```{r}
+overdispersionP <- TestOverdispersion(mydata, to_test = 8:10)
+qq(overdispersionP[["8"]])
+qq(overdispersionP[["9"]])
+qq(overdispersionP[["10"]])
+```
+
+Again, nine looks like a good value.
+
 We can iteratively estimate genotype probabilities assuming 
 Hardy-Weinberg equilibrium.  The argument `tol` is set to a higher
 value than the default here in order to help the tutorial run more quickly.
@@ -334,7 +378,7 @@ Since *Miscanthus* is highly outcrossing, we will leave the `selfing.rate`
 argument at its default of zero.
 
 ```{r message = FALSE}
-mydataHWE <- IterateHWE(mydata, tol = 1e-3)
+mydataHWE <- IterateHWE(mydata, tol = 1e-3, overdispersion = 9)
 ```
 
 Let's take a look at allele frequencies:
@@ -357,7 +401,8 @@ setting a seed so that the vignette always renders in the same way.
 
 ```{r message = FALSE}
 set.seed(3908)
-mydataPopStruct <- IteratePopStruct(mydata, nPcsInit = 8, tol = 5e-03)
+mydataPopStruct <- IteratePopStruct(mydata, nPcsInit = 8, tol = 5e-03,
+                                    overdispersion = 9)
 ```
 
 Allele frequency estimates have changed slightly:
@@ -382,7 +427,7 @@ allele frequency.
 
 ```{r}
 myallele <- 1
-freqcol <- rainbow(101)[round(mydataPopStruct$alleleFreqByTaxa[,myallele] * 100) + 1]
+freqcol <- heat.colors(101)[round(mydataPopStruct$alleleFreqByTaxa[,myallele] * 100) + 1]
 plot(mydataPopStruct$PCA[,1], mydataPopStruct$PCA[,2],
      xlab = "PC axis 1", ylab = "PC axis 2", pch = 21,
      bg = freqcol)
@@ -429,6 +474,9 @@ divide them up some other way than by chromosome, see `SubsetByLocus`.
 If you are importing from VCF but don't want to import the whole genome at
 once, see the examples on the help page for `VCF2RADdata` for how to
 import just a particular genomic region.
+
+You might use `SubsetByLocus` and select a random subset of ~1000 loci to use
+with `TestOverdispersion` for estimating the overdispersion parameter.
 
 If you are using one of the iterative pipelines, it is possible to set the
 `tol` argument higher in order to reduce processing time at the
