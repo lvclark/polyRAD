@@ -218,6 +218,9 @@ AddGenotypeLikelihood.RADdata <- function(object, overdispersion = 10, ...){
   
   # get ploidies, ignoring inheritance pattern
   ploidies <- sort(unique(sapply(object$possiblePloidies, sum)))
+  # fix any allele freq that are zero, to prevent NaN likelihood
+  alFreq[alFreq == 0] <- 1/nTaxa(object)/max(ploidies)
+  
   # set up list for genotype likelihoods and loop through
   object$genotypeLikelihood <- list()
   length(object$genotypeLikelihood) <- length(ploidies)
