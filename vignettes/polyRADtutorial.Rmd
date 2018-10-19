@@ -167,7 +167,11 @@ allele frequency (determined based on ploidy and mapping population type)
 and still be classified as that allele frequency. The default settings assume an
 F1 population, but the population type can be adjusted using the
 `n.gen.backcrossing`, `n.gen.intermating`, and
-`n.gen.selfing` arguments.  Since this first run is for a rough estimate of
+`n.gen.selfing` arguments.  We'll also lower `minLikelihoodRatio` from the
+default because one of the parents has many uncertain genotypes under the
+tetraploid model (which was determined by exploration of the dataset outside
+of this tutorial; many NA values were observed in `priorProb` under the 
+default). Since this first run is for a rough estimate of
 genotypes, we'll set `useLinkage = FALSE` to save a little computational time.
 
 ```{r}
@@ -178,7 +182,8 @@ mydata2 <- PipelineMapping2Parents(mydata,
                                                      "p196-150A-c", 
                                                      "p877-348-b"),
                                   freqAllowedDeviation = 0.06,
-                                  useLinkage = FALSE)
+                                  useLinkage = FALSE,
+                                  minLikelihoodRatio = 2)
 ```
 
 We can use these preliminary estimates to determine whether we need to adjust
@@ -209,7 +214,8 @@ mydata <- PipelineMapping2Parents(mydata,
                                                      "p196-150A-c", 
                                                      "p877-348-b"),
                                   freqAllowedDeviation = 0.06,
-                                  useLinkage = TRUE, overdispersion = 9)
+                                  useLinkage = TRUE, overdispersion = 9,
+                                  minLikelihoodRatio = 2)
 ```
 
 We can examine the allele frequencies.
@@ -225,18 +231,18 @@ genotype at each locus, taxon, and ploidy.  This is the probability
 of seeing the observed distribution of reads.
 
 ```{r}
-mydata$alleleDepth[3,11:20]
-mydata$genotypeLikelihood[[1]][,3,11:20]
-mydata$genotypeLikelihood[[2]][,3,11:20]
+mydata$alleleDepth[10,19:26]
+mydata$genotypeLikelihood[[1]][,10,19:26]
+mydata$genotypeLikelihood[[2]][,10,19:26]
 ```
 
-Above, for one individal (Map1-001), we see its read depth at the
-first ten alleles (first five loci), followed by the genotype likelihoods
-under diploid and tetraploid models.  For example, at locus TP26698, 
+Above, for one individal (Map1-018), we see its read depth at
+eight alleles (four loci), followed by the genotype likelihoods
+under diploid and tetraploid models.  For example, at locus TP35570, 
 heterozygosity is the most likely state, although there is a chance that
-this individual is homozygous for allele 1 and the one read of allele 0
-was due to contamination.  If this locus is allotetraploid, it is most
-likely that there is one copy of allele 0 and three copies of allele 1.
+this individual is homozygous for allele 0 and the four reads of allele 1
+were due to contamination.  If this locus is allotetraploid, it is most
+likely that there is one copy of allele 1 and three copies of allele 0.
 Other loci have higher depth and as a result there is less uncertainty
 in the genotype, particularly for the diploid model.
 
@@ -247,16 +253,17 @@ can be ignored by increasing the `minLikelihoodRatio` argument to
 `PipelineMapping2Parents`.
 
 ```{r}
-mydata$priorProb[[1]][,11:20]
-mydata$priorProb[[2]][,11:20]
+mydata$priorProb[[1]][,19:26]
+mydata$priorProb[[2]][,19:26]
 ```
 
 Here we see some pretty big differences under the diploid and
-allotetraploid models.  For example, if TP28405 is behaving in a diploid
+allotetraploid models.  For example, if TP35570 is behaving in a diploid
 fashion we expect F2-like segregation since both parents were 
-heterozygous.  However, if TP28405 is behaving in an allotetraploid
-fashion, we expect that both parents are homozygous at differing 
-paralogous loci, resulting in no segregation.
+heterozygous.  However, if TP35570 is behaving in an allotetraploid
+fashion, a 1:1 segregation ratio is expected due to one parent being
+heterozygous at one isolocus and the other being homozygous at both
+isoloci.
 
 Now we want to determine which ploidy is the best fit for each locus.
 This is done by comparing genotype prior probabilities to
@@ -264,7 +271,7 @@ genotype likelihoods and estimating a $\chi^2$ statistic.  Lower
 values indicate a better fit.
 
 ```{r}
-mydata$ploidyChiSq[,11:20]
+mydata$ploidyChiSq[,19:26]
 ```
 
 We can make a plot to get an overall sense of how well the markers
@@ -285,8 +292,8 @@ Now we'll examine the posterior genotype probabilities.  These are still
 estimated separately for each ploidy.
 
 ```{r}
-mydata$posteriorProb[[1]][,3,11:20]
-mydata$posteriorProb[[2]][,3,11:20]
+mydata$posteriorProb[[1]][,10,19:26]
+mydata$posteriorProb[[2]][,10,19:26]
 ```
 
 We can export the results for use in downstream analysis.  The function
@@ -300,7 +307,7 @@ which can be changed with the `minval` and `maxval` arguments.
 
 ```{r}
 mywm <- GetWeightedMeanGenotypes(mydata)
-mywm[c(297,2:6), 6:10]
+mywm[c(297,2:6), 10:13]
 ```
 
 Note that the parent weighted mean genotypes were estimated using 
@@ -311,8 +318,8 @@ genotypes that were used for estimating progeny priors using
 `$likelyGeno_donor` and `$likelyGeno_recurrent`.
 
 ```{r}
-mydata$likelyGeno_donor[,11:20]
-mydata$likelyGeno_recurrent[,11:20]
+mydata$likelyGeno_donor[,19:26]
+mydata$likelyGeno_recurrent[,19:26]
 ```
 
 ## Estimating genotype probabilities in a diversity panel <a name="diversity"></a>
