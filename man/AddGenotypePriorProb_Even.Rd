@@ -35,7 +35,6 @@ ploidy) is in rows, and alleles are in columns.  Each value is
 It is in the same order as \code{$priorProb}, with each item indicating the
 inheritance mode for the corresponding prior probability matrix.}
 }
-}
 
 \note{
 Values in \code{object$ploidyChiSq} may not be particularly meaningful
