@@ -2,11 +2,11 @@
 \alias{TestOverdispersion}
 \alias{TestOverdispersion.RADdata}
 \title{
-Test the Fit of Read Depth to Beta Binomial Distribution
+Test the Fit of Read Depth to Beta-Binomial Distribution
 }
 \description{
 This function is intended to help the user select a value to pass to the
-\code{overdispersion} parameter of \code{\link{AddGenotypeLikelihood}},
+\code{overdispersion} argument of \code{\link{AddGenotypeLikelihood}},
 generally via pipeline functions such as \code{\link{IterateHWE}} or
 \code{\link{PipelineMapping2Parents}}.
 }
@@ -41,40 +41,35 @@ inheritance mode has the lowest chi-squared value.
 Within this inheritance mode and allele set, genotypes are selected where the
 posterior probability of having a single copy of the allele is at least 0.95.
 Read depth for these genotypes is then analyzed.  For each genotype, a 
-probability is calculated for the read depth ratio to deviate from the expected
-ratio by at least that much under the beta-binomial distribution.  This test
-is performed for each overdispersion value provided in \code{to_test}.
+two-tailed probability is calculated for the read depth ratio to deviate from 
+the expected ratio by at least that much under the beta-binomial distribution.
+This test is performed for each overdispersion value provided in
+\code{to_test}.
 }
 \value{
-A list of the same length as \code{to_test}
+A list of the same length as \code{to_test}.  The names of the list are
+\code{to_test} converted to a character vector.  Each item in the list is a
+vector of p-values, one per examined genotype, of the read depth ratio for
+that genotype to deviate that much from the expected ratio.
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
+
 \author{
-%%  ~~who you are~~
-}
-\note{
-%%  ~~further notes~~
+Lindsay V. Clark
 }
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
-
-\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-}
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+# dataset with overdispersion
+data(Msi01genes)
 
-## The function is currently defined as
-function (object, ...) 
-{
-    UseMethod("TestOverdispersion", object)
-  }
+# test several values for the overdispersion parameter
+myP <- TestOverdispersion(Msi01genes, to_test = 8:10)
+
+# visualize results with QQ plots
+require(qqman)
+qq(myP[["8"]])  # over-fit; too much overdispersion in model
+qq(myP[["9"]])  # fairly close to expected; good value to use
+qq(myP[["10"]]) # slightly under-fit; not enough overdispersion
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory.
-\keyword{ ~kwd1 }% use one of  RShowDoc("KEYWORDS")
-\keyword{ ~kwd2 }% __ONLY ONE__ keyword per line
+
+\keyword{ distribution }
+\keyword{ methods }

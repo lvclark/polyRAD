@@ -11,7 +11,8 @@ Author: Lindsay V. Clark [aut, cre] (<https://orcid.org/0000-0002-3881-9252>),
 Maintainer: Lindsay V. Clark <lvclark@illinois.edu>
 Imports: fastmatch, pcaMethods, methods, Rcpp
 Suggests: rrBLUP, Rsamtools, GenomeInfoDb, Biostrings, GenomicRanges, VariantAnnotation,
-  SummarizedExperiment, S4Vectors, IRanges, BiocGenerics, knitr, rmarkdown, GenomicFeatures
+  SummarizedExperiment, S4Vectors, IRanges, BiocGenerics, knitr, rmarkdown,
+  GenomicFeatures, qqman
 LinkingTo: Rcpp
 VignetteBuilder: knitr, rmarkdown
 Description: Read depth data from genotyping-by-sequencing (GBS) or restriction 
