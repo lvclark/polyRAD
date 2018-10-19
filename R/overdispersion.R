@@ -33,11 +33,18 @@ TestOverdispersion.RADdata <- function(object, to_test = seq(6, 20, by = 2),
   totcnt <- alcnt + object$antiAlleleDepth[,theseal][one_copy_gen]
   # set up values where we need distribution fn
   testcnt <- mapply(function(n, k){
-    if(k == n/2){
+    expected <- n * samprob
+    if(k == expected){
       return(0:n)
     } else {
-      if(k > n/2) k <- n - k
-      return(c(0:k, (n - k):n))
+      if(k > expected){
+        hi <- k
+        lo <- floor(2 * expected - k)
+      } else {
+        lo <- k
+        hi <- ceiling(2 * expected - k)
+      }
+      return(c(0:lo, hi:n))
     }
   }, totcnt, alcnt)
   # set up sampling permutations (except for alcnt == totcnt/2)
