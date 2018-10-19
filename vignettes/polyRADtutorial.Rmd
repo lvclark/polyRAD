@@ -160,7 +160,7 @@ genotypes.
 Now we can run the pipeline.
 We'll specify that we don't want to include the parents or doubled haploid
 lines in the estimation of allele frequencies or evaluation of genotype
-frequenecies (`excludeTaxa` argument). The
+frequencies (`excludeTaxa` argument). The
 `allowedDeviation` argument indicates how different the apparent
 allele frequency (based on read depth ratios) can be from an expected
 allele frequency (determined based on ploidy and mapping population type) 
