@@ -12,7 +12,7 @@ distribution of read counts that are recorded for that taxon and locus.
 \usage{
 AddGenotypeLikelihood(object, ...)
 
-\method{AddGenotypeLikelihood}{RADdata}(object, overdispersion = 10, \dots)
+\method{AddGenotypeLikelihood}{RADdata}(object, overdispersion = 9, \dots)
 }
 \arguments{
   \item{object}{

@@ -22,7 +22,7 @@ PipelineMapping2Parents(object, n.gen.backcrossing = 0,
                                             GetRecurrentParent(object), 
                                             GetBlankTaxa(object)),
                         useLinkage = TRUE, linkageDist = 1e7,
-                        minLinkageCorr = 0.5, overdispersion = 10)
+                        minLinkageCorr = 0.5, overdispersion = 9)
 }
 \arguments{
   \item{object}{

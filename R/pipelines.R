@@ -2,7 +2,7 @@
 
 IterateHWE <- function(object, selfing.rate = 0, tol = 1e-5, 
                        excludeTaxa = GetBlankTaxa(object),
-                       overdispersion = 10){
+                       overdispersion = 9){
   if(!"RADdata" %in% class(object)){
     stop("RADdata object needed.")
   }
@@ -37,7 +37,7 @@ IterateHWE <- function(object, selfing.rate = 0, tol = 1e-5,
 IterateHWE_LD <- function(object, selfing.rate = 0, tol = 1e-5, 
                           excludeTaxa = GetBlankTaxa(object),
                           LDdist = 1e4, minLDcorr = 0.2,
-                          overdispersion = 10){
+                          overdispersion = 9){
   if(!"RADdata" %in% class(object)){
     stop("RADdata object needed.")
   }
@@ -83,7 +83,7 @@ IterateHWE_LD <- function(object, selfing.rate = 0, tol = 1e-5,
 IteratePopStruct <- function(object, selfing.rate = 0, tol = 1e-3, 
                              excludeTaxa = GetBlankTaxa(object),
                              nPcsInit = 10, minfreq = 0.0001,
-                             overdispersion = 10){
+                             overdispersion = 9){
   if(!"RADdata" %in% class(object)){
     stop("RADdata object needed.")
   }
@@ -135,7 +135,7 @@ IteratePopStructLD <- function(object, selfing.rate = 0, tol = 1e-3,
                              excludeTaxa = GetBlankTaxa(object),
                              nPcsInit = 10, minfreq = 0.0001,
                              LDdist = 1e4, minLDcorr = 0.2,
-                             overdispersion = 10){
+                             overdispersion = 9){
   if(!"RADdata" %in% class(object)){
     stop("RADdata object needed.")
   }
@@ -208,7 +208,7 @@ PipelineMapping2Parents <- function(object,
                                                     GetBlankTaxa(object)),
                                     useLinkage = TRUE, linkageDist = 1e7,
                                     minLinkageCorr = 0.5,
-                                    overdispersion = 10){
+                                    overdispersion = 9){
   if(useLinkage && (is.null(object$locTable$Chr) ||
                     is.null(object$locTable$Pos))){
     stop("Set useLinkage = FALSE if alignment data unavailable.")

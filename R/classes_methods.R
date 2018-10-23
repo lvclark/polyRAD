@@ -209,7 +209,7 @@ AddAlleleFreqHWE.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object),
 AddGenotypeLikelihood <- function(object, ...){
   UseMethod("AddGenotypeLikelihood", object)
 }
-AddGenotypeLikelihood.RADdata <- function(object, overdispersion = 10, ...){
+AddGenotypeLikelihood.RADdata <- function(object, overdispersion = 9, ...){
   if(is.null(object$alleleFreq)){
     message("Allele frequencies not found; estimating under HWE from depth ratios.")
     object <- AddAlleleFreqHWE(object)
