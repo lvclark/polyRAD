@@ -13,6 +13,12 @@ genotype prior probabilities.  The exact shape of the beta-binomial
 distribution is determined by an overdispersion parameter, which the user can
 optimize using the TestOverdispersion function.
 
+When using linkage disequilibrium to update genotype priors, the square of
+Pearson's correlation coefficient is now used for weighting markers, where
+Pearson's correlation coefficient was used previously without being squared.
+This applies to both mapping populations and diversity panels, and results
+in improved genotyping accuracy.
+
 The functions Export_polymapR, readTASSELGBSv2, RemoveHighDepthLoci,
 AddGenotypePriorProb_Even, and TestOverdispersion have been added.
 

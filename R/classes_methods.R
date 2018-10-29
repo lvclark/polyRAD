@@ -1096,8 +1096,8 @@ AddGenotypePriorProb_LD.RADdata <- function(object, type, ...){
               # If there are only two possible genotypes for each, we know that all
               # copies of alleles are linked and can treat them that way.
               newpost[possibleThisAllele,progeny,i] <- 
-                thispost[possibleLinked,progeny,i] * atab$corr[i] +
-                0.5 * (1 - atab$corr[i])
+                thispost[possibleLinked,progeny,i] * atab$corr[i]^2 +
+                0.5 * (1 - atab$corr[i]^2)
             } else {
               # If any allele has more than two genotypes, we aren't sure of
               # complete phasing.
@@ -1120,9 +1120,9 @@ AddGenotypePriorProb_LD.RADdata <- function(object, type, ...){
           thispost <- newpost
         } else { # for hwe or pop structure situations
           # multiply by correlation coefficient
-          thispost <- sweep(thispost, 3, atab$corr, "*")
+          thispost <- sweep(thispost, 3, atab$corr^2, "*")
           # add even priors for the remainder of the coefficient
-          thispost <- sweep(thispost, 3, (1 - atab$corr)/ngen, "+")
+          thispost <- sweep(thispost, 3, (1 - atab$corr^2)/ngen, "+")
         }
         
         # multiply across alleles to get priors
