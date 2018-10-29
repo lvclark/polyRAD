@@ -1150,6 +1150,9 @@ AddAlleleLinkages.RADdata <- function(object, type, linkageDist, minCorr,
   if(!type %in% c("mapping", "hwe", "popstruct")){
     stop("type must be 'mapping', 'hwe', or 'popstruct'.")
   }
+  if(minCorr < 0){
+    stop("minCorr for linkage disequilibrium cannot be negative.")
+  }
   # get weighted mean genotypes for doing correlations
   wmgeno <- GetWeightedMeanGenotypes(object, omit1allelePerLocus = FALSE)
   wmgeno <- wmgeno[!rownames(wmgeno) %in% excludeTaxa, ]
