@@ -1,5 +1,6 @@
 \name{AddGenotypeLikelihood}
 \alias{AddGenotypeLikelihood}
+\alias{AddGenotypeLikelihood.RADdata}
 \title{
 Estimate Genotype Likelihoods in a RADdata object
 }
@@ -10,10 +11,18 @@ distribution of read counts that are recorded for that taxon and locus.
 }
 \usage{
 AddGenotypeLikelihood(object, ...)
+
+\method{AddGenotypeLikelihood}{RADdata}(object, overdispersion = 9, \dots)
 }
 \arguments{
   \item{object}{
 A \code{"\link{RADdata}"} object.
+}
+\item{overdispersion}{
+An overdispersion parameter.  Higher values will cause the expected read depth
+distribution to more resemble the binomial distribution.  Lower values indicate
+more overdispersion, \emph{i.e.} sample-to-sample variance in the probability
+of observing reads from a given allele.
 }
   \item{\dots}{
 Other arguments; none are currently used.
@@ -34,8 +43,8 @@ To estimate the genotype likelihood, where \eqn{nr_i} is the number of reads
 corresponding to allele \eqn{i} for a given taxon and locus and \eqn{nr_j} is the
 number of reads corresponding to all other alleles for that taxon and locus:
 
-\deqn{P(nr_i, nr_j | x) = {{nr_i + nr_j}\choose{nr_i}} * P(r_i | x)^{nr_i} * [1 - P(r_i | x)]^{nr_j}}{
-P(nr_i, nr_j | x) = [(nr_i + nr_j) choose nr_i] * P(r_i | x)^{nr_i} * [1 - P(r_i | x)]^{nr_j}
+\deqn{P(nr_i, nr_j | x) = {{nr_i + nr_j}\choose{nr_i}} * \frac{B[P(r_i | x) * d + nr_i, [1 - P(r_i | x)] * d + nr_j]]}{B[P(r_i | x) * d, [1 - P(r_i | x)] * d]}}{
+P(nr_i, nr_j | x) = [(nr_i + nr_j) choose nr_i] * B[P(r_i | x) * d + nr_i, [1 - P(r_i | x)] * d + nr_j]] / B[P(r_i | x) * d, [1 - P(r_i | x)] * d]
 }
 
 where
@@ -43,6 +52,9 @@ where
 \deqn{{{nr_i + nr_j}\choose{nr_i}} = \frac{(nr_i + nr_j)!}{nr_i! * nr_j!}}{
 [(nr_i + nr_j) choose nr_i] = (nr_i + nr_j)!/(nr_i! * nr_j!)
 }
+
+B is the beta function, and \eqn{d} is the overdispersion parameter set by 
+\code{overdispersion}.
 }
 \value{
 A \code{"RADdata"} object identical to that passed to the function, but with
@@ -51,12 +63,6 @@ list, with one item for each possible ploidy, ignoring differences between
 autopolyploids and allopolyploids.  For each ploidy there is a three-dimensional 
 array with number of allele copies in the first dimension, taxa in the second dimension,
 and alleles in the third dimension.
-}
-
-\note{
-For samples with very high read depth (>1000 reads at a locus), the function may
-run much more slowly, since an alternative algorithm must be used for likelihood
-estimation.
 }
 
 \author{

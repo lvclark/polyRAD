@@ -59,8 +59,9 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   
   expandedLocDepth <- locDepth[,as.character(alleles2loc), drop = FALSE]
   
-  # get number of permutations of order in which each allele could have been sampled from total depth from that locus
-  depthSamplingPermutations <- choose(expandedLocDepth, alleleDepth)
+  # get log of number of permutations of order in which each allele could have
+  # been sampled from total depth from that locus.
+  depthSamplingPermutations <- lchoose(expandedLocDepth, alleleDepth)
   dimnames(depthSamplingPermutations)[[2]] <- dimnames(alleleDepth)[[2]]
   # for each allele and taxon, get proportion of reads for that locus
   depthRatio <- alleleDepth/expandedLocDepth
@@ -208,7 +209,7 @@ AddAlleleFreqHWE.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object),
 AddGenotypeLikelihood <- function(object, ...){
   UseMethod("AddGenotypeLikelihood", object)
 }
-AddGenotypeLikelihood.RADdata <- function(object, ...){
+AddGenotypeLikelihood.RADdata <- function(object, overdispersion = 9, ...){
   if(is.null(object$alleleFreq)){
     message("Allele frequencies not found; estimating under HWE from depth ratios.")
     object <- AddAlleleFreqHWE(object)
@@ -217,6 +218,9 @@ AddGenotypeLikelihood.RADdata <- function(object, ...){
   
   # get ploidies, ignoring inheritance pattern
   ploidies <- sort(unique(sapply(object$possiblePloidies, sum)))
+  # fix any allele freq that are zero, to prevent NaN likelihood
+  alFreq[alFreq == 0] <- 1/nTaxa(object)/max(ploidies)
+  
   # set up list for genotype likelihoods and loop through
   object$genotypeLikelihood <- list()
   length(object$genotypeLikelihood) <- length(ploidies)
@@ -231,6 +235,9 @@ AddGenotypeLikelihood.RADdata <- function(object, ...){
       alleleProb[j,] <- sampleReal[j] + sampleContam
     }
     antiAlleleProb <- 1 - alleleProb
+    # multiply probabilities by overdispersion factor for betabinomial
+    alleleProb <- alleleProb * overdispersion
+    antiAlleleProb <- antiAlleleProb * overdispersion
     
     # get likelihoods
     object$genotypeLikelihood[[i]] <- array(0, dim = c(ploidies[i]+1, 
@@ -239,41 +246,20 @@ AddGenotypeLikelihood.RADdata <- function(object, ...){
                                                        GetTaxa(object),
                                                        GetAlleleNames(object)))
     for(j in 1:(ploidies[i]+1)){
+      # likelihoods under beta-binomial distribution
       object$genotypeLikelihood[[i]][j,,] <- 
-        object$depthSamplingPermutations * 
-          AlleleProbExp(object$alleleDepth, alleleProb[j,]) * 
-            AlleleProbExp(object$antiAlleleDepth, antiAlleleProb[j,]) # Rcpp function
-#          t(apply(object$alleleDepth, 1, function(x) alleleProb[j,] ^ x) * 
-#            apply(object$antiAlleleDepth, 1, function(x) antiAlleleProb[j,] ^ x)) # non-C version of above two lines
-      # when depth is too high, use dbinom instead.
-      toRecalculate <- which(is.na(object$genotypeLikelihood[[i]][j,,]) |
-                               object$genotypeLikelihood[[i]][j,,] == Inf,
-                             arr.ind = TRUE)
-      if(dim(toRecalculate)[1] == 0) next
-      for(k in 1:dim(toRecalculate)[1]){
-        # note repetitive code below
-        taxon <- toRecalculate[k,1]
-        allele <- toRecalculate[k,2]
-        object$genotypeLikelihood[[i]][j,taxon,allele] <-
-          dbinom(object$alleleDepth[taxon,allele],
-                 object$locDepth[taxon, as.character(object$alleles2loc[allele])],
-                 alleleProb[j,allele])
-      }
+        exp(object$depthSamplingPermutations +
+        sweep(lbeta(sweep(object$alleleDepth, 2, alleleProb[j,], "+"),
+                    sweep(object$antiAlleleDepth, 2, antiAlleleProb[j,], "+")),
+              2, lbeta(alleleProb[j,], antiAlleleProb[j,]), "-"))
     }
     # fix likelihoods where all are zero
     totlik <- colSums(object$genotypeLikelihood[[i]])
     toRecalculate <- which(totlik == 0, arr.ind = TRUE)
     if(dim(toRecalculate)[1] > 0){
       for(k in 1:dim(toRecalculate)[1]){
-        for(j in 1:(ploidies[i] + 1)){
-          # note repetitive code from just above
-          taxon <- toRecalculate[k,1]
-          allele <- toRecalculate[k,2]
-          object$genotypeLikelihood[[i]][j,taxon,allele] <-
-            dbinom(object$alleleDepth[taxon,allele],
-                   object$locDepth[taxon, as.character(object$alleles2loc[allele])],
-                   alleleProb[j,allele])
-        }
+        taxon <- toRecalculate[k,1]
+        allele <- toRecalculate[k,2]
         # for rare cases where likelihood still not estimated, set to one
         if(sum(object$genotypeLikelihood[[i]][, taxon, allele]) == 0){
           object$genotypeLikelihood[[i]][, taxon, allele] <- 1
@@ -594,6 +580,25 @@ AddGenotypePriorProb_HWE.RADdata <- function(object, selfing.rate = 0, ...){
                               selfing.rate)
   }
   
+  object$priorProb <- priors
+  object$priorProbPloidies <- object$possiblePloidies
+  attr(object, "priorType") <- "population"
+  return(object)
+}
+
+AddGenotypePriorProb_Even <- function(object, ...){
+  UseMethod("AddGenotypePriorProb_Even", object)
+}
+AddGenotypePriorProb_Even.RADdata <- function(object, ...){
+  priors <- list()
+  length(priors) <- length(object$possiblePloidies)
+  for(i in 1:length(priors)){
+    thispld <- sum(object$possiblePloidies[[i]])
+    priors[[i]] <- matrix(1/(thispld + 1), nrow = thispld + 1, 
+                          ncol = nAlleles(object),
+                          dimnames = list(as.character(0:thispld),
+                                          GetAlleleNames(object)))
+  }
   object$priorProb <- priors
   object$priorProbPloidies <- object$possiblePloidies
   attr(object, "priorType") <- "population"
@@ -1755,7 +1760,7 @@ MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
       object$depthRatio[,alToMerge] <- 
         object$depthRatio[,alToMerge] + object$depthRatio[,thisAl]
       object$depthSamplingPermutations[,alToMerge] <-
-        choose(object$locDepth[,as.character(L)], object$alleleDepth[,alToMerge])
+        lchoose(object$locDepth[,as.character(L)], object$alleleDepth[,alToMerge])
       Nindwithal[alToMerge] <- Nindwithal[alToMerge] + Nindwithal[thisAl]
       # merge nucleotides
       newNt <- .mergeNucleotides(object$alleleNucleotides[[alToMerge]],

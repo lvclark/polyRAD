@@ -1,6 +1,6 @@
 Package: polyRAD
-Version: 0.6-0
-Date: 2018-08-15
+Version: 1.0
+Date: 2018-10-18
 Title: Genotype Calling with Uncertainty from Sequencing Data in Polyploids and Diploids
 Authors@R: c(person("Lindsay V.", "Clark", email = "lvclark@illinois.edu",
                     role = c("aut", "cre"), 
@@ -11,7 +11,8 @@ Author: Lindsay V. Clark [aut, cre] (<https://orcid.org/0000-0002-3881-9252>),
 Maintainer: Lindsay V. Clark <lvclark@illinois.edu>
 Imports: fastmatch, pcaMethods, methods, Rcpp
 Suggests: rrBLUP, Rsamtools, GenomeInfoDb, Biostrings, GenomicRanges, VariantAnnotation,
-  SummarizedExperiment, S4Vectors, IRanges, BiocGenerics, knitr, rmarkdown, GenomicFeatures
+  SummarizedExperiment, S4Vectors, IRanges, BiocGenerics, knitr, rmarkdown,
+  GenomicFeatures, qqman
 LinkingTo: Rcpp
 VignetteBuilder: knitr, rmarkdown
 Description: Read depth data from genotyping-by-sequencing (GBS) or restriction 

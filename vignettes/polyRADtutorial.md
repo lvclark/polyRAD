@@ -185,16 +185,80 @@ below. The advantage of including alignment data is that gentoypes at
 linked markers are used for imputing missing or correcting erroneous
 genotypes.
 
-Now we can run the pipeline. We’ll specify that we don’t want to include
-the parents or doubled haploid lines in the estimation of allele
-frequencies or evaluation of genotype frequenecies (`excludeTaxa`
-argument). The `allowedDeviation` argument indicates how different the
-apparent allele frequency (based on read depth ratios) can be from an
-expected allele frequency (determined based on ploidy and mapping
-population type) and still be classified as that allele frequency. The
-default settings assume an F1 population, but the population type can be
-adjusted using the `n.gen.backcrossing`, `n.gen.intermating`, and
-`n.gen.selfing` arguments.
+Now we can perform a preliminary run of the pipeline. We’ll specify that
+we don’t want to include the parents or doubled haploid lines in the
+estimation of allele frequencies or evaluation of genotype frequencies
+(`excludeTaxa` argument). The `allowedDeviation` argument indicates how
+different the apparent allele frequency (based on read depth ratios) can
+be from an expected allele frequency (determined based on ploidy and
+mapping population type) and still be classified as that allele
+frequency. The default settings assume an F1 population, but the
+population type can be adjusted using the `n.gen.backcrossing`,
+`n.gen.intermating`, and `n.gen.selfing` arguments. We’ll also lower
+`minLikelihoodRatio` from the default because one of the parents has
+many uncertain genotypes under the tetraploid model (which was
+determined by exploration of the dataset outside of this tutorial; many
+NA values were observed in `priorProb` under the default). Since this
+first run is for a rough estimate of genotypes, we’ll set `useLinkage =
+FALSE` to save a little computational time.
+
+``` r
+mydata2 <- PipelineMapping2Parents(mydata, 
+                                  freqExcludeTaxa = c("Kaskade-Justin", 
+                                                      "Zebrinus-Justin",
+                                                     "IGR-2011-001",
+                                                     "p196-150A-c", 
+                                                     "p877-348-b"),
+                                  freqAllowedDeviation = 0.06,
+                                  useLinkage = FALSE,
+                                  minLikelihoodRatio = 2)
+```
+
+    ## Making initial parameter estimates...
+
+    ## Done.
+
+We can use these preliminary estimates to determine whether we need to
+adjust the overdispersion parameter. Exactly how much does read depth
+distribution deviate from what would be expected under binomial
+distibution? The `TestOverdispersion` function will help us here. We
+will use the `qqman` package to visualize the results.
+
+``` r
+library(qqman)
+overdispersionP <- TestOverdispersion(mydata2, to_test = 6:10)
+qq(overdispersionP[["6"]])
+```
+
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+``` r
+qq(overdispersionP[["7"]])
+```
+
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
+
+``` r
+qq(overdispersionP[["8"]])
+```
+
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-6-3.png)<!-- -->
+
+``` r
+qq(overdispersionP[["9"]])
+```
+
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-6-4.png)<!-- -->
+
+``` r
+qq(overdispersionP[["10"]])
+```
+
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-6-5.png)<!-- -->
+
+It looks like `9` follows the red line most closely, so we’ll use that
+for the overdispersion parameter. Now we can re-run the pipeline to
+properly call the genotypes.
 
 ``` r
 mydata <- PipelineMapping2Parents(mydata, 
@@ -204,7 +268,8 @@ mydata <- PipelineMapping2Parents(mydata,
                                                      "p196-150A-c", 
                                                      "p877-348-b"),
                                   freqAllowedDeviation = 0.06,
-                                  useLinkage = TRUE)
+                                  useLinkage = TRUE, overdispersion = 9,
+                                  minLikelihoodRatio = 2)
 ```
 
     ## Making initial parameter estimates...
@@ -235,53 +300,53 @@ seeing the observed distribution of
     reads.
 
 ``` r
-mydata$alleleDepth[3,11:20]
+mydata$alleleDepth[10,19:26]
 ```
 
-    ## TP26698_0 TP26698_1 TP28405_0 TP28405_1 TP28602_0 TP28602_1 TP28986_0 
-    ##         1         7         0        51         0        32        15 
-    ## TP28986_1 TP31810_0 TP31810_1 
-    ##        21        10        13
+    ## TP31810_0 TP31810_1 TP34632_0 TP34632_1 TP34939_0 TP34939_1 TP35570_0 
+    ##        26        33        12        18         9         5        18 
+    ## TP35570_1 
+    ##         4
 
 ``` r
-mydata$genotypeLikelihood[[1]][,3,11:20]
+mydata$genotypeLikelihood[[1]][,10,19:26]
 ```
 
-    ##      TP26698_0    TP26698_1     TP28405_0     TP28405_1     TP28602_0
-    ## 0 5.968571e-03 4.881592e-25  9.748162e-01 4.440892e-169  9.920309e-01
-    ## 1 3.115636e-02 3.115636e-02  4.440892e-16  4.440892e-16  2.365849e-10
-    ## 2 4.881592e-25 5.968571e-03 4.440892e-169  9.748162e-01 1.004524e-100
-    ##       TP28602_1    TP28986_0    TP28986_1    TP31810_0    TP31810_1
-    ## 0 1.004524e-100 5.158357e-45 1.309455e-56 1.087526e-30 2.697672e-35
-    ## 1  2.365849e-10 8.126672e-02 8.126672e-02 1.365876e-01 1.365876e-01
-    ## 2  9.920309e-01 1.309455e-56 5.158357e-45 2.697672e-35 1.087526e-30
+    ##      TP31810_0    TP31810_1    TP34632_0    TP34632_1    TP34939_0
+    ## 0 1.274105e-06 5.796763e-07 1.819889e-05 3.238446e-07 3.064777e-06
+    ## 1 3.520993e-02 3.520993e-02 6.090279e-02 6.090279e-02 1.084014e-01
+    ## 2 5.796763e-07 1.274105e-06 3.238446e-07 1.819889e-05 3.431537e-05
+    ##      TP34939_1    TP35570_0    TP35570_1
+    ## 0 3.431537e-05 2.688637e-08 2.257439e-04
+    ## 1 1.084014e-01 2.751453e-02 2.751453e-02
+    ## 2 3.064777e-06 2.257439e-04 2.688637e-08
 
 ``` r
-mydata$genotypeLikelihood[[2]][,3,11:20]
+mydata$genotypeLikelihood[[2]][,10,19:26]
 ```
 
-    ##      TP26698_0    TP26698_1     TP28405_0     TP28405_1     TP28602_0
-    ## 0 5.968571e-03 4.881592e-25  9.748162e-01 4.440892e-169  9.920309e-01
-    ## 1 2.662559e-01 3.662109e-04  4.175805e-07  2.075288e-31  1.004524e-04
-    ## 2 3.115636e-02 3.115636e-02  4.440892e-16  4.440892e-16  2.365849e-10
-    ## 3 3.662109e-04 2.662559e-01  2.075288e-31  4.175805e-07  5.778929e-20
-    ## 4 4.881592e-25 5.968571e-03 4.440892e-169  9.748162e-01 1.004524e-100
-    ##       TP28602_1    TP28986_0    TP28986_1    TP31810_0    TP31810_1
-    ## 0 1.004524e-100 5.158357e-45 1.309455e-56 1.087526e-30 2.697672e-35
-    ## 1  5.778929e-20 1.233327e-02 1.746741e-05 2.592075e-02 9.787414e-04
-    ## 2  2.365849e-10 8.126672e-02 8.126672e-02 1.365876e-01 1.365876e-01
-    ## 3  1.004524e-04 1.746741e-05 1.233327e-02 9.787414e-04 2.592075e-02
-    ## 4  9.920309e-01 1.309455e-56 5.158357e-45 2.697672e-35 1.087526e-30
+    ##      TP31810_0    TP31810_1    TP34632_0    TP34632_1    TP34939_0
+    ## 0 1.274105e-06 5.796763e-07 1.819889e-05 3.238446e-07 3.064777e-06
+    ## 1 1.733971e-02 6.779369e-03 4.353570e-02 1.028542e-02 2.003410e-02
+    ## 2 3.520993e-02 3.520993e-02 6.090279e-02 6.090279e-02 1.084014e-01
+    ## 3 6.779369e-03 1.733971e-02 1.028542e-02 4.353570e-02 1.067533e-01
+    ## 4 5.796763e-07 1.274105e-06 3.238446e-07 1.819889e-05 3.431537e-05
+    ##      TP34939_1    TP35570_0    TP35570_1
+    ## 0 3.431537e-05 2.688637e-08 2.257439e-04
+    ## 1 1.067533e-01 1.128698e-03 1.118037e-01
+    ## 2 1.084014e-01 2.751453e-02 2.751453e-02
+    ## 3 2.003410e-02 1.118037e-01 1.128698e-03
+    ## 4 3.064777e-06 2.257439e-04 2.688637e-08
 
-Above, for one individal (Map1-001), we see its read depth at the first
-ten alleles (first five loci), followed by the genotype likelihoods
-under diploid and tetraploid models. For example, at locus TP26698,
-heterozygosity is the most likely state, although there is a chance that
-this individual is homozygous for allele 1 and the one read of allele 0
-was due to contamination. If this locus is allotetraploid, it is most
-likely that there is one copy of allele 0 and three copies of allele 1.
-Other loci have higher depth and as a result there is less uncertainty
-in the genotype, particularly for the diploid model.
+Above, for one individal (Map1-018), we see its read depth at eight
+alleles (four loci), followed by the genotype likelihoods under diploid
+and tetraploid models. For example, at locus TP35570, heterozygosity is
+the most likely state, although there is a chance that this individual
+is homozygous for allele 0 and the four reads of allele 1 were due to
+contamination. If this locus is allotetraploid, it is most likely that
+there is one copy of allele 1 and three copies of allele 0. Other loci
+have higher depth and as a result there is less uncertainty in the
+genotype, particularly for the diploid model.
 
 The prior genotype probabilities (expected genotype distributions) are
 also stored in the object for each possible ploidy. These distributions
@@ -291,41 +356,42 @@ argument to
     `PipelineMapping2Parents`.
 
 ``` r
-mydata$priorProb[[1]][,11:20]
+mydata$priorProb[[1]][,19:26]
 ```
 
-    ##   TP26698_0 TP26698_1 TP28405_0 TP28405_1 TP28602_0 TP28602_1 TP28986_0
-    ## 0       0.0       0.5      0.25      0.25       0.5       0.0       0.5
-    ## 1       0.5       0.5      0.50      0.50       0.5       0.5       0.5
-    ## 2       0.5       0.0      0.25      0.25       0.0       0.5       0.0
-    ##   TP28986_1 TP31810_0 TP31810_1
-    ## 0       0.0       0.5       0.0
-    ## 1       0.5       0.5       0.5
-    ## 2       0.5       0.0       0.5
+    ##   TP31810_0 TP31810_1 TP34632_0 TP34632_1 TP34939_0 TP34939_1 TP35570_0
+    ## 0       0.5       0.0       0.0       0.5       0.0       0.5      0.25
+    ## 1       0.5       0.5       0.5       0.5       0.5       0.5      0.50
+    ## 2       0.0       0.5       0.5       0.0       0.5       0.0      0.25
+    ##   TP35570_1
+    ## 0      0.25
+    ## 1      0.50
+    ## 2      0.25
 
 ``` r
-mydata$priorProb[[2]][,11:20]
+mydata$priorProb[[2]][,19:26]
 ```
 
-    ##   TP26698_0 TP26698_1 TP28405_0 TP28405_1 TP28602_0 TP28602_1 TP28986_0
-    ## 0       0.0       0.0         0         0         0         0        NA
-    ## 1       0.0       0.5         0         0         1         0        NA
-    ## 2       0.5       0.5         1         1         0         0        NA
-    ## 3       0.5       0.0         0         0         0         1        NA
-    ## 4       0.0       0.0         0         0         0         0        NA
-    ##   TP28986_1 TP31810_0 TP31810_1
-    ## 0        NA         0         0
-    ## 1        NA         1         0
-    ## 2        NA         0         0
-    ## 3        NA         0         1
-    ## 4        NA         0         0
+    ##   TP31810_0 TP31810_1 TP34632_0 TP34632_1 TP34939_0 TP34939_1 TP35570_0
+    ## 0         0         0         0         0        NA        NA       0.0
+    ## 1         1         0         0         1        NA        NA       0.0
+    ## 2         0         0         0         0        NA        NA       0.5
+    ## 3         0         1         1         0        NA        NA       0.5
+    ## 4         0         0         0         0        NA        NA       0.0
+    ##   TP35570_1
+    ## 0       0.0
+    ## 1       0.5
+    ## 2       0.5
+    ## 3       0.0
+    ## 4       0.0
 
 Here we see some pretty big differences under the diploid and
-allotetraploid models. For example, if TP28405 is behaving in a diploid
+allotetraploid models. For example, if TP35570 is behaving in a diploid
 fashion we expect F2-like segregation since both parents were
-heterozygous. However, if TP28405 is behaving in an allotetraploid
-fashion, we expect that both parents are homozygous at differing
-paralogous loci, resulting in no segregation.
+heterozygous. However, if TP35570 is behaving in an allotetraploid
+fashion, a 1:1 segregation ratio is expected due to one parent being
+heterozygous at one isolocus and the other being homozygous at both
+isoloci.
 
 Now we want to determine which ploidy is the best fit for each locus.
 This is done by comparing genotype prior probabilities to genotype
@@ -334,15 +400,15 @@ a better
     fit.
 
 ``` r
-mydata$ploidyChiSq[,11:20]
+mydata$ploidyChiSq[,19:26]
 ```
 
-    ##       TP26698_0  TP26698_1  TP28405_0  TP28405_1 TP28602_0 TP28602_1
-    ## [1,]   6.156873   6.156873   7.390125   7.390125  17.60031  17.60031
-    ## [2,] 130.424838 130.424838 178.066213 178.066213 230.45413 230.45413
-    ##      TP28986_0 TP28986_1   TP31810_0   TP31810_1
-    ## [1,]  2.107682  2.107682   0.1076233   0.1076233
-    ## [2,]        NA        NA 238.0402426 238.0402426
+    ##        TP31810_0   TP31810_1  TP34632_0  TP34632_1 TP34939_0 TP34939_1
+    ## [1,]   0.1202935   0.1202935   6.249807   6.249807  3.948139  3.948139
+    ## [2,] 209.5997378 209.5997378 205.038788 205.038788        NA        NA
+    ##      TP35570_0 TP35570_1
+    ## [1,]  5.598134  5.598134
+    ## [2,] 96.096122 96.096122
 
 We can make a plot to get an overall sense of how well the markers fit
 the diploid versus tetraploid model.
@@ -354,7 +420,7 @@ plot(mydata$ploidyChiSq[1,], mydata$ploidyChiSq[2,],
 abline(a = 0, b = 1, col = "red")
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 Alleles above the red line fit the diploid model better, and alleles
 below the red line fit the tetraploid model better. In this case it
@@ -365,34 +431,34 @@ estimated separately for each
     ploidy.
 
 ``` r
-mydata$posteriorProb[[1]][,3,11:20]
+mydata$posteriorProb[[1]][,10,19:26]
 ```
 
-    ##     TP26698_0   TP26698_1     TP28405_0     TP28405_1    TP28602_0
-    ## 0 0.00000e+00 4.95033e-28  1.000000e+00 2.131711e-174 1.000000e+00
-    ## 1 1.00000e+00 1.00000e+00  2.142491e-17  2.142491e-17 2.384855e-10
-    ## 2 4.95033e-28 0.00000e+00 2.131711e-174  1.000000e+00 0.000000e+00
-    ##      TP28602_1    TP28986_0    TP28986_1   TP31810_0   TP31810_1
-    ## 0 0.000000e+00 1.287625e-40 0.000000e+00 7.96211e-30 0.00000e+00
-    ## 1 2.384855e-10 1.000000e+00 1.000000e+00 1.00000e+00 1.00000e+00
-    ## 2 1.000000e+00 0.000000e+00 1.287625e-40 0.00000e+00 7.96211e-30
+    ##      TP31810_0    TP31810_1    TP34632_0    TP34632_1    TP34939_0
+    ## 0 3.618464e-05 0.000000e+00 0.000000e+00 1.212058e-14 0.000000e+00
+    ## 1 9.999638e-01 9.999638e-01 1.000000e+00 1.000000e+00 1.000000e+00
+    ## 2 0.000000e+00 3.618464e-05 1.212058e-14 0.000000e+00 5.541691e-11
+    ##      TP34939_1    TP35570_0    TP35570_1
+    ## 0 5.541691e-11 1.079825e-08 8.809879e-07
+    ## 1 1.000000e+00 9.999991e-01 9.999991e-01
+    ## 2 0.000000e+00 8.809879e-07 1.079825e-08
 
 ``` r
-mydata$posteriorProb[[2]][,3,11:20]
+mydata$posteriorProb[[2]][,10,19:26]
 ```
 
-    ##    TP26698_0  TP26698_1 TP28405_0 TP28405_1 TP28602_0 TP28602_1 TP28986_0
-    ## 0 0.00000000 0.00000000         0         0         0         0       NaN
-    ## 1 0.00000000 0.01442306         0         0         1         0       NaN
-    ## 2 0.98557694 0.98557694         1         1         0         0       NaN
-    ## 3 0.01442306 0.00000000         0         0         0         1       NaN
-    ## 4 0.00000000 0.00000000         0         0         0         0       NaN
-    ##   TP28986_1 TP31810_0 TP31810_1
-    ## 0       NaN         0         0
-    ## 1       NaN         1         0
-    ## 2       NaN         0         0
-    ## 3       NaN         0         1
-    ## 4       NaN         0         0
+    ##   TP31810_0 TP31810_1 TP34632_0 TP34632_1 TP34939_0 TP34939_1 TP35570_0
+    ## 0         0         0         0         0       NaN       NaN 0.0000000
+    ## 1         1         0         0         1       NaN       NaN 0.0000000
+    ## 2         0         0         0         0       NaN       NaN 0.1784686
+    ## 3         0         1         1         0       NaN       NaN 0.8215314
+    ## 4         0         0         0         0       NaN       NaN 0.0000000
+    ##   TP35570_1
+    ## 0 0.0000000
+    ## 1 0.8215314
+    ## 2 0.1784686
+    ## 3 0.0000000
+    ## 4 0.0000000
 
 We can export the results for use in downstream analysis. The function
 below weights possible ploidies for each allele based on the results in
@@ -405,23 +471,16 @@ be changed with the `minval` and `maxval` arguments.
 
 ``` r
 mywm <- GetWeightedMeanGenotypes(mydata)
-mywm[c(297,2:6), 6:10]
+mywm[c(297,2:6), 10:13]
 ```
 
-    ##                    TP26698_1  TP28405_1    TP28602_0    TP28986_0
-    ## Zebrinus-Justin 5.110893e-01 0.50000014 2.485904e-18 3.232376e-39
-    ## Kaskade-Justin  1.521187e-06 0.49989345 5.002103e-01 5.000000e-01
-    ## Map1-001        4.998375e-01 0.98007584 1.773836e-02 5.000000e-01
-    ## Map1-002        1.126958e-02 0.47687372 4.822616e-01 1.740322e-24
-    ## Map1-003        1.126960e-02 0.03777935 1.773836e-02 5.000000e-01
-    ## Map1-005        1.126958e-02 0.50000000 4.746178e-01 1.578666e-42
-    ##                    TP31810_0
-    ## Zebrinus-Justin 5.000000e-01
-    ## Kaskade-Justin  1.583328e-20
-    ## Map1-001        4.998870e-01
-    ## Map1-002        1.129795e-04
-    ## Map1-003        1.129795e-04
-    ## Map1-005        4.998870e-01
+    ##                    TP31810_0    TP34632_1    TP34939_1  TP35570_1
+    ## Zebrinus-Justin 5.000666e-01 0.0000112405 4.831070e-07 0.49904150
+    ## Kaskade-Justin  6.917092e-07 0.5010540759 5.001090e-01 0.49391916
+    ## Map1-001        4.998211e-01 0.0073948698 2.339796e-20 0.49399216
+    ## Map1-002        1.461815e-04 0.0073948698 2.327966e-20 0.01384357
+    ## Map1-003        6.874348e-03 0.4926051302 5.000000e-01 0.02970733
+    ## Map1-005        4.998340e-01 0.0073948698 9.010851e-19 0.49535219
 
 Note that the parent weighted mean genotypes were estimated using
 gentoype likelihood only, ignoring the priors set for the progeny. In
@@ -432,26 +491,26 @@ genotypes that were used for estimating progeny priors using
     `$likelyGeno_recurrent`.
 
 ``` r
-mydata$likelyGeno_donor[,11:20]
+mydata$likelyGeno_donor[,19:26]
 ```
 
-    ##   TP26698_0 TP26698_1 TP28405_0 TP28405_1 TP28602_0 TP28602_1 TP28986_0
-    ## 2         2         0         1         1         1         1         1
-    ## 4         4         0         2         2         2         2        NA
-    ##   TP28986_1 TP31810_0 TP31810_1
-    ## 2         1         0         2
-    ## 4        NA         0         4
+    ##   TP31810_0 TP31810_1 TP34632_0 TP34632_1 TP34939_0 TP34939_1 TP35570_0
+    ## 2         0         2         1         1         1         1         1
+    ## 4         0         4         2         2        NA        NA         3
+    ##   TP35570_1
+    ## 2         1
+    ## 4         1
 
 ``` r
-mydata$likelyGeno_recurrent[,11:20]
+mydata$likelyGeno_recurrent[,19:26]
 ```
 
-    ##   TP26698_0 TP26698_1 TP28405_0 TP28405_1 TP28602_0 TP28602_1 TP28986_0
-    ## 2         1         1         1         1         0         2         0
-    ## 4         1         3         2         2         0         4         0
-    ##   TP28986_1 TP31810_0 TP31810_1
-    ## 2         2         1         1
-    ## 4         4         2         2
+    ##   TP31810_0 TP31810_1 TP34632_0 TP34632_1 TP34939_0 TP34939_1 TP35570_0
+    ## 2         1         1         2         0         2         0         1
+    ## 4         2         2         4         0         4         0         2
+    ##   TP35570_1
+    ## 2         1
+    ## 4         2
 
 ## Estimating genotype probabilities in a diversity panel <a name="diversity"></a>
 
@@ -512,6 +571,8 @@ mydata <- VCF2RADdata(myVCF, possiblePloidies = list(2, c(2,2)),
 
     ## Merging rare haplotypes...
 
+    ## 24 markers retained out of 24 originally.
+
 ``` r
 mydata
 ```
@@ -525,6 +586,36 @@ mydata
     ## Autodiploid (2)
     ## Allotetraploid (2 2)
 
+For natural populations and diversity panels, we can run
+`TestOverdispersion` before performing any genotype
+    calling.
+
+``` r
+overdispersionP <- TestOverdispersion(mydata, to_test = 8:10)
+```
+
+    ## Genotype estimates not found in object. Performing rough genotype estimation under HWE.
+
+``` r
+qq(overdispersionP[["8"]])
+```
+
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+
+``` r
+qq(overdispersionP[["9"]])
+```
+
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-19-2.png)<!-- -->
+
+``` r
+qq(overdispersionP[["10"]])
+```
+
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-19-3.png)<!-- -->
+
+Again, nine looks like a good value.
+
 We can iteratively estimate genotype probabilities assuming
 Hardy-Weinberg equilibrium. The argument `tol` is set to a higher value
 than the default here in order to help the tutorial run more quickly.
@@ -532,7 +623,7 @@ Since *Miscanthus* is highly outcrossing, we will leave the
 `selfing.rate` argument at its default of zero.
 
 ``` r
-mydataHWE <- IterateHWE(mydata, tol = 1e-3)
+mydataHWE <- IterateHWE(mydata, tol = 1e-3, overdispersion = 9)
 ```
 
 Let’s take a look at allele frequencies:
@@ -541,7 +632,7 @@ Let’s take a look at allele frequencies:
 hist(mydataHWE$alleleFreq, breaks = 20)
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
 We can do a different genotype probability estimation that models
 population structure and variation in allele frequencies among
@@ -558,7 +649,8 @@ setting a seed so that the vignette always renders in the same way.
 
 ``` r
 set.seed(3908)
-mydataPopStruct <- IteratePopStruct(mydata, nPcsInit = 8, tol = 5e-03)
+mydataPopStruct <- IteratePopStruct(mydata, nPcsInit = 8, tol = 5e-03,
+                                    overdispersion = 9)
 ```
 
 Allele frequency estimates have changed slightly:
@@ -567,7 +659,7 @@ Allele frequency estimates have changed slightly:
 hist(mydataPopStruct$alleleFreq, breaks = 20)
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 Here’s some of the population structure that was used for modeling
 allele frequencies (fairly weak in this case because so few markers were
@@ -578,7 +670,7 @@ plot(mydataPopStruct$PCA[,1], mydataPopStruct$PCA[,2],
      xlab = "PC axis 1", ylab = "PC axis 2")
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
 And here’s an example of allele frequency varying across the
 environment. Allele frequencies were estimated for each taxon, and are
@@ -587,13 +679,13 @@ indicates estimated local allele frequency.
 
 ``` r
 myallele <- 1
-freqcol <- rainbow(101)[round(mydataPopStruct$alleleFreqByTaxa[,myallele] * 100) + 1]
+freqcol <- heat.colors(101)[round(mydataPopStruct$alleleFreqByTaxa[,myallele] * 100) + 1]
 plot(mydataPopStruct$PCA[,1], mydataPopStruct$PCA[,2],
      xlab = "PC axis 1", ylab = "PC axis 2", pch = 21,
      bg = freqcol)
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
 As before, we can export the weighted mean genotypes for downstream
 analysis.
@@ -604,27 +696,27 @@ wmgenoPopStruct[1:10,1:5]
 ```
 
     ##                       S01_138045_G S01_139820_TT S01_139820_CT
-    ## KMS207-8              2.645137e-07   0.096667423    0.17087366
-    ## JM0051.003            2.326726e-01   0.316595966    0.19777504
-    ## JM0034.001            1.000000e-04   0.000100000    0.13146174
-    ## JM0220.001            1.000000e-04   0.504460393    0.20460317
-    ## NC-2010-003-001       2.993545e-01   0.000100000    0.05308058
-    ## JM0026.001            1.449631e-01   0.000100000    0.18328813
-    ## JM0026.002            8.935318e-03   0.080217548    0.21141645
-    ## PI294605-US64-0007-01 1.982370e-08   0.005706146    0.04644102
-    ## JM0058.001            6.938406e-01   0.000100000    0.22816820
-    ## UI10-00086-Silberfeil 9.421438e-01   0.000100000    0.13270507
+    ## KMS207-8              2.121035e-06    0.07826646    0.18363045
+    ## JM0051.003            1.960683e-01    0.31724781    0.20377208
+    ## JM0034.001            1.000000e-04    0.00010000    0.12903134
+    ## JM0220.001            1.000000e-04    0.50485295    0.20647566
+    ## NC-2010-003-001       4.238161e-01    0.00010000    0.00010000
+    ## JM0026.001            1.267297e-01    0.00010000    0.17797905
+    ## JM0026.002            8.283588e-04    0.07539674    0.20510083
+    ## PI294605-US64-0007-01 9.597573e-07    0.01082588    0.07149441
+    ## JM0058.001            6.569028e-01    0.00010000    0.23944415
+    ## UI10-00086-Silberfeil 9.307387e-01    0.00010000    0.12717438
     ##                       S01_139883_G S01_150928_GG
-    ## KMS207-8              7.826446e-02  1.247877e-13
-    ## JM0051.003            9.579951e-03  9.156796e-08
-    ## JM0034.001            3.502285e-03  9.399818e-06
-    ## JM0220.001            1.549956e-01  9.224464e-10
-    ## NC-2010-003-001       2.100899e-05  6.213912e-14
-    ## JM0026.001            1.000000e-04  1.049680e-12
-    ## JM0026.002            7.372525e-03  1.322674e-10
-    ## PI294605-US64-0007-01 8.619531e-02  8.531214e-30
-    ## JM0058.001            1.000000e-04  1.189512e-07
-    ## UI10-00086-Silberfeil 2.108120e-03  3.147051e-30
+    ## KMS207-8              7.169509e-02  3.800123e-05
+    ## JM0051.003            5.730691e-03  3.169649e-06
+    ## JM0034.001            5.005010e-03  2.022024e-03
+    ## JM0220.001            1.616635e-01  1.219048e-06
+    ## NC-2010-003-001       2.764331e-05  1.351630e-01
+    ## JM0026.001            1.000000e-04  1.182203e-04
+    ## JM0026.002            7.560629e-03  1.128420e-01
+    ## PI294605-US64-0007-01 8.961110e-02  2.685860e-05
+    ## JM0058.001            1.000000e-04  3.471470e-03
+    ## UI10-00086-Silberfeil 3.114721e-03  5.711384e-06
 
 If you expect that your species has high linkage disequilibrium, the
 functions `IterateHWE_LD` and `IteratePopStructLD` behave like
@@ -661,6 +753,10 @@ to divide them up some other way than by chromosome, see
 `SubsetByLocus`. If you are importing from VCF but don’t want to import
 the whole genome at once, see the examples on the help page for
 `VCF2RADdata` for how to import just a particular genomic region.
+
+You might use `SubsetByLocus` and select a random subset of ~1000 loci
+to use with `TestOverdispersion` for estimating the overdispersion
+parameter.
 
 If you are using one of the iterative pipelines, it is possible to set
 the `tol` argument higher in order to reduce processing time at the

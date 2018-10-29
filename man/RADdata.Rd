@@ -65,8 +65,8 @@ integer.}
 depth summed across all alleles for each locus.  Column names are locus 
 numbers rather than locus names.  See \code{\link{GetLocDepth}} for retrieving
 the same matrix but with locus names as column names.}
-\item{depthSamplingPermutations }{An integer matrix with taxa in rows and 
-alleles in columns.  It is calculated as \eqn{locDepth choose alleleDepth}.
+\item{depthSamplingPermutations }{A numeric matrix with taxa in rows and 
+alleles in columns.  It is calculated as \eqn{log(locDepth choose alleleDepth)}.
 This is used as a coefficient for likelihood estimations done by other
 \pkg{polyRAD} functions (\emph{i.e.} \code{\link{AddGenotypeLikelihood}}).}
 \item{depthRatio }{A numeric matrix with taxa in rows and alleles in columns.

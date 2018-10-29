@@ -3,6 +3,7 @@ useDynLib(polyRAD)
 export(AddAlleleFreqByTaxa, AddAlleleFreqHWE, AddAlleleFreqMapping,
        AddAlleleLinkages, AddGenotypeLikelihood,  
 AddGenotypePosteriorProb,  AddGenotypePriorProb_ByTaxa,
+AddGenotypePriorProb_Even,
 AddGenotypePriorProb_HWE, AddGenotypePriorProb_LD,
 AddGenotypePriorProb_Mapping2Parents, AddPCA,
 AddPloidyChiSq, AddPloidyLikelihood, AddPriorTimesLikelihood,
@@ -17,7 +18,8 @@ MergeRareHaplotypes, nTaxa, nAlleles, nLoci, OneAllelePerMarker,
 PipelineMapping2Parents, RADdata, readHMC, readStacks, readTagDigger,
 readTASSELGBSv2, RemoveHighDepthLoci, RemoveMonomorphicLoci,
 SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent,
-SplitByChromosome, StripDown, SubsetByLocus, SubsetByTaxon, VCF2RADdata)
+SplitByChromosome, StripDown, SubsetByLocus, SubsetByTaxon, 
+TestOverdispersion, VCF2RADdata)
 
 importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom",
            "hclust", "cutree", "as.dist", "cor", "residuals", "lm.fit", "sd")
@@ -34,6 +36,7 @@ S3method(AddAlleleLinkages, RADdata)
 S3method(AddGenotypeLikelihood, RADdata)
 S3method(AddGenotypePosteriorProb, RADdata)
 S3method(AddGenotypePriorProb_ByTaxa, RADdata)
+S3method(AddGenotypePriorProb_Even, RADdata)
 S3method(AddGenotypePriorProb_HWE, RADdata)
 S3method(AddGenotypePriorProb_LD, RADdata)
 S3method(AddGenotypePriorProb_Mapping2Parents, RADdata)
@@ -70,3 +73,4 @@ S3method(SplitByChromosome, RADdata)
 S3method(SubsetByLocus, RADdata)
 S3method(SubsetByTaxon, RADdata)
 S3method(StripDown, RADdata)
+S3method(TestOverdispersion, RADdata)
