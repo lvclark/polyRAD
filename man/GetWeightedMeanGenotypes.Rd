@@ -11,7 +11,8 @@ These functions calculate numerical genotype values using posterior
 probabilities in a \code{"\link{RADdata}"} object, and output
 those values as a matrix of taxa by alleles.
 \code{GetWeightedMeanGenotypes} returns continuous genotype values, 
-weighted by posterior genotype probabilities.  
+weighted by posterior genotype probabilities (\emph{i.e.} posterior mean
+genotypes).  
 \code{GetProbableGenotypes} returns discrete genotype values indicating
 the most probable genotype.  If the \code{"\link{RADdata}"} 
 object includes more than one possible inheritance mode, the 
@@ -94,7 +95,7 @@ selected using the \code{donorPloidies} and \code{recurrentPloidies} slots.
 \details{
 For each inheritance mode \eqn{m}, taxon \eqn{t}, allele \eqn{a}, allele copy number 
 \eqn{i}, total ploidy \eqn{k}, and posterior genotype probability \eqn{p_{i,t,a,m}},
-weighted mean genotype \eqn{g_{t,a,m}} is estimated by \code{GetWeightedMeanGenotypes} as:
+posterior mean genotype \eqn{g_{t,a,m}} is estimated by \code{GetWeightedMeanGenotypes} as:
 
 \deqn{g_{t,a,m} = \sum_{i = 0}^k p_{i,t,a,m} * \frac{i}{k}}{g_{t,a,m} = \sum_{i = 0}^k p_{i,t,a,m} * i/k}
 
