@@ -46,6 +46,7 @@ Network Trash Folder
 Temporary Items
 .apdisk
 *.Rhistory
+*.RData
 .Rproj.user
 *.o
 *.dll
