@@ -6,7 +6,7 @@ render("polyRADtutorial.Rmd") # html_vignette
 
 # markdown version viewable on GitHub
 render("polyRADtutorial.Rmd", 
-       output_format = md_document("gfm"))
+       output_format = md_document("markdown_github"))
 
 # manually add table of contents
 mdlines <- readLines("polyRADtutorial.md")

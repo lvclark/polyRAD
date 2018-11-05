@@ -24,7 +24,7 @@ estimated from allelic read
 depth, genotype prior probabilities are estimated from population parameters,
 and then genotype posterior probabilities are estimated from likelihoods and
 prior probabilities.  Posterior probabilities can be used directly in 
-downstream analysis, converted to weighted mean genotypes for analyses
+downstream analysis, converted to posterior mean genotypes for analyses
 of additive genetic effects, or used for export of the most probable genotypes
 for analyses that require discrete genotypic data.
 
@@ -300,7 +300,8 @@ We can export the results for use in downstream analysis.  The function
 below weights possible ploidies for each allele based on the results
 in `mydata$ploidyChiSq`, and for each taxon outputs a continuous,
 numerical genotype that is the mean of all possible genotypes weighted
-by genotype posterior probabilities.  By default, one allele per locus
+by genotype posterior probabilities (*i.e.* the posterior mean genotype).
+By default, one allele per locus
 is discarded in order to avoid mathematical singularities in downstream
 analysis.  The continuous genotypes also range from zero to one by default,
 which can be changed with the `minval` and `maxval` arguments.
@@ -310,7 +311,7 @@ mywm <- GetWeightedMeanGenotypes(mydata)
 mywm[c(297,2:6), 10:13]
 ```
 
-Note that the parent weighted mean genotypes were estimated using 
+Note that the parent posterior mean genotypes were estimated using 
 gentoype likelihood only, ignoring the priors set for the progeny.  In 
 some places they may not match the progeny genotypes, indicating a
 likely error in parental genotype calling.  We can see the parental
@@ -440,7 +441,7 @@ plot(mydataPopStruct$PCA[,1], mydataPopStruct$PCA[,2],
      bg = freqcol)
 ```
 
-As before, we can export the weighted mean genotypes for downstream analysis.
+As before, we can export the posterior mean genotypes for downstream analysis.
 
 ```{r}
 wmgenoPopStruct <- GetWeightedMeanGenotypes(mydataPopStruct)
@@ -457,7 +458,7 @@ update priors based on genotypes at linked loci.
 `RADdata` objects contain large matrices and arrays for storing read depth
 and the parameters that are estimated by the pipeline functions, and as a 
 result require a lot of RAM (computer memory) in comparison to
-the weighted mean genotypes that are exported.
+the posterior mean genotypes that are exported.
 A `RADdata` object that has just been imported will take up less RAM than one
 that has been processed by a pipeline function.  `RADdata` objects will also
 take up more RAM (and take longer for pipeline functions to process) if they
@@ -471,7 +472,7 @@ will create separate `RADdata` objects by chromosomes or groups of
 chromosomes, and will save those objects to separate R workspace (.RData)
 files on your hard drive.  You can then run a loop to re-import those 
 objects one at a time, process each one with a pipeline function, and export
-weighted mean geneotypes (or any other parameters you wish to keep) to a
+posterior mean geneotypes (or any other parameters you wish to keep) to a
 file or a smaller R object.  If you have access to a high performance 
 computing cluster, you may instead wish to process individual chromosomes
 as parallel jobs.

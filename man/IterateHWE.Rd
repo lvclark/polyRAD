@@ -15,14 +15,17 @@ posterior probabilities can then be exported for downstream analysis.
 IterateHWE(object, selfing.rate = 0, tol = 1e-05,
            excludeTaxa = GetBlankTaxa(object),
            overdispersion = 9)
+
 IterateHWE_LD(object, selfing.rate = 0, tol = 1e-05, 
               excludeTaxa = GetBlankTaxa(object),
               LDdist = 1e4, minLDcorr = 0.2,
               overdispersion = 9)
+
 IteratePopStruct(object, selfing.rate = 0, tol = 1e-03,
                  excludeTaxa = GetBlankTaxa(object),
                  nPcsInit = 10, minfreq = 0.0001,
                  overdispersion = 9)
+
 IteratePopStructLD(object, selfing.rate = 0, tol = 1e-03,
                    excludeTaxa = GetBlankTaxa(object),
                    nPcsInit = 10, minfreq = 0.0001, LDdist = 1e4, 
