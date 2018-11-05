@@ -58,14 +58,17 @@ There is an export function for discrete genotypes for the following software:
 polyRAD depends on some Bioconductor packages.  Before attempting to install polyRAD, run
 
 ```
-source("https://bioconductor.org/biocLite.R")
-biocLite("pcaMethods")
+if (!requireNamespace("BiocManager", quietly = TRUE)){
+  install.packages("BiocManager")
+}
+
+BiocManager::install("pcaMethods")
 ```
 
 If you plan to import from VCF, also run
 
 ```
-biocLite("VariantAnnotation")
+BiocManager::install("VariantAnnotation")
 ```
 
 polyRAD can then be installed from CRAN with
