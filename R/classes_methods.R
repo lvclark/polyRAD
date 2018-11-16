@@ -914,8 +914,23 @@ AddPCA.RADdata <- function(object, nPcsInit = 10, maxR2changeratio = 0.05,
   
   # replace NaN with NA
   genmat[is.na(genmat)] <- NA
-  # remove non-variable sites
+  # check that no columns are completely NA
+  if(any(colMeans(is.na(genmat)) == 1)){
+    message("Alleles with completely missing data:")
+    cat(colnames(genmat)[colMeans(is.na(genmat)) == 1], sep = "\n")
+    stop("Alleles found with completely missing data.")
+  }
+  
   genfreq <- colMeans(genmat, na.rm = TRUE)
+  # if any individuals are completely missing, fill them in with mean.
+  # This can happen with blanks or very low quality samples when looping
+  # through the genome in chunks.
+  missind <- which(rowMeans(is.na(genmat)) == 1)
+  for(i in missind){
+    genmat[i,] <- genfreq
+  }
+  
+  # remove non-variable sites
   genmat <- genmat[, which(genfreq > 0 & genfreq < 1)]
   
   # adjust number of PC axes if necessary
