@@ -5,7 +5,7 @@ This R package is ready for use, although new features are still being developed
 polyRAD is part of an upcoming suite of interoperable software called the
 [ploidyverse](https://github.com/ploidyverse).
 
-I'm always interested in new collaboration!  If you find polyRAD to be helpful in your research, let me know if you'd be interested in sharing your data and results for coauthorship in the publication describing the software.  I would also like to hear your feature requests.  Contact: Lindsay Clark, University of Illinois, Urbana-Champaign.
+I'm always interested in new collaboration!  If you have new feature requests I would love to hear them, especially if you have datasets that you would be willing to share that could be used for testing these new features.  I expect that there will be more publications as polyRAD is developed further, and I am open to adding new coauthors.  Contact: Lindsay Clark, University of Illinois, Urbana-Champaign.
 
 ## Purpose
 
