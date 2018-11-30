@@ -1244,35 +1244,29 @@ AddNormalizedDepthProp.RADdata <- function(object, ...){
 AddAlleleBias <- function(object, ...){
   UseMethod("AddAlleleBias", object)
 }
-AddAlleleBias.RADdata <- function(object, maxbias = 4, ...){
+AddAlleleBias.RADdata <- function(object, ...){
   if(is.null(object$normalizedDepthProp)){
     object <- AddNormalizedDepthProp(object)
+  }
+  if(any(object$normalizedDepthProp == 0)){
+    stop("Alleles with zero reads in dataset will interfere with bias estimation.")
   }
   
   # estimate bias directly from data
   bias <- ((1 - object$normalizedDepthProp)/(1 - object$alleleFreq))/
     (object$normalizedDepthProp / object$alleleFreq)
+  logbias <- log(bias)
   
-  # # total depth per locus
-  # locdepth <- colSums(object$alleleDepth + object$antiAlleleDepth)
-  # # normalized total depth per allele
-  # normdepth <- round(object$normalizedDepthProp * locdepth)
-  # # probability of seeing apparent bias that extreme if there is no bias
-  # p_no_bias <- numeric(length(bias))
-  # biaspos <- object$normalizedDepthProp > object$alleleFreq
-  # p_no_bias[biaspos] <- pbinom(normdepth[biaspos], locdepth[biaspos],
-  #                              object$alleleFreq[biaspos], lower.tail = FALSE)
-  # p_no_bias[!biaspos] <- pbinom(normdepth[!biaspos], locdepth[!biaspos],
-  #                              object$alleleFreq[!biaspos], lower.tail = TRUE)
-  # 
-  # # correct bias based on that probability
-  # ## (this might not be the best method; set prior instead?)
-  # corr_log_bias <- log(bias) * (1 - p_no_bias)
-  # object$alleleBias <- exp(corr_log_bias)
-  # object$alleleBias[object$alleleBias > maxbias] <- maxbias
-  # object$alleleBias[object$alleleBias < 1/maxbias] <- 1/maxbias
+  # ad-hoc estimate of expected variance based on read depth
+  log_bias_var <- 0.4 / 
+    (colMeans(object$alleleDepth) + colMeans(object$antiAlleleDepth))
   
-  object$alleleBias <- bias
+  # apply James-Stein shrinkage
+  shrinkfactor <- (1 - (length(logbias) - 3) / sum(logbias^2) * log_bias_var)
+  shrinkfactor[shrinkfactor < 0] <- 0
+  shrunk <- shrinkfactor * logbias
+  
+  object$alleleBias <- exp(shrunk)
   
   return(object)
 }
