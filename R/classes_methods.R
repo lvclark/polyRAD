@@ -236,6 +236,12 @@ AddGenotypeLikelihood.RADdata <- function(object, overdispersion = 9, ...){
     for(j in 1:length(sampleReal)){
       alleleProb[j,] <- sampleReal[j] + sampleContam
     }
+    # adjust for allelic bias
+    if(!is.null(object$alleleBias)){
+      alleleProb <- alleleProb / 
+        (sweep(1 - alleleProb, 2, object$alleleBias, "*") + alleleProb)
+    }
+    # get probability of sampling other allele
     antiAlleleProb <- 1 - alleleProb
     # multiply probabilities by overdispersion factor for betabinomial
     alleleProb <- alleleProb * overdispersion
