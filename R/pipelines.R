@@ -26,6 +26,7 @@ IterateHWE <- function(object, selfing.rate = 0, tol = 1e-5,
     object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePosteriorProb(object)
     object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
+    object <- AddAlleleBias(object)
     nIter <- nIter + 1
     meanDiff <- mean(abs(oldAlFreq - object$alleleFreq), na.rm = TRUE)
     message(paste("Mean difference in allele frequencies of", meanDiff))
@@ -72,6 +73,7 @@ IterateHWE_LD <- function(object, selfing.rate = 0, tol = 1e-5,
     object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePosteriorProb(object)
     object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
+    object <- AddAlleleBias(object)
     nIter <- nIter + 1
     meanDiff <- mean(abs(oldAlFreq - object$alleleFreq), na.rm = TRUE)
     message(paste("Mean difference in allele frequencies of", meanDiff))
@@ -117,6 +119,7 @@ IteratePopStruct <- function(object, selfing.rate = 0, tol = 1e-3,
       #     tend to get more accuracy with more PCs,
       #     number of PCs going up and down prevents convergence of algorithm
     object <- AddAlleleFreqByTaxa(object, minfreq = minfreq)
+    object <- AddAlleleBias(object)
     nIter <- nIter + 1
     meanDiff <- mean(abs(oldAlFreq - object$alleleFreqByTaxa), na.rm = TRUE)
     message(paste("Mean difference in allele frequencies of", meanDiff))
@@ -176,6 +179,7 @@ IteratePopStructLD <- function(object, selfing.rate = 0, tol = 1e-3,
     message(paste("PCs used:", dim(object$PCA)[2]))
     oldAlFreq <- object$alleleFreqByTaxa
     object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
+    object <- AddAlleleBias(object)
     object <- AddGenotypePriorProb_ByTaxa(object, selfing.rate)
     object <- AddGenotypePriorProb_LD(object, type = "popstruct")
     object <- AddGenotypeLikelihood(object, overdispersion = overdispersion)
@@ -224,6 +228,7 @@ PipelineMapping2Parents <- function(object,
   object <- AddAlleleFreqMapping(object, expectedFreqs = possfreq,
                                  allowedDeviation = freqAllowedDeviation,
                                  excludeTaxa = freqExcludeTaxa)
+  object <- AddAlleleBias(object)
   # calculations for rest of pipeline
   object <- AddGenotypeLikelihood(object, overdispersion = overdispersion)
   object <- AddGenotypePriorProb_Mapping2Parents(object, donorParent = donorParent,
