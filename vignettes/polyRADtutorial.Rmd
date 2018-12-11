@@ -105,10 +105,15 @@ We'll start by loading polyRAD and importing the data into a `RADdata`
 object.  The `possiblePloidies` argument indicates the expected
 inheritance modes: diploid (2) and allotetraploid (2 2).
 
+With your own dataset, you will not need to use `system.file`.  Instead,
+directly create a text string indicating the name of your file (and its 
+location if it is not in the working directory.)
+
 ```{r}
 library(polyRAD)
 maphmcfile <- system.file("extdata", "ClareMap_HapMap.hmc.txt", 
                           package = "polyRAD")
+maphmcfile
 
 mydata <- readHMC(maphmcfile,
                   possiblePloidies = list(2, c(2, 2)))
@@ -339,6 +344,9 @@ Since the data are in VCF format, we will need the Bioconductor package
 VariantAnnotation to load them.  See 
 https://bioconductor.org/packages/release/bioc/html/VariantAnnotation.html
 for installation instructions.
+
+Again, with your own dataset you will not need to use `system.file` (see 
+section on mapping populations).
 
 ```{r message=FALSE, warning=FALSE}
 library(VariantAnnotation)
