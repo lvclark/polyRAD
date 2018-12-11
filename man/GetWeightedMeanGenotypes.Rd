@@ -143,18 +143,16 @@ Lindsay V. Clark
 }
 
 \examples{
-# load dataset and set some parameters
+# load dataset
 data(exampleRAD_mapping)
+
+# run a genotype calling pipeline; 
+# substitute with any pipeline and parameters
 exampleRAD_mapping <- SetDonorParent(exampleRAD_mapping, "parent1")
 exampleRAD_mapping <- SetRecurrentParent(exampleRAD_mapping, "parent2")
-exampleRAD_mapping <- AddAlleleFreqMapping(exampleRAD_mapping,
-                                           expectedFreqs = c(0.25, 0.75),
-                                           allowedDeviation = 0.08)
-exampleRAD_mapping <- AddGenotypeLikelihood(exampleRAD_mapping)
-exampleRAD_mapping <- AddGenotypePriorProb_Mapping2Parents(exampleRAD_mapping,
-                                                      n.gen.backcrossing = 1)
-exampleRAD_mapping <- AddGenotypePosteriorProb(exampleRAD_mapping)
-exampleRAD_mapping <- AddPloidyChiSq(exampleRAD_mapping)
+exampleRAD_mapping <- PipelineMapping2Parents(exampleRAD_mapping,
+                                 n.gen.backcrossing = 1, useLinkage = FALSE)
+
 
 # get weighted mean genotypes
 wmg <- GetWeightedMeanGenotypes(exampleRAD_mapping)
