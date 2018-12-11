@@ -207,10 +207,7 @@ mydata <- SubsetByTaxon(mydata, taxa = keeptaxa)
 plot(mydata)
 ```
 
-Now we can perform a preliminary run of the pipeline.
-We'll specify that we don't want to include the parents or doubled haploid
-lines in the estimation of allele frequencies or evaluation of genotype
-frequencies (`excludeTaxa` argument). The
+Now we can perform a preliminary run of the pipeline.  The
 `allowedDeviation` argument indicates how different the apparent
 allele frequency (based on read depth ratios) can be from an expected
 allele frequency (determined based on ploidy and mapping population type) 
@@ -260,7 +257,8 @@ mydata <- PipelineMapping2Parents(mydata,
 
 We can examine the allele frequencies.
 Allele frequencies that fall outside of the expected ranges will be 
-recorded as they were estimated from read depth.
+recorded as they were estimated from read depth.  In this case all are within
+the expected ranges.
 
 ```{r}
 table(mydata$alleleFreq)

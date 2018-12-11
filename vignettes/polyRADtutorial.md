@@ -246,22 +246,20 @@ plot(mydata)
 
 ![](polyRADtutorial_files/figure-markdown_github/unnamed-chunk-8-1.png)
 
-Now we can perform a preliminary run of the pipeline. We’ll specify that
-we don’t want to include the parents or doubled haploid lines in the
-estimation of allele frequencies or evaluation of genotype frequencies
-(`excludeTaxa` argument). The `allowedDeviation` argument indicates how
-different the apparent allele frequency (based on read depth ratios) can
-be from an expected allele frequency (determined based on ploidy and
-mapping population type) and still be classified as that allele
-frequency. The default settings assume an F1 population, but the
-population type can be adjusted using the `n.gen.backcrossing`,
-`n.gen.intermating`, and `n.gen.selfing` arguments. We’ll also lower
-`minLikelihoodRatio` from the default because one of the parents has
-many uncertain genotypes under the tetraploid model (which was
-determined by exploration of the dataset outside of this tutorial; many
-NA values were observed in `priorProb` under the default). Since this
-first run is for a rough estimate of genotypes, we’ll set
-`useLinkage = FALSE` to save a little computational time.
+Now we can perform a preliminary run of the pipeline. The
+`allowedDeviation` argument indicates how different the apparent allele
+frequency (based on read depth ratios) can be from an expected allele
+frequency (determined based on ploidy and mapping population type) and
+still be classified as that allele frequency. The default settings
+assume an F1 population, but the population type can be adjusted using
+the `n.gen.backcrossing`, `n.gen.intermating`, and `n.gen.selfing`
+arguments. We’ll also lower `minLikelihoodRatio` from the default
+because one of the parents has many uncertain genotypes under the
+tetraploid model (which was determined by exploration of the dataset
+outside of this tutorial; many NA values were observed in `priorProb`
+under the default). Since this first run is for a rough estimate of
+genotypes, we’ll set `useLinkage = FALSE` to save a little computational
+time.
 
 ``` r
 mydata2 <- PipelineMapping2Parents(mydata, 
@@ -331,7 +329,7 @@ mydata <- PipelineMapping2Parents(mydata,
 
 We can examine the allele frequencies. Allele frequencies that fall
 outside of the expected ranges will be recorded as they were estimated
-from read depth.
+from read depth. In this case all are within the expected ranges.
 
 ``` r
 table(mydata$alleleFreq)
