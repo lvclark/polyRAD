@@ -1417,6 +1417,27 @@ GetBlankTaxa.RADdata <- function(object, ...){
 
 # some basic utilities ####
 
+# plot method that shows the PCA results
+plot.RADdata <- function(x, ...){
+  if(is.null(x$PCA)){
+    message("Performing principal components analysis...")
+    x <- AddPCA(x)
+  }
+  
+  plot(x$PCA[,1], x$PCA[,2], xlab = "PC1", ylab = "PC2",
+       main = "PCA of RADdata object", ...)
+  if(!is.null(attr(x, "donorParent"))){
+    don <- GetDonorParent(x)
+    points(x$PCA[don, 1], x$PCA[don, 2], col = "darkgreen")
+    text(x$PCA[don, 1], x$PCA[don, 2], "donor", col = "darkgreen", pos = 1)
+  }
+  if(!is.null(attr(x, "recurrentParent"))){
+    rec <- GetRecurrentParent(x)
+    points(x$PCA[rec, 1], x$PCA[rec, 2], col = "blue")
+    text(x$PCA[rec, 1], x$PCA[rec, 2], "recurrent", col = "blue", pos = 1)
+  }
+}
+
 OneAllelePerMarker <- function(object, ...){
   UseMethod("OneAllelePerMarker", object)
 }

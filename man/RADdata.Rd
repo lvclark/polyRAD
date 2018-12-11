@@ -1,5 +1,6 @@
 \name{RADdata}
 \alias{RADdata}
+\alias{plot.RADdata}
 \title{
 RADdata object constructor
 }
@@ -12,6 +13,8 @@ not already in a format supported by \pkg{polyRAD}.
 \usage{
 RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies, contamRate,
         alleleNucleotides)
+        
+\method{plot}{RADdata}(x, \dots)
 }
 \arguments{
   \item{alleleDepth}{
@@ -50,6 +53,13 @@ A character vector with one value for each column of
 only the sequence at variable sites is provided, although intervening 
 non-variable sequence can also be provided.
 }
+\item{x}{
+A \dQuote{RADdata} object.
+}
+\item{\dots}{
+Additional arguments to pass to \code{plot}, for example \code{col} or 
+\code{pch}.
+}
 }
 
 \value{
@@ -86,6 +96,12 @@ the rows of \code{alleleDepth}.}
 \item{nTaxa }{An integer indicating the number of taxa.}
 \item{nLoc }{An integer indicating the number of loci in \code{locTable}.}
 \item{contamRate }{Identical to the argument provided to the function.}
+
+The \code{plot} method performs a principal components analysis with 
+\code{\link{AddPCA}} if not already done, then plots the first two axes.
+Points represent individuals (taxa).  If mapping population parents have been
+noted in the object (see \code{\link{SetDonorParent}}), they are indicated in
+the plot.
 }
 \author{
 Lindsay V. Clark
@@ -123,6 +139,9 @@ mydata$GPS
 # If you have NA in your alleleDepth matrix to indicate zero reads,
 # perform the following before running the RADdata constructor:
 mydepth[is.na(mydepth)] <- 0L
+
+# plotting a RADdata object
+plot(mydata)
 }
 
 \keyword{ methods }

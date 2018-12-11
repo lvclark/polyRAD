@@ -1,3 +1,7 @@
+## Changes in v1.1 ##
+
+A plot method has been added for RADdata objects.
+
 ## Changes in v1.0 ##
 
 Genotype likelihoods are now estimated under a beta-binomial distribution 
