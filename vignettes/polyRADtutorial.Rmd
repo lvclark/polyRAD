@@ -162,6 +162,51 @@ the code below.  The advantage of including alignment data is that gentoypes
 at linked markers are used for imputing missing or correcting erroneous
 genotypes.
 
+It is important that the only individuals included in the analysis are those
+that are truly part of the population.  Allele frequencies are used for 
+inferring segregation pattern, and could be incorrect if many individuals are
+included that are not part of the population.  Additionally, the genotype
+priors will be incorrect for individuals that are not part of the population,
+leading to incorrect genotypes.
+
+At this point we would normally do
+
+```{r eval = FALSE}
+mydata <- AddPCA(mydata)
+```
+
+However, because a very small number of markers was used in this example
+dataset, the PCA does not accurately reflect the relatedness of individuals.
+Here I will load a PCA that was done with the full set of markers.
+
+```{r}
+load(system.file("extdata", "examplePCA.RData", package = "polyRAD"))
+mydata$PCA <- examplePCA
+```
+
+Now a plot can be used for visualizing the relationship among taxa.
+
+```{r}
+plot(mydata)
+```
+
+Now we'll extract a subset of taxa that we actually want to analyze.
+We can see from the plot that a fair number of them were the product of
+self-fertilization of "Zebrinus-Justin" and should be eliminated.
+
+```{r}
+realprogeny <- GetTaxa(mydata)[mydata$PCA[,"PC1"] > -10 &
+                                 mydata$PCA[,"PC1"] < 10]
+# eliminate the one doubled haploid line in this group
+realprogeny <- realprogeny[!realprogeny %in% c("IGR-2011-001", "p196-150A-c",
+                                               "p877-348-b")]
+# also retain parents
+keeptaxa <- c(realprogeny, GetDonorParent(mydata), GetRecurrentParent(mydata))
+
+mydata <- SubsetByTaxon(mydata, taxa = keeptaxa)
+plot(mydata)
+```
+
 Now we can perform a preliminary run of the pipeline.
 We'll specify that we don't want to include the parents or doubled haploid
 lines in the estimation of allele frequencies or evaluation of genotype
@@ -181,14 +226,9 @@ genotypes, we'll set `useLinkage = FALSE` to save a little computational time.
 
 ```{r}
 mydata2 <- PipelineMapping2Parents(mydata, 
-                                  freqExcludeTaxa = c("Kaskade-Justin", 
-                                                      "Zebrinus-Justin",
-                                                     "IGR-2011-001",
-                                                     "p196-150A-c", 
-                                                     "p877-348-b"),
-                                  freqAllowedDeviation = 0.06,
-                                  useLinkage = FALSE,
-                                  minLikelihoodRatio = 2)
+                                   freqAllowedDeviation = 0.06,
+                                   useLinkage = FALSE,
+                                   minLikelihoodRatio = 2)
 ```
 
 We can use these preliminary estimates to determine whether we need to adjust
@@ -213,11 +253,6 @@ genotypes.
 
 ```{r}
 mydata <- PipelineMapping2Parents(mydata, 
-                                  freqExcludeTaxa = c("Kaskade-Justin", 
-                                                      "Zebrinus-Justin",
-                                                     "IGR-2011-001",
-                                                     "p196-150A-c", 
-                                                     "p877-348-b"),
                                   freqAllowedDeviation = 0.06,
                                   useLinkage = TRUE, overdispersion = 9,
                                   minLikelihoodRatio = 2)
@@ -236,9 +271,9 @@ genotype at each locus, taxon, and ploidy.  This is the probability
 of seeing the observed distribution of reads.
 
 ```{r}
-mydata$alleleDepth[10,19:26]
-mydata$genotypeLikelihood[[1]][,10,19:26]
-mydata$genotypeLikelihood[[2]][,10,19:26]
+mydata$alleleDepth[8,19:26]
+mydata$genotypeLikelihood[[1]][,8,19:26]
+mydata$genotypeLikelihood[[2]][,8,19:26]
 ```
 
 Above, for one individal (Map1-018), we see its read depth at
@@ -286,11 +321,10 @@ fit the diploid versus tetraploid model.
 plot(mydata$ploidyChiSq[1,], mydata$ploidyChiSq[2,], 
      xlab = "Chi-squared for diploid model",
      ylab = "Chi-squared for tetraploid model")
-abline(a = 0, b = 1, col = "red")
 ```
 
-Alleles above the red line fit the diploid model better, and alleles
-below the red line fit the tetraploid model better.  In this case it
+For each allele, whichever model gives the lower Chi-squared value is the one
+with the best fit.  In this case it
 looks like everything is diploid with fairly high confidence.
 
 Now we'll examine the posterior genotype probabilities.  These are still
@@ -313,7 +347,7 @@ which can be changed with the `minval` and `maxval` arguments.
 
 ```{r}
 mywm <- GetWeightedMeanGenotypes(mydata)
-mywm[c(297,2:6), 10:13]
+mywm[c(276, 277, 1:5), 10:13]
 ```
 
 Note that the parent posterior mean genotypes were estimated using 
@@ -432,8 +466,7 @@ allele frequencies (fairly weak in this case because so few markers
 were used):
 
 ```{r}
-plot(mydataPopStruct$PCA[,1], mydataPopStruct$PCA[,2],
-     xlab = "PC axis 1", ylab = "PC axis 2")
+plot(mydataPopStruct)
 ```
 
 And here's an example of allele frequency varying across the environment.
@@ -444,9 +477,7 @@ allele frequency.
 ```{r}
 myallele <- 1
 freqcol <- heat.colors(101)[round(mydataPopStruct$alleleFreqByTaxa[,myallele] * 100) + 1]
-plot(mydataPopStruct$PCA[,1], mydataPopStruct$PCA[,2],
-     xlab = "PC axis 1", ylab = "PC axis 2", pch = 21,
-     bg = freqcol)
+plot(mydataPopStruct, pch = 21, bg = freqcol)
 ```
 
 As before, we can export the posterior mean genotypes for downstream analysis.
