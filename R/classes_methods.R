@@ -1258,12 +1258,23 @@ AddAlleleBias.RADdata <- function(object, ...){
     stop("Alleles with zero reads in dataset will interfere with bias estimation.")
   }
   
+  # get rid of estimated allele frequencies that are one
+  # (floating point math issue)
+  antiAlFreq <- 1 - object$alleleFreq
+  tofix <- which(antiAlFreq == 0)
+  for(al in tofix){
+    otheral <- which(object$alleles2loc == object$alleles2loc[al])
+    otheral <- otheral[otheral != al]
+    antiAlFreq[al] <- sum(object$alleleFreq[otheral])
+  }
+  
   # estimate bias directly from data
-  bias <- ((1 - object$normalizedDepthProp)/(1 - object$alleleFreq))/
+  bias <- ((1 - object$normalizedDepthProp)/(antiAlFreq))/
     (object$normalizedDepthProp / object$alleleFreq)
   logbias <- log(bias)
   
   # ad-hoc estimate of expected variance based on read depth
+  # ## will probably need to be fixed
   log_bias_var <- 0.4 / 
     (colMeans(object$alleleDepth) + colMeans(object$antiAlleleDepth))
   
