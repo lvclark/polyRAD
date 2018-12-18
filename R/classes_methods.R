@@ -220,8 +220,8 @@ AddGenotypeLikelihood.RADdata <- function(object, overdispersion = 9, ...){
   ploidies <- sort(unique(sapply(object$possiblePloidies, sum)))
   # fix any allele freq that are zero, to prevent NaN likelihood
   minfreq <- 1/nTaxa(object)/max(ploidies)
-  alFreq[alFreq == 0] <- minfreq
-  alFreq[alFreq == 1] <- 1 - minfreq
+  alFreq[alFreq < minfreq] <- minfreq
+  alFreq[alFreq > 1 - minfreq] <- 1 - minfreq
   
   # set up list for genotype likelihoods and loop through
   object$genotypeLikelihood <- list()
@@ -1258,19 +1258,16 @@ AddAlleleBias.RADdata <- function(object, ...){
     stop("Alleles with zero reads in dataset will interfere with bias estimation.")
   }
   
-  # get rid of estimated allele frequencies that are one
-  # (floating point math issue)
-  antiAlFreq <- 1 - object$alleleFreq
-  tofix <- which(antiAlFreq == 0)
-  for(al in tofix){
-    otheral <- which(object$alleles2loc == object$alleles2loc[al])
-    otheral <- otheral[otheral != al]
-    antiAlFreq[al] <- sum(object$alleleFreq[otheral])
-  }
+  # fix any allele freq that are zero, to prevent 0 or Inf bias
+  alFreq <- object$alleleFreq
+  minfreq <- 1/nTaxa(object)/max(sapply(object$possiblePloidies, sum))
+  alFreq[alFreq < minfreq] <- minfreq
+  alFreq[alFreq > 1 - minfreq] <- 1 - minfreq
+  antiAlFreq <- 1 - alFreq
   
   # estimate bias directly from data
   bias <- ((1 - object$normalizedDepthProp)/(antiAlFreq))/
-    (object$normalizedDepthProp / object$alleleFreq)
+    (object$normalizedDepthProp / alFreq)
   logbias <- log(bias)
   
   # ad-hoc estimate of expected variance based on read depth
