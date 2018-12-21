@@ -37,7 +37,7 @@ An integer, zero or greater, indicating how many generations of
 intermating within the population were performed.
 }
   \item{n.gen.selfing}{
-An integer, zero or greater, indicatin ghow many generations of
+An integer, zero or greater, indicating how many generations of
 selfing were performed.
 }
   \item{donorParentPloidies}{
