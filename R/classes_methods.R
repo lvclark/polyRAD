@@ -2018,3 +2018,46 @@ LocusInfo.RADdata <- function(object, locus, genome = NULL, annotation = NULL, v
   
   return(out)
 }
+
+# function to merge multiple taxa into one before doing genotyping
+MergeTaxaDepth <- function(object, ...){
+  UseMethod("MergeTaxaDepth", object)
+}
+MergeTaxaDepth.RADdata <- function(object, taxa, ...){
+  if(!is.null(object$alleleFreq)){
+    stop("Run MergeTaxaCounts before running any pipeline functions.")
+  }
+  if(length(taxa) < 2){
+    stop("At least two taxa must be merged.")
+  }
+  message(paste(length(taxa), " taxa will be merged into the taxon ", taxa[1],
+                ".", sep = ""))
+  
+  taxanum <- match(taxa, GetTaxa(object))
+  
+  # sum read depths and remove taxa from matrices
+  object$alleleDepth[taxanum[1],] <- colSums(object$alleleDepth[taxanum,])
+  object$alleleDepth <- object$alleleDepth[-taxanum[-1],]
+  
+  object$locDepth[taxanum[1],] <- colSums(object$locDepth[taxanum,])
+  object$locDepth <- object$locDepth[-taxanum[-1],]
+  
+  object$antiAlleleDepth[taxanum[1],] <- colSums(object$antiAlleleDepth[taxanum,])
+  object$antiAlleleDepth <- object$antiAlleleDepth[-taxanum[-1],]
+  
+  # remove taxa from attributes
+  attr(object, "taxa") <- attr(object, "taxa")[-taxanum[-1]]
+  attr(object, "nTaxa") <- length(attr(object, "taxa"))
+  
+  # recalculated depth ratio and sampling permutations
+  object$depthRatio <- object$depthRatio[-taxanum[-1],]
+  object$depthRatio[taxa[1],] <- object$alleleDepth[taxa[1],]/
+    (object$alleleDepth[taxa[1],] + object$antiAlleleDepth[taxa[1],])
+  
+  object$depthSamplingPermutations <- object$depthSamplingPermutations[-taxanum[-1],]
+  object$depthSamplingPermutations[taxa[1],] <- 
+    lchoose(object$alleleDepth[taxa[1],] + object$antiAlleleDepth[taxa[1],],
+            object$alleleDepth[taxa[1],])
+  
+  return(object)
+}
