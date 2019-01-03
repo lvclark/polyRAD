@@ -234,7 +234,7 @@ deviate from what would be expected under binomial distibution?  The
 `TestOverdispersion` function will help us here.  We will use the `qqman`
 package to visualize the results.
 
-```{r message = FALSE}
+```{r message = FALSE, warning = FALSE}
 library(qqman)
 overdispersionP <- TestOverdispersion(mydata2, to_test = 6:10)
 qq(overdispersionP[["6"]])
