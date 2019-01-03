@@ -93,6 +93,8 @@ polyRAD is described in a preprint manuscript:
 Clark LV, Lipka AE, and Sacks EJ (2018) polyRAD: Genotype calling with uncertainty from sequencing data in
 polyploids and diploids.  bioRxiv, doi:[10.1101/380899](https://doi.org/10.1101/380899)
 
+Our manuscript has been accepted by G3, so check back later for the full citation!
+
 Citable Zenodo DOI for the software:
 [![DOI](https://zenodo.org/badge/99379777.svg)](https://zenodo.org/badge/latestdoi/99379777)
 
