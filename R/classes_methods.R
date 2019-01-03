@@ -1253,25 +1253,6 @@ AddAlleleBias.RADdata <- function(object, maxbias = 4, ...){
   bias <- ((1 - object$normalizedDepthProp)/(1 - object$alleleFreq))/
     (object$normalizedDepthProp / object$alleleFreq)
   
-  # # total depth per locus
-  # locdepth <- colSums(object$alleleDepth + object$antiAlleleDepth)
-  # # normalized total depth per allele
-  # normdepth <- round(object$normalizedDepthProp * locdepth)
-  # # probability of seeing apparent bias that extreme if there is no bias
-  # p_no_bias <- numeric(length(bias))
-  # biaspos <- object$normalizedDepthProp > object$alleleFreq
-  # p_no_bias[biaspos] <- pbinom(normdepth[biaspos], locdepth[biaspos],
-  #                              object$alleleFreq[biaspos], lower.tail = FALSE)
-  # p_no_bias[!biaspos] <- pbinom(normdepth[!biaspos], locdepth[!biaspos],
-  #                              object$alleleFreq[!biaspos], lower.tail = TRUE)
-  # 
-  # # correct bias based on that probability
-  # ## (this might not be the best method; set prior instead?)
-  # corr_log_bias <- log(bias) * (1 - p_no_bias)
-  # object$alleleBias <- exp(corr_log_bias)
-  # object$alleleBias[object$alleleBias > maxbias] <- maxbias
-  # object$alleleBias[object$alleleBias < 1/maxbias] <- 1/maxbias
-  
   object$alleleBias <- bias
   
   return(object)
