@@ -2036,13 +2036,16 @@ MergeTaxaDepth.RADdata <- function(object, taxa, ...){
   taxanum <- match(taxa, GetTaxa(object))
   
   # sum read depths and remove taxa from matrices
-  object$alleleDepth[taxanum[1],] <- colSums(object$alleleDepth[taxanum,])
+  object$alleleDepth[taxanum[1],] <- 
+    as.integer(colSums(object$alleleDepth[taxanum,]))
   object$alleleDepth <- object$alleleDepth[-taxanum[-1],]
   
-  object$locDepth[taxanum[1],] <- colSums(object$locDepth[taxanum,])
+  object$locDepth[taxanum[1],] <- 
+    as.integer(colSums(object$locDepth[taxanum,]))
   object$locDepth <- object$locDepth[-taxanum[-1],]
   
-  object$antiAlleleDepth[taxanum[1],] <- colSums(object$antiAlleleDepth[taxanum,])
+  object$antiAlleleDepth[taxanum[1],] <- 
+    as.integer(colSums(object$antiAlleleDepth[taxanum,]))
   object$antiAlleleDepth <- object$antiAlleleDepth[-taxanum[-1],]
   
   # remove taxa from attributes
