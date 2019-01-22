@@ -640,6 +640,12 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   if(!all(samples %in% VariantAnnotation::samples(VariantAnnotation::scanVcfHeader(file)))){
     stop("Not all samples given in argument found in file.")
   }
+  if(length(samples) < min.ind.with.reads){
+    stop("Need to adjust min.ind.with.reads for number of samples in dataset.")
+  }
+  if(length(samples)/2 < min.ind.with.minor.allele){
+    stop("Need to adjust min.ind.with.minor.allele for number of samples in dataset.")
+  }
   
   # determine what extra columns to add to locTable
   extracols <- c(VariantAnnotation::vcfFixed(svparam),
@@ -970,6 +976,12 @@ readStacks <- function(allelesFile, matchesFolder, version = 2,
   sstacksFiles <- list.files(matchesFolder, "\\.matches\\.tsv")
   sampleNames <- sub("\\.matches\\.tsv(\\.gz)?$", "", sstacksFiles)
   sstacksFiles <- file.path(matchesFolder, sstacksFiles)
+  if(length(sampleNames) < min.ind.with.reads){
+    stop("Need to adjust min.ind.with.reads for number of samples in dataset.")
+  }
+  if(length(sampleNames)/2 < min.ind.with.minor.allele){
+    stop("Need to adjust min.ind.with.minor.allele for number of samples in dataset.")
+  }
   
   # set up allele depth matrix
   alleleDepth <- matrix(0L, nrow = length(sampleNames), 
