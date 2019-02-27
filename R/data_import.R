@@ -1026,7 +1026,7 @@ readStacks <- function(allelesFile, matchesFolder, version = 2,
     }
     
     # determine whether to keep the locus
-    keepLoc <- sum(rowSums(alleleDepth[,thesecol]) > 0) >= min.ind.with.reads
+    keepLoc <- sum(rowSums(alleleDepth[,thesecol, drop = FALSE]) > 0) >= min.ind.with.reads
     if(keepLoc){
       commonAllele <- which.max(indperal[thesecol])
       keepLoc <- sum(indperal[thesecol[-commonAllele]]) >= min.ind.with.minor.allele
