@@ -968,6 +968,9 @@ readStacks <- function(allelesFile, matchesFolder, version = 2,
   
   # get all of the sstacks files to read
   sstacksFiles <- list.files(matchesFolder, "\\.matches\\.tsv")
+  if(length(sstacksFiles) == 0){
+    stop("No .matches.tsv files found.")
+  }
   sampleNames <- sub("\\.matches\\.tsv(\\.gz)?$", "", sstacksFiles)
   sstacksFiles <- file.path(matchesFolder, sstacksFiles)
   
