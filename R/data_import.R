@@ -1006,6 +1006,8 @@ readStacks <- function(allelesFile, matchesFolder, version = 2,
     alleleDepth[i, theseAlNames] <- theseDepth
     reorder[mf[[msamcol]][1]] <- i
   }
+  # eliminate any  sample numbers that were skipped, and reorder matrix
+  reorder <- reorder[!is.na(reorder) & reorder > 0]
   alleleDepth <- alleleDepth[reorder,]
   
   # filter loci
