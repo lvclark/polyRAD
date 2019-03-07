@@ -3,4 +3,5 @@ bibentry(bibtype = "Article",
          author = c(person("Lindsay V.", "Clark", email = "lvclark@illinois.edu"),
                     person("Alexander E.", "Lipka", email = "alipka@illinois.edu"),
                     person("Erik J.", "Sacks", email = "esacks@illinois.edu")),
-         journal = "G3", year = 2019, volume = 9, number = 3, doi = "10.1534/g3.118.200913")
+         journal = "G3", year = 2019, volume = 9, number = 3, pages = "663--673"
+         doi = "10.1534/g3.118.200913")

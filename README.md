@@ -91,7 +91,7 @@ The tutorial document for the package is available [on Github](https://github.co
 If you use polyRAD, please cite this manuscript:
 
 Clark LV, Lipka AE, and Sacks EJ (2019) polyRAD: Genotype calling with uncertainty from sequencing data in
-polyploids and diploids.  *G3* 9(3). doi:[10.1534/g3.118.200913](https://doi.org/10.1534/g3.118.200913)
+polyploids and diploids.  *G3* 9(3) 663--673. doi:[10.1534/g3.118.200913](https://doi.org/10.1534/g3.118.200913)
 
 ### Additional citations
 

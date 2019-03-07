@@ -1,7 +1,7 @@
 polyRAD Tutorial
 ================
 Lindsay V. Clark, University of Illinois, Urbana-Champaign
-22 January 2019
+07 March 2019
 
 -   [Introduction <a name="introduction"></a>](#introduction)
 -   [Summary of available functions <a name="functions"></a>](#summary-of-available-functions)
@@ -729,4 +729,4 @@ GD.all <- cbind(GAPITlist[[1]]$GD, GAPITlist[[2]]$GD[,-1],
 Citing polyRAD <a name="citation"></a>
 --------------------------------------
 
-Clark LV, Lipka AE, and Sacks EJ (2019) polyRAD: Genotype calling with uncertainty from sequencing data in polyploids and diploids. *G3* 9(3), [10.1534/g3.118.200913](https://doi.org/10.1534/g3.118.200913).
+Clark LV, Lipka AE, and Sacks EJ (2019) polyRAD: Genotype calling with uncertainty from sequencing data in polyploids and diploids. *G3* 9(3):663--673, [10.1534/g3.118.200913](https://doi.org/10.1534/g3.118.200913).
