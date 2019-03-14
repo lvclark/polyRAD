@@ -88,17 +88,22 @@ The tutorial document for the package is available [on Github](https://github.co
 
 ## Citation
 
-polyRAD is described in a preprint manuscript:
+If you use polyRAD, please cite this manuscript:
 
-Clark LV, Lipka AE, and Sacks EJ (2018) polyRAD: Genotype calling with uncertainty from sequencing data in
-polyploids and diploids.  bioRxiv, doi:[10.1101/380899](https://doi.org/10.1101/380899)
+Clark LV, Lipka AE, and Sacks EJ (2019) polyRAD: Genotype calling with uncertainty from sequencing data in
+polyploids and diploids.  *G3* 9(3) 663--673. doi:[10.1534/g3.118.200913](https://doi.org/10.1534/g3.118.200913)
 
-Our manuscript has been accepted by G3, so check back later for the full citation!
+### Additional citations
 
 Citable Zenodo DOI for the software:
 [![DOI](https://zenodo.org/badge/99379777.svg)](https://zenodo.org/badge/latestdoi/99379777)
 
-Version 0.1 was also presented in a poster:
+polyRAD has also been presented in these posters:
+
+Clark LV, Lipka AE, and Sacks EJ (2019) Improvements to Genotype Calling in 
+Polyploids Using the polyRAD R Package.  Plant and Animal Genome Conference 
+XXVII, January 12-16, San Diego, California, USA.
+doi:[10.13140/RG.2.2.18358.75847](https://doi.org/10.13140/RG.2.2.18358.75847)
 
 Clark LV, Lipka AE, and Sacks EJ (2018) polyRAD: Genotype Calling with Uncertainty from Sequencing Data
 in Polyploids and Diploids.  Plant and Animal Genome Conference XXVI, January 13-17, San Diego, California, USA.

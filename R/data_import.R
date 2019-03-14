@@ -640,6 +640,12 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   if(!all(samples %in% VariantAnnotation::samples(VariantAnnotation::scanVcfHeader(file)))){
     stop("Not all samples given in argument found in file.")
   }
+  if(length(samples) < min.ind.with.reads){
+    stop("Need to adjust min.ind.with.reads for number of samples in dataset.")
+  }
+  if(length(samples)/2 < min.ind.with.minor.allele){
+    stop("Need to adjust min.ind.with.minor.allele for number of samples in dataset.")
+  }
   
   # determine what extra columns to add to locTable
   extracols <- c(VariantAnnotation::vcfFixed(svparam),
@@ -968,8 +974,17 @@ readStacks <- function(allelesFile, matchesFolder, version = 2,
   
   # get all of the sstacks files to read
   sstacksFiles <- list.files(matchesFolder, "\\.matches\\.tsv")
+  if(length(sstacksFiles) == 0){
+    stop("No .matches.tsv files found.")
+  }
   sampleNames <- sub("\\.matches\\.tsv(\\.gz)?$", "", sstacksFiles)
   sstacksFiles <- file.path(matchesFolder, sstacksFiles)
+  if(length(sampleNames) < min.ind.with.reads){
+    stop("Need to adjust min.ind.with.reads for number of samples in dataset.")
+  }
+  if(length(sampleNames)/2 < min.ind.with.minor.allele){
+    stop("Need to adjust min.ind.with.minor.allele for number of samples in dataset.")
+  }
   
   # set up allele depth matrix
   alleleDepth <- matrix(0L, nrow = length(sampleNames), 
@@ -991,6 +1006,8 @@ readStacks <- function(allelesFile, matchesFolder, version = 2,
     alleleDepth[i, theseAlNames] <- theseDepth
     reorder[mf[[msamcol]][1]] <- i
   }
+  # eliminate any  sample numbers that were skipped, and reorder matrix
+  reorder <- reorder[!is.na(reorder) & reorder > 0]
   alleleDepth <- alleleDepth[reorder,]
   
   # filter loci
@@ -1009,7 +1026,7 @@ readStacks <- function(allelesFile, matchesFolder, version = 2,
     }
     
     # determine whether to keep the locus
-    keepLoc <- sum(rowSums(alleleDepth[,thesecol]) > 0) >= min.ind.with.reads
+    keepLoc <- sum(rowSums(alleleDepth[,thesecol, drop = FALSE]) > 0) >= min.ind.with.reads
     if(keepLoc){
       commonAllele <- which.max(indperal[thesecol])
       keepLoc <- sum(indperal[thesecol[-commonAllele]]) >= min.ind.with.minor.allele
