@@ -136,6 +136,8 @@ Variant Call Format specification: \url{http://samtools.github.io/hts-specs/}
 TASSEL GBSv2 pipeline: \url{https://bitbucket.org/tasseladmin/tassel-5-source/wiki/Tassel5GBSv2Pipeline}
 
 GATK: \url{https://software.broadinstitute.org/gatk/}
+
+Tassel4-Poly: \url{https://github.com/guilherme-pereira/tassel4-poly}
 }
 \author{
 Lindsay V. Clark
