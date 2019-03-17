@@ -24,7 +24,7 @@
                          chrvect)
     if(length(weirdstrings) > 0){
       warning("Strings naming chromosomes have multiple sections with numbers.")
-      cat(loctable$Chr[weirdstrings][1:max(c(10, length(weirdstrings)))],
+      cat(chrvect[weirdstrings][1:max(c(10, length(weirdstrings)))],
           sep = "\n")
     }
     # remove everything that is not a number from the character strings
