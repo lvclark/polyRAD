@@ -4,6 +4,7 @@
 \alias{Export_rrBLUP_GWAS}
 \alias{Export_TASSEL_Numeric}
 \alias{Export_polymapR}
+\alias{Export_MAPpoly}
 \title{
 Export RADdata Object for Use by Other R Packages
 }
@@ -16,6 +17,8 @@ perform genome-wide association and genomic prediction using genotypes
 as a continuous numeric variable.  \code{Export_polymapR} uses
 \code{\link{GetProbableGenotypes}} to export discrete genotypes for
 \pkg{polymapR} after processing with \code{\link{PipelineMapping2Parents}}.
+\code{Export_MAPpoly} write genotype posterior probabilities to a file for
+import by \pkg{MAPpoly}.
 }
 \usage{
 ExportGAPIT(object, onePloidyPerAllele = FALSE)
@@ -25,7 +28,15 @@ Export_rrBLUP_GWAS(object, naIfZeroReads = FALSE,
                    onePloidyPerAllele = FALSE)
 Export_TASSEL_Numeric(object, file, naIfZeroReads = FALSE,
                       onePloidyPerAllele = FALSE)
-Export_polymapR(object, naIfZeroReads = TRUE)
+Export_polymapR(object, naIfZeroReads = TRUE,
+                progeny = GetTaxa(object)[!GetTaxa(object) \%in\% 
+                  c(GetDonorParent(object), GetRecurrentParent(object),
+                    GetBlankTaxa(object))])
+Export_MAPpoly(object, file, pheno = NULL, ploidyIndex = 1,
+               progeny = GetTaxa(object)[!GetTaxa(object) \%in\% 
+                 c(GetDonorParent(object), GetRecurrentParent(object),
+                   GetBlankTaxa(object))],
+               digits = 3))
 }
 \arguments{
   \item{object}{
@@ -50,26 +61,49 @@ reads.
 \item{file}{
 A character string indicating a file path to which to write.
 }
+\item{pheno}{
+A data frame or matrix of phenotypic values, with progeny in rows and traits
+in columns.  Columns should be named.
+}
+\item{ploidyIndex}{
+Index, within \code{object$priorProbPloidies}, of the ploidy to be exported.
+}
+\item{progeny}{
+A character vector indicating which individuals to export as progeny of the
+cross.
+}
+\item{digits}{
+Number of decimal places to which to round genotype probabilities in the 
+output file.
+}
 }
 \details{
 \pkg{GAPIT}, \pkg{FarmCPU}, \pkg{rrBLUP}, and \pkg{TASSEL} allow genotypes to 
-be a continuous numeric variable.
+be a continuous numeric variable.  \pkg{MAPpoly} allows for import of genotype
+probabilities.
 \pkg{GAPIT} does not allow missing data, hence there is no \code{naIfZeroReads}
 argument for \code{ExportGAPIT}.  Genotypes are exported on a scale of -1
 to 1 for \pkg{rrBLUP}, on a scale of 0 to 2 for \pkg{GAPIT} and \pkg{FarmCPU},
 and on a scale of 0 to 1 for \pkg{TASSEL}.
 
-For all functions, one allele per marker is dropped.  For \code{ExportGAPIT}
+For all functions, one allele per marker is dropped.  \code{Export_MAPpoly}
+also drops alleles where one or both parental genotypes could not be determined,
+and where both parents are homozygotes.
+
+For \code{ExportGAPIT}
 and \code{Export_rrBLUP_GWAS}, chromosome and position are filled with dummy
 data if they do not exist in \code{object$locTable}.  For \code{Export_TASSEL_Numeric},
 allele names are exported, but no chromosome or position information per se.
 
 If the chromosomes in \code{object$locTable} are in character format,
-\code{ExportGAPIT} will attempt to extract chromosome numbers.
+\code{ExportGAPIT} and \code{Export_MAPpoly} will attempt to extract chromosome numbers.
 
 Because \pkg{polymapR} allows only one ploidy, there must only be one possible
 ploidy for the progeny in the \code{RADdata} object (possibly with different
-ploidies for the parents, \emph{e.g.} 4x x 2x = 3x).
+ploidies for the parents, \emph{e.g.} 4x x 2x = 3x).  \pkg{MAPpoly} also only
+allows one ploidy, but \code{Export_MAPpoly} allows the user to select which
+ploidy from the \code{RADdata} object to use.  (This is due to how internal
+\pkg{polyRAD} functions are coded.)
 }
 \value{
 For \code{ExportGAPIT}, a list:
@@ -90,7 +124,8 @@ The first three columns contain the marker names, chromosomes, and positions,
 and the remaining columns each represent one taxon and contain the genotype
 data.  This can be passed to the \code{GWAS} function in \pkg{rrBLUP}.
 
-\code{Export_TASSEL_Numeric} writes a file but does not return an object.
+\code{Export_TASSEL_Numeric} and \code{Export_MAPpoly} write a file but does
+not return an object.
 
 For \code{Export_polymapR}, a matrix of integers indicating the most probable 
 allele copy number, with markers in rows and individuals in columns.  The 
@@ -122,14 +157,21 @@ Bourke, P., van Geest, G., Voorrips, R. E., Jansen, J., Kranenberg, T.,
 Shahin, A., Visser, R. G. F., Arens, P., Smulders, M. J. M. and Maliepaard, C.
 (2018) polymapR: linkage analysis and genetic map construction from F1 
 populations of outcrossing polyploids. \emph{Bioinformatics} \bold{34}, 
-3496–-3502.
+3496--3502.
+
+\url{https://github.com/mmollina/MAPpoly}
+
+Mollinari, M. and Garcia, A. A. F. (2018) Linkage analysis and haplotype
+phasing in experimental autopolyploid populations with high ploidy level using
+hidden Markov models.  \emph{bioRxiv} doi: https://doi.org/10.1101/415232.
 }
 \author{
 Lindsay V. Clark
 }
 \note{
 \pkg{rrBLUP} and \pkg{polymapR} are available through CRAN, and \pkg{GAPIT}
-and \pkg{FarmCPU} must be downloaded from the Zhang lab website.
+and \pkg{FarmCPU} must be downloaded from the Zhang lab website.  \pkg{MAPpoly}
+is available on GitHub but not yet on CRAN.
 
 In my experience with \pkg{TASSEL 5}, numerical genotype files that are too large do 
 not load/display properly.  If you run into this problem I recommend using
@@ -171,6 +213,20 @@ exampleRAD_mapping <- PipelineMapping2Parents(exampleRAD_mapping)
 
 # convert to polymapR format
 examplePMR <- Export_polymapR(exampleRAD_mapping)
+
+# export to MAPpoly
+outfile2 <- tempfile() # temporary file for example
+# generate a dummy phenotype matrix containing random numbers
+mypheno <- matrix(rnorm(200), nrow = 100, ncol = 2,
+                  dimnames = list(GetTaxa(exampleRAD_mapping)[-(1:2)],
+                                  c("Height", "Yield")))
+Export_MAPpoly(exampleRAD_mapping, file = outfile2, pheno = mypheno)
+
+\donttest{
+# load data into MAPpoly
+require(mappoly)
+mydata <- read_geno_dist(outfile2)
+}
 }
 
 \keyword{ manip }

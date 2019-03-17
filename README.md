@@ -53,6 +53,10 @@ There is an export function for discrete genotypes for the following software:
 
 * [polymapR](https://cran.r-project.org/package=polymapR)
 
+In the development version of polyRAD, genotype probabilities can be exported to:
+
+* [MAPpoly](https://github.com/mmollina/MAPpoly)
+
 ## Installation
 
 polyRAD depends on some Bioconductor packages.  Before attempting to install polyRAD, run

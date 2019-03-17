@@ -4,6 +4,8 @@ A plot method has been added for RADdata objects.
 
 The MergeTaxaDepth utility function has been added.
 
+The Export_MAPpoly function has been added.
+
 ## Changes in v1.0 ##
 
 Genotype likelihoods are now estimated under a beta-binomial distribution 
