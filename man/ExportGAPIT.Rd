@@ -120,9 +120,9 @@ traits in diverse samples. \emph{Bioinformatics} \bold{23}, 2633--2635.
 
 Bourke, P., van Geest, G., Voorrips, R. E., Jansen, J., Kranenberg, T.,
 Shahin, A., Visser, R. G. F., Arens, P., Smulders, M. J. M. and Maliepaard, C.
-(2017) polymapR: linkage analysis and genetic map construction from F1 
-populations of outcrossing polyploids. \emph{bioRxiv}
-https://doi.org/10.1101/228817
+(2018) polymapR: linkage analysis and genetic map construction from F1 
+populations of outcrossing polyploids. \emph{Bioinformatics} \bold{34}, 
+3496–-3502.
 }
 \author{
 Lindsay V. Clark
