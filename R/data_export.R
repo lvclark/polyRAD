@@ -1,5 +1,53 @@
 # functions to export data into formats for use by other software
 
+.chromosome_to_integer <- function(chrvect){
+  ## Convert chromosomes as strings to chromosomes as integers ##
+  
+  if(is.integer(chrvect)) return (chrvect)
+  
+  if(!class(chrvect) %in% c("numeric", "character", "factor")){
+    stop("Unexpected values in chromosome column.")
+  }
+  
+  if(is.numeric(chrvect)){
+    if(any(chrvect %% 1 != 0)){
+      stop("Unexpected numeric non-integer values in chromosome column.")
+    }
+    chrnum <- as.integer(chrvect)
+  }
+  if(is.factor(chrvect)){
+    chrvect <- as.character(chrvect)
+  }
+  if(is.character(chrvect)){
+    # check if there are multiple sections with digits in chromosome strings
+    weirdstrings <- grep("[[:digit:]+][^[:digit:]]+[[:digit:]+]",
+                         chrvect)
+    if(length(weirdstrings) > 0){
+      warning("Strings naming chromosomes have multiple sections with numbers.")
+      cat(loctable$Chr[weirdstrings][1:max(c(10, length(weirdstrings)))],
+          sep = "\n")
+    }
+    # remove everything that is not a number from the character strings
+    chrnum <- as.integer(gsub("[^[:digit:]]", "", chrvect))
+    # get indices for chromosome names starting with "chr"
+    chromInd <- grep("^chr", chrvect, ignore.case = TRUE)
+    # get highest chromosome number, and add this to non-"chr" sequences
+    if(length(chromInd) > 0 && length(chromInd) < length(chrnum)){
+      nChr <- max(chrnum[chromInd], na.rm = TRUE)
+      chrnum[-chromInd] <- chrnum[-chromInd] + nChr
+    }
+    # check that strings with same num are the same
+    for(cn in sort(unique(chrnum))){
+      thisnumind <- which(chrnum == cn)
+      if(length(unique(chrvect[thisnumind])) > 1){
+        stop("Chromosome names not resolvable to chromosome numbers; number manually.")
+      }
+    }
+  }
+  
+  return(chrnum)
+}
+
 .ordered_gen_and_loctable <- function(object, numgen, 
                                       omit1allelePerLocus = TRUE,
                                       omitCommonAllele = TRUE,
@@ -29,46 +77,8 @@
     loctable <- loctable[alOrder,]
     
     if(chromAsInteger && !is.integer(loctable$Chr)){
-      if(!class(loctable$Chr) %in% c("numeric", "character", "factor")){
-        stop("Unexpected values in chromosome column.")
-      }
       # conversion of chromosomes to integer format if needed
-      if(is.numeric(loctable$Chr)){
-        if(any(loctable$Chr %% 1 != 0)){
-          stop("Unexpected numeric non-integer values in chromosome column.")
-        }
-        loctable$Chr <- as.integer(loctable$Chr)
-      }
-      if(is.factor(loctable$Chr)){
-        loctable$Chr <- as.character(loctable$Chr)
-      }
-      if(is.character(loctable$Chr)){
-        # check if there are multiple sections with digits in chromosome strings
-        weirdstrings <- grep("[[:digit:]+][^[:digit:]]+[[:digit:]+]",
-                             loctable$Chr)
-        if(length(weirdstrings) > 0){
-          warning("Strings naming chromosomes have multiple sections with numbers.")
-          cat(loctable$Chr[weirdstrings][1:max(c(10, length(weirdstrings)))],
-              sep = "\n")
-        }
-        # remove everything that is not a number from the character strings
-        chrnum <- as.integer(gsub("[^[:digit:]]", "", loctable$Chr))
-        # get indices for chromosome names starting with "chr"
-        chromInd <- grep("^chr", loctable$Chr, ignore.case = TRUE)
-        # get highest chromosome number, and add this to non-"chr" sequences
-        if(length(chromInd) > 0 && length(chromInd) < length(chrnum)){
-          nChr <- max(chrnum[chromInd], na.rm = TRUE)
-          chrnum[-chromInd] <- chrnum[-chromInd] + nChr
-        }
-        # check that strings with same num are the same
-        for(cn in sort(unique(chrnum))){
-          thisnumind <- which(chrnum == cn)
-          if(length(unique(loctable$Chr[thisnumind])) > 1){
-            stop("Chromosome names not resolvable to chromosome numbers; number manually.")
-          }
-        }
-        loctable$Chr <- chrnum
-      }
+      loctable$Chr <- .chromosome_to_integer(loctable$Chr)
     }
   } else {
     # insert fake alignment data if it doesn't exist
