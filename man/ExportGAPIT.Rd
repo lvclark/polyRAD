@@ -36,7 +36,7 @@ Export_MAPpoly(object, file, pheno = NULL, ploidyIndex = 1,
                progeny = GetTaxa(object)[!GetTaxa(object) \%in\% 
                  c(GetDonorParent(object), GetRecurrentParent(object),
                    GetBlankTaxa(object))],
-               digits = 3))
+               digits = 3)
 }
 \arguments{
   \item{object}{
