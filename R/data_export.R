@@ -278,3 +278,31 @@ Export_MAPpoly <- function(object, file, pheno = NULL, ploidyIndex = 1,
   write.table(genotab, file = file, append = TRUE, quote = FALSE,
               col.names = FALSE, row.names = FALSE)
 }
+
+Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE){
+  # matrix of discrete genotypes
+  mygeno <- t(GetProbableGenotypes(object,
+                                   omit1allelePerLocus = TRUE,
+                                   omitCommonAllele = TRUE,
+                                   naIfZeroReads = naIfZeroReads)$genotypes)
+  
+  # get loci to correspond to these alleles
+  locindex <- object$alleles2loc[-OneAllelePerMarker(object,
+                                                     commonAllele = TRUE)]
+  loctable <- object$locTable
+  if(is.null(loctable$Chr)){
+    loctable$Chr <- rep(0L, nrow(loctable))
+  }
+  if(is.null(loctable$Pos)){
+    loctable$Pos <- 1:nrow(loctable)
+  }
+  
+  # data frame for export
+  outdata <- data.frame(Marker = rownames(mygeno),
+                        Chrom = .chromosome_to_integer(loctable$Chr[locindex]),
+                        Position = loctable$Pos[locindex],
+                        mygeno)
+  
+  # export
+  write.csv(outdata, file = file, row.names = FALSE, quote = FALSE)
+}

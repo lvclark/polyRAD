@@ -68,6 +68,7 @@ For exporting the estimated genotypes to other software:
 * `Export_TASSEL_Numeric`
 * `Export_polymapR`
 * `Export_MAPpoly`
+* `Export_GWASpoly`
 
 If you need continuous numerical genotypes exported in some other format, see 
 `GetWeightedMeanGenotypes`.  If you need discrete numerical genotypes, 

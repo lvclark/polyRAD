@@ -8,6 +8,7 @@ AddGenotypePriorProb_HWE, AddGenotypePriorProb_LD,
 AddGenotypePriorProb_Mapping2Parents, AddPCA,
 AddPloidyChiSq, AddPloidyLikelihood, AddPriorTimesLikelihood,
 CanDoGetWeightedMeanGeno, EstimateContaminationRate, ExportGAPIT,
+Export_GWASpoly,
 Export_MAPpoly, Export_polymapR, Export_rrBLUP_Amat, Export_rrBLUP_GWAS,
 Export_TASSEL_Numeric, GetAlleleNames,
 GetBlankTaxa, GetContamRate, GetDonorParent, GetLikelyGen, 
@@ -24,7 +25,7 @@ TestOverdispersion, VCF2RADdata)
 
 importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom",
            "hclust", "cutree", "as.dist", "cor", "residuals", "lm.fit", "sd")
-importFrom("utils", "read.csv", "write.table")
+importFrom("utils", "read.csv", "write.table", "write.csv")
 importFrom("fastmatch", "%fin%")
 importFrom("methods", "is")
 importFrom("Rcpp", "evalCpp")
