@@ -1469,10 +1469,7 @@ SubsetByTaxon.RADdata <- function(object, taxa, ...){
   }
   
   # set up object and transfer attributes (including class)
-  splitRADdata <- list()
-  oldAttributes <- attributes(object)
-  oldAttributes <- oldAttributes[-match("names", names(oldAttributes))]
-  attributes(splitRADdata) <- oldAttributes
+  splitRADdata <- object
   attr(splitRADdata, "nTaxa") <- length(taxa)
   attr(splitRADdata, "taxa") <- GetTaxa(object)[taxa]
   
@@ -1544,10 +1541,7 @@ SubsetByLocus.RADdata <- function(object, loci, ...){
   
   # set up object and transfer attributes (including class)
   thesealleles <- object$alleles2loc %fin% loci
-  splitRADdata <- list()
-  oldAttributes <- attributes(object)
-  oldAttributes <- oldAttributes[-match("names", names(oldAttributes))]
-  attributes(splitRADdata) <- oldAttributes
+  splitRADdata <- object
   attr(splitRADdata, "nLoci") <- length(loci)
   
   # mandatory slots
