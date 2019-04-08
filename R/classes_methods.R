@@ -1595,6 +1595,14 @@ SubsetByLocus.RADdata <- function(object, loci, ...){
   if(!is.null(object$PCA)){
     splitRADdata$PCA <- object$PCA
   }
+  if(!is.null(object$likelyGeno_donor)){
+    splitRADdata$likelyGeno_donor <- 
+      object$likelyGeno_donor[, thesealleles, drop = FALSE]
+  }
+  if(!is.null(object$likelyGeno_recurrent)){
+    splitRADdata$likelyGeno_recurrent <- 
+      object$likelyGeno_recurrent[, thesealleles, drop = FALSE]
+  }
   
   return(splitRADdata)
 }
