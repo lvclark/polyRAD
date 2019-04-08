@@ -40,11 +40,19 @@ TestOverdispersion.RADdata <- function(object, to_test = seq(6, 20, by = 2),
       if(k > expected){
         hi <- k
         lo <- floor(2 * expected - k)
+        out <- hi:n
+        if(lo >= 0){
+          out <- c(0:lo, out)
+        }
       } else {
         lo <- k
         hi <- ceiling(2 * expected - k)
+        out <- 0:lo
+        if(hi >= lo + 1){
+          out <- c(out, hi:n)
+        }
       }
-      return(c(0:lo, hi:n))
+      return(out)
     }
   }, totcnt, alcnt)
   # set up sampling permutations (except for alcnt == totcnt/2)
