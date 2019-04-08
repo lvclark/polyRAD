@@ -201,7 +201,7 @@ Export_MAPpoly <- function(object, file, pheno = NULL, ploidyIndex = 1,
                           digits = 3){
   # Confirm that genotype calling has been performed
   if(is.null(object$likelyGeno_donor) || is.null(object$posteriorProb)){
-    stop("PipelineMapping2Parents needs to be run before using Write_MAPpoly.")
+    stop("PipelineMapping2Parents needs to be run before using Export_MAPpoly.")
   }
   # Check phenotypes
   if(!is.null(pheno) && is.null(colnames(pheno))){
