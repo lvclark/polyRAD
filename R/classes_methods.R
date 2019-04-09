@@ -1458,6 +1458,9 @@ SubsetByTaxon <- function(object, ...){
 }
 SubsetByTaxon.RADdata <- function(object, taxa, ...){
   # check and convert taxa
+  if(length(taxa) == 0){
+    stop("At least one taxon must be provided for subsetting.")
+  }
   if(is.character(taxa)){
     taxa <- fastmatch::fmatch(taxa, GetTaxa(object))
     if(any(is.na(taxa))) stop("Some taxa don't match RADdata object.")
@@ -1533,6 +1536,9 @@ SubsetByLocus <- function(object, ...){
 }
 SubsetByLocus.RADdata <- function(object, loci, ...){
   # check and convert loci
+  if(length(loci) == 0){
+    stop("At least one locus must be provided for subsetting.")
+  }
   if(is.character(loci)){
     loci <- fastmatch::fmatch(loci, rownames(object$locTable))
     if(any(is.na(loci))) stop("Some loci don't match RADdata object.")
