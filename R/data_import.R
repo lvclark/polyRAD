@@ -465,13 +465,14 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         thisName <- row.names(locTable)[chrset[currLocIn]]
         thisPos <- locTable$Pos[chrset[currLocIn]]
         thisSeq <- alleleNucleotides[alleles2loc == chrset[currLocIn]]
+        
+        # get proportion difference in depth between these two loci
+        diff <- sum(abs(rowSums(thisDepth) - rowSums(lastDepth))) / 
+          ((sum(thisDepth) + sum(lastDepth))/2)
       }
-
-      # get proportion difference in depth between these two loci
-      diff <- sum(abs(rowSums(thisDepth) - rowSums(lastDepth))) / 
-        ((sum(thisDepth) + sum(lastDepth))/2)
       
-      if(diff > tol || thisPos - lastPos + 1 > tagsize || currLocIn > length(chrset)){
+      if(length(chrset) == 1 || diff > tol || thisPos - lastPos + 1 > tagsize 
+         || currLocIn > length(chrset)){
         ## If these are different loci (either due to counts or distance)
         ## put the "last" data into the output, and make the new data the last.
         
@@ -487,11 +488,13 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         locTableOut$Chr[currLocOut] <- thisChrom
         locTableOut$Pos[currLocOut] <- lastPos
         
-        # shift "this" locus to "last" locus
-        lastDepth <- thisDepth
-        lastName <- thisName
-        lastPos <- thisPos
-        lastSeq <- thisSeq
+        if(length(chrset) > 1){
+          # shift "this" locus to "last" locus
+          lastDepth <- thisDepth
+          lastName <- thisName
+          lastPos <- thisPos
+          lastSeq <- thisSeq
+        }
         
         # increment current allele and locus
         currAlOut <- currAlOut + thisNAl

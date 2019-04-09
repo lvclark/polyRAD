@@ -6,6 +6,9 @@ The MergeTaxaDepth utility function has been added.
 
 The Export_MAPpoly and Export_GWASpoly functions have been added.
 
+Bug fixes have been made in TestOverdispersion, VCF2RADdata, SubsetByLocus,
+and SubsetByTaxon.
+
 ## Changes in v1.0 ##
 
 Genotype likelihoods are now estimated under a beta-binomial distribution 
