@@ -1520,6 +1520,10 @@ SubsetByTaxon.RADdata <- function(object, taxa, ...){
   if(!is.null(object$PCA)){
     splitRADdata$PCA <- object$PCA[taxa,, drop = FALSE]
   }
+  if(!is.null(object$priorProbLD)){
+    splitRADdata$priorProbLD <- 
+      lapply(object$priorProbLD, function(x) x[, taxa,, drop = FALSE])
+  }
   
   return(splitRADdata)
 }
@@ -1602,6 +1606,13 @@ SubsetByLocus.RADdata <- function(object, loci, ...){
   if(!is.null(object$likelyGeno_recurrent)){
     splitRADdata$likelyGeno_recurrent <- 
       object$likelyGeno_recurrent[, thesealleles, drop = FALSE]
+  }
+  if(!is.null(object$priorProbLD)){
+    splitRADdata$priorProbLD <- 
+      lapply(object$priorProbLD, function(x) x[,, thesealleles, drop = FALSE])
+  }
+  if(!is.null(object$alleleLinkages)){
+    splitRADdata$alleleLinkages <- object$alleleLinkages[thesealleles]
   }
   
   return(splitRADdata)
