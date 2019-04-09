@@ -19,6 +19,7 @@ MergeRareHaplotypes, MergeTaxaDepth, nTaxa, nAlleles, nLoci,
 OneAllelePerMarker, 
 PipelineMapping2Parents, RADdata, readHMC, readStacks, readTagDigger,
 readTASSELGBSv2, RemoveHighDepthLoci, RemoveMonomorphicLoci,
+RemoveUngenotypedLoci,
 SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent,
 SplitByChromosome, StripDown, SubsetByLocus, SubsetByTaxon, 
 TestOverdispersion, VCF2RADdata)
@@ -70,6 +71,7 @@ S3method(OneAllelePerMarker, RADdata)
 S3method(plot, RADdata)
 S3method(RemoveHighDepthLoci, RADdata)
 S3method(RemoveMonomorphicLoci, RADdata)
+S3method(RemoveUngenotypedLoci, RADdata)
 S3method(SetBlankTaxa, RADdata)
 S3method(SetContamRate, RADdata)
 S3method(SetDonorParent, RADdata)

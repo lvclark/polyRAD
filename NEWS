@@ -2,7 +2,7 @@
 
 A plot method has been added for RADdata objects.
 
-The MergeTaxaDepth utility function has been added.
+The MergeTaxaDepth and RemoveUngenotypedLoci utility functions have been added.
 
 The Export_MAPpoly and Export_GWASpoly functions have been added.
 

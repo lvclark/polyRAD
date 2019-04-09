@@ -7,6 +7,8 @@
 \alias{RemoveMonomorphicLoci.RADdata}
 \alias{RemoveHighDepthLoci}
 \alias{RemoveHighDepthLoci.RADdata}
+\alias{RemoveUngenotypedLoci}
+\alias{RemoveUngenotypedLoci.RADdata}
 \title{
 Create RADdata Objects with a Subset of Loci
 }
@@ -18,6 +20,9 @@ multiple \code{RADdata} objects representing chromosomes or sets of chromosomes.
 \code{RemoveMonomorphicLoci} eliminates any loci with fewer than two alleles.
 \code{RemoveHighDepthLoci} eliminates loci that have especially high read
 depth in order to eliminate false loci originating from repetitive sequence.
+\code{RemoveUngenotypedLoci} is intended for datasets that have been run
+through \code{\link{PipelineMapping2Parents}} and may have some genotypes that
+are missing or non-variable due to how priors were determined.
 }
 \usage{
 SubsetByLocus(object, ...)
@@ -32,6 +37,9 @@ RemoveMonomorphicLoci(object, ...)
 
 RemoveHighDepthLoci(object, ...)
 \method{RemoveHighDepthLoci}{RADdata}(object, max.SD.above.mean = 2, verbose = TRUE, \dots)
+
+RemoveUngenotypedLoci(object, ...)
+\method{RemoveUngenotypedLoci}{RADdata}(object, removeNonvariant = TRUE, \dots)
 }
 \arguments{
   \item{object}{
@@ -72,6 +80,11 @@ the number of loci that were retained.  For \code{RemoveHighDepthLoci}, a
 histogram is also plotted showing mean depth per locus, and the cutoff for
 removing loci.
 }
+\item{removeNonvariant}{
+If \code{TRUE}, in addition to removing loci where posterior probabilities are
+missing, loci will be removed where posterior probabilities are uniform across
+the population.
+}
   \item{\dots}{
 Additional arguments (none implemented).
 }
@@ -97,11 +110,12 @@ concatenated with \code{cbind}.
 \code{RemoveHighDepthLoci} use \code{SubsetByLocus} internally.
 }
 \value{
-\code{SubsetByLocus}, \code{RemoveMonomorphicLoci}, and 
-\code{RemoveHighDepthLoci} return a \code{RADdata}
+\code{SubsetByLocus}, \code{RemoveMonomorphicLoci}, 
+\code{RemoveHighDepthLoci}, and \code{RemoveUngenotypedLoci} return a \code{RADdata}
 object with all the slots and attributes of \code{object}, but only 
 containing the loci listed in \code{loci}, only loci with two or more
-alleles, or only loci without abnormally high depth, respectively.
+alleles, only loci without abnormally high depth, or only loci where posterior
+probabilities are non-missing and variable, respectively.
 
 \code{SplitByChromosome} returns a character vector containing file names
 where .RData files have been saved.  Each .RData file contains one 
@@ -138,6 +152,11 @@ filterRAD <- RemoveMonomorphicLoci(exampleRAD)
 
 # filter out high depth loci (none removed in this example)
 filterRAD2 <- RemoveHighDepthLoci(filterRAD)
+
+# filter out loci with missing or non-variable genotypes 
+# (none removed in this example)
+filterRAD3 <- IterateHWE(filterRAD2)
+filterRAD3 <- RemoveUngenotypedLoci(filterRAD3)
 }
 
 \keyword{ manip }

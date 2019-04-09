@@ -2083,3 +2083,54 @@ MergeTaxaDepth.RADdata <- function(object, taxa, ...){
   
   return(object)
 }
+# function to filter out loci that couldn't be genotyped, generally because
+# parent genotypes did not match allele frequency.
+RemoveUngenotypedLoci <- function(object, ...){
+  UseMethod("RemoveUngenotypedLoci", object)
+}
+RemoveUngenotypedLoci.RADdata <- function(object, removeNonvariant = TRUE,
+                                          ...){
+  if(is.null(object$posteriorProb)){
+    stop("Perform genotype calling before running RemoveUngenotypedLoci.")
+  }
+  
+  # if this is a mapping population, we will exclude the parents when
+  # looking for missing or non-variable genotypes
+  have_parents <- !is.null(attr(object, "donorParent")) && 
+    !is.null(attr(object, "recurrentParent"))
+  if(have_parents){
+    parents <- c(match(GetDonorParent(object), GetTaxa(object)),
+                 match(GetRecurrentParent(object), GetTaxa(object)))
+  }
+  
+  # vector of alleles to discard; becomes FALSE if non-missing for any ploidy
+  alleles_discard <- rep(TRUE, nAlleles(object))
+  
+  # loop through ploidies
+  for(prob in object$posteriorProb){
+    if(have_parents){
+      prob <- prob[, -parents, , drop = FALSE]
+    }
+    all_missing <- apply(prob, 3, function(x) all(is.na(x)))
+    
+    if(removeNonvariant){
+      nmprob <- prob[,, !all_missing, drop = FALSE]
+      nonvar <- apply(nmprob, 3, 
+            function(x) all(apply(x, 1, 
+                                  function(y) sd(y, na.rm = TRUE) == 0),
+                            na.rm = TRUE))
+      all_missing[!all_missing] <- nonvar
+    }
+    
+    alleles_discard <- alleles_discard & all_missing
+  }
+  
+  # discard loci that have any alleles to discard
+  loci_discard <- unique(object$alleles2loc[alleles_discard])
+  if(length(loci_discard) > 0){
+    loci_keep <- (1:nLoci(object))[-loci_discard]
+    object <- SubsetByLocus(object, loci_keep)
+  }
+  
+  return(object)
+}
