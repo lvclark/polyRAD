@@ -24,7 +24,7 @@ a character string indicating the name of an allele, for which the
 corresponding locus will be identified.
 }
 \item{genome}{
-An optional \code{\link[Rsamtools]{FaFile}} or 
+An optional \code{\link[Rsamtools:FaFile-class]{FaFile}} or 
 \code{\link[BSgenome:BSgenome-class]{BSgenome}}
 object containing the reference genome sequence.
 }
@@ -45,7 +45,8 @@ position are known, those are also returned and printed.  If \code{annotation}
 is provided, the function will return and print genes that overlap the locus.
 If \code{annotation} and \code{genome} are provided, the function will attempt
 to identify any amino acid changes caused by the alleles, using
-\code{\link[VariantAnnotation]{predictCoding}} internally.  Identification of
+\code{\link[VariantAnnotation:predictCoding-methods]{predictCoding}} 
+internally.  Identification of
 amino acid changes will work if the \code{RADdata} object was created with
 \code{VCF2RADdata} using the \code{refgenome} argument to fill in non-variable
 sites, and/or if the alleles are only one nucleotide long.
