@@ -995,30 +995,7 @@ AddAlleleFreqByTaxa.RADdata <- function(object, minfreq = 0.0001, ...){
            ncol = nAlleles(object))
   
   # adjust allele frequencies to possible values
-  for(loc in sort(unique(object$alleles2loc))){
-    thesecol <- which(object$alleles2loc == loc) # columns for this locus
-    for(taxa in 1:nTaxa(object)){
-      thesefreq <- predAl[taxa,thesecol]
-      thesefreq <- thesefreq/sum(thesefreq) # must sum to 1
-      while(any(thesefreq < minfreq)){
-        oldfreq <- thesefreq
-        toolow <- thesefreq < minfreq
-        thesefreq[toolow] <- minfreq
-        canadjust <- thesefreq > minfreq
-        adjust <- sum(thesefreq - oldfreq)/sum(canadjust)
-        thesefreq[canadjust] <- thesefreq[canadjust] - adjust
-      }
-      while(any(thesefreq > (1 - minfreq))){
-        oldfreq <- thesefreq
-        toohigh <- thesefreq > 1 - minfreq
-        thesefreq[toohigh] <- 1 - minfreq
-        canadjust <- thesefreq < 1 - minfreq
-        adjust <- sum(oldfreq - thesefreq)/sum(canadjust)
-        thesefreq[canadjust] <- thesefreq[canadjust] + adjust
-      }
-      predAl[taxa,thesecol] <- thesefreq
-    }
-  }
+  predAl <- AdjustAlleleFreq(predAl, object$alleles2loc, minfreq)
   
   dimnames(predAl) <- list(GetTaxa(object), GetAlleleNames(object))
   object$alleleFreqByTaxa <- predAl

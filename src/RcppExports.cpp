@@ -5,6 +5,19 @@
 
 using namespace Rcpp;
 
+// AdjustAlleleFreq
+NumericMatrix AdjustAlleleFreq(NumericMatrix predAl, IntegerVector alleles2loc, double minfreq);
+RcppExport SEXP _polyRAD_AdjustAlleleFreq(SEXP predAlSEXP, SEXP alleles2locSEXP, SEXP minfreqSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type predAl(predAlSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type alleles2loc(alleles2locSEXP);
+    Rcpp::traits::input_parameter< double >::type minfreq(minfreqSEXP);
+    rcpp_result_gen = Rcpp::wrap(AdjustAlleleFreq(predAl, alleles2loc, minfreq));
+    return rcpp_result_gen;
+END_RCPP
+}
 // BestGenos
 IntegerMatrix BestGenos(NumericVector probs, int ploidy, int ntaxa, int nalleles);
 RcppExport SEXP _polyRAD_BestGenos(SEXP probsSEXP, SEXP ploidySEXP, SEXP ntaxaSEXP, SEXP nallelesSEXP) {
@@ -45,6 +58,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_polyRAD_AdjustAlleleFreq", (DL_FUNC) &_polyRAD_AdjustAlleleFreq, 3},
     {"_polyRAD_BestGenos", (DL_FUNC) &_polyRAD_BestGenos, 4},
     {"_polyRAD_BestPloidies", (DL_FUNC) &_polyRAD_BestPloidies, 1},
     {"_polyRAD_ThirdDimProd", (DL_FUNC) &_polyRAD_ThirdDimProd, 3},
