@@ -52,7 +52,7 @@ objects; see the help page for that function for more information on what
 data are needed.
 
 Several pipelines are available for genotype estimation, depending on how the 
-population is structured (i.e. what the genotype prior probabilities should be.):
+population is structured (i.e. what the genotype prior probabilities should be):
 
 * `PipelineMapping2Parents`
 * `IterateHWE`
