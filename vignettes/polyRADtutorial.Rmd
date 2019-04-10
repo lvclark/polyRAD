@@ -348,7 +348,7 @@ which can be changed with the `minval` and `maxval` arguments.
 
 ```{r}
 mywm <- GetWeightedMeanGenotypes(mydata)
-mywm[c(276, 277, 1:5), 10:13]
+round(mywm[c(276, 277, 1:5), 10:13], 3)
 ```
 
 Note that the parent posterior mean genotypes were estimated using 
