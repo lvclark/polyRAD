@@ -79,6 +79,7 @@ There are also various utilities for manipulating RADdata objects:
 
 * `SubsetByTaxon`
 * `SubsetByLocus`
+* `SubsetByPloidy`
 * `SplitByChromosome`
 * `MergeRareHaplotypes`
 * `MergeTaxaDepth`
@@ -335,6 +336,14 @@ estimated separately for each ploidy.
 ```{r}
 mydata$posteriorProb[[1]][,10,19:26]
 mydata$posteriorProb[[2]][,10,19:26]
+```
+
+Since we decided from the Chi-squared results that the markers were only
+segregating in a diploid manner, we can remove allotetraploidy from the
+dataset.
+
+```{r}
+mydata <- SubsetByPloidy(mydata, ploidies = list(2))
 ```
 
 Typically in a mapping population, due to noisy data polyRAD will not be able

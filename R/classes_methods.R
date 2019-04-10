@@ -1623,6 +1623,87 @@ SubsetByLocus.RADdata <- function(object, loci, ...){
   
   return(splitRADdata)
 }
+SubsetByPloidy <- function(object, ...){
+  UseMethod("SubsetByPloidy", object)
+}
+SubsetByPloidy.RADdata <- function(object, ploidies, ...){
+  ploidies <- lapply(ploidies, as.integer)
+  object$possiblePloidies <- ploidies
+  # don't need to subset much if genotype calling not done
+  if(is.null(object$priorProbPloidies)){
+    return(object)
+  }
+  
+  npld <- length(ploidies)
+  # get indices of the desired ploidies in the object
+  pldindex <- integer(npld)
+  for(i in 1:npld){
+    for(j in 1:length(object$priorProbPloidies)){
+      if(identical(ploidies[[i]], object$priorProbPloidies[[j]])){
+        pldindex[i] <- j
+        break
+      }
+    }
+    if(pldindex[i] == 0){
+      stop(paste("Ploidy", paste(ploidies[[i]], collapse = " "), 
+                 "not found in dataset."))
+    }
+  }
+  object$priorProbPloidies <- ploidies
+  
+  if(!is.null(object$priorProb)){
+    object$priorProb <- object$priorProb[pldindex]
+  }
+  if(!is.null(object$ploidyChiSq)){
+    object$ploidyChiSq <- object$ploidyChiSq[pldindex,, drop = FALSE]
+  }
+  if(!is.null(object$ploidyChiSqP)){
+    object$ploidyChiSqP <- object$ploidyChiSqP[pldindex,, drop = FALSE]
+  }
+  if(!is.null(object$ploidyLikelihood)){
+    object$ploidyLikelihood <- object$ploidyLikelihood[pldindex,, drop = FALSE]
+  }
+  if(!is.null(object$priorTimesLikelihood)){
+    object$priorTimesLikelihood <- object$priorTimesLikelihood[pldindex]
+  }
+  if(!is.null(object$priorProbLD)){
+    object$priorProbLD <- object$priorProbLD[pldindex]
+  }
+  
+  # subset items relating to likelihood, which ignore auto/allo differences
+  pldsums <- sapply(ploidies, sum)
+  if(!is.null(object$genotypeLikelihood)){
+    likpld <- sapply(object$genotypeLikelihood, function(x) dim(x)[1] - 1L)
+    object$genotypeLikelihood <- object$genotypeLikelihood[likpld %in% pldsums]
+  }
+  if(!is.null(object$likelyGeno_donor)){
+    keeprow <- as.integer(rownames(object$likelyGeno_donor)) %in% pldsums
+    object$likelyGeno_donor <- object$likelyGeno_donor[keeprow,, drop = FALSE]
+  }
+  if(!is.null(object$likelyGeno_recurrent)){
+    keeprow <- as.integer(rownames(object$likelyGeno_recurrent)) %in% pldsums
+    object$likelyGeno_recurrent <- 
+      object$likelyGeno_recurrent[keeprow,, drop = FALSE]
+  }
+  
+  # subset parental ploidies if mapping population
+  ploidyfound <- function(x){
+    for(pld in ploidies){
+      if(identical(pld, x)) return(TRUE)
+    }
+    return(FALSE)
+  }
+  if(!is.null(object$donorPloidies)){
+    keeppld <- sapply(object$donorPloidies, ploidyfound)
+    object$donorPloidies <- object$donorPloidies[keeppld]
+  }
+  if(!is.null(object$recurrentPloidies)){
+    keeppld <- sapply(object$recurrentPloidies, ploidyfound)
+    object$recurrentPloidies <- object$recurrentPloidies[keeppld]
+  }
+  
+  return(object)
+}
 SplitByChromosome <- function(object, ...){
   UseMethod("SplitByChromosome", object)
 }

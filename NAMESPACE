@@ -21,7 +21,7 @@ PipelineMapping2Parents, RADdata, readHMC, readStacks, readTagDigger,
 readTASSELGBSv2, RemoveHighDepthLoci, RemoveMonomorphicLoci,
 RemoveUngenotypedLoci,
 SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent,
-SplitByChromosome, StripDown, SubsetByLocus, SubsetByTaxon, 
+SplitByChromosome, StripDown, SubsetByLocus, SubsetByPloidy, SubsetByTaxon,
 TestOverdispersion, VCF2RADdata)
 
 importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom",
@@ -78,6 +78,7 @@ S3method(SetDonorParent, RADdata)
 S3method(SetRecurrentParent, RADdata)
 S3method(SplitByChromosome, RADdata)
 S3method(SubsetByLocus, RADdata)
+S3method(SubsetByPloidy, RADdata)
 S3method(SubsetByTaxon, RADdata)
 S3method(StripDown, RADdata)
 S3method(TestOverdispersion, RADdata)
