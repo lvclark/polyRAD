@@ -235,11 +235,11 @@ mypheno <- matrix(rnorm(200), nrow = 100, ncol = 2,
                   dimnames = list(GetTaxa(exampleRAD_mapping)[-(1:2)],
                                   c("Height", "Yield")))
 Export_MAPpoly(exampleRAD_mapping, file = outfile2, pheno = mypheno)
-\donttest{
+
 # load data into MAPpoly
-require(mappoly)
-mydata <- read_geno_dist(outfile2)
-}
+# require(mappoly) # can uncomment once mappoly is on CRAN
+# mydata <- read_geno_dist(outfile2)
+
 # export to GWASpoly
 outfile3 <- tempfile() # temporary file for example
 Export_GWASpoly(exampleRAD, outfile3)
