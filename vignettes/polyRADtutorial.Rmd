@@ -84,6 +84,7 @@ There are also various utilities for manipulating RADdata objects:
 * `MergeTaxaDepth`
 * `RemoveMonomorphicLoci`
 * `RemoveHighDepthLoci`
+* `RemoveUngenotypedLoci`
 * `EstimateContaminationRate`
 * `StripDown`
 * `LocusInfo`
@@ -334,6 +335,19 @@ estimated separately for each ploidy.
 ```{r}
 mydata$posteriorProb[[1]][,10,19:26]
 mydata$posteriorProb[[2]][,10,19:26]
+```
+
+Typically in a mapping population, due to noisy data polyRAD will not be able
+to determine the segregation patterns of some markers, which end up having `NA`
+values for their prior and posterior probabilities.  There may also be some
+cases where both parents were homozygous and as a result there is no 
+segregation in an F1 population.  In this example dataset, these issues are not
+present (as long as diploidy is assumed) because the markers were curated
+from a set that had already been filtered for mapping.  Generally, however,
+you would want to find and remove such markers using `RemoveUngenotypedLoci`:
+
+```{r}
+mydata <- RemoveUngenotypedLoci(mydata)
 ```
 
 We can export the results for use in downstream analysis.  The function
