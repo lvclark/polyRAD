@@ -213,9 +213,15 @@ Export_MAPpoly <- function(object, file, pheno = NULL, ploidyIndex = 1,
   if(!is.null(pheno) && !is.null(row.names(pheno)) && !identical(progeny, row.names(pheno))){
     warning("Please check that progeny vector and rows of pheno are in same order.")
   }
+  if(!is.null(pheno) && any(grepl(" ", colnames(pheno)))){
+    stop("Phenotype names should not have spaces.")
+  }
   # Check progeny names
   if(!all(progeny %in% GetTaxa(object))){
     stop("Not all progeny names found in object.")
+  }
+  if(any(grepl(" ", progeny))){
+    stop("Taxa names should not have spaces.")
   }
   # Determine the ploidy
   if(ploidyIndex > length(object$priorProbPloidies)){
@@ -234,6 +240,9 @@ Export_MAPpoly <- function(object, file, pheno = NULL, ploidyIndex = 1,
   keepal <- which(!is.na(donorGen) & !is.na(recurGen) & 
     !(donorGen == 0 & recurGen == ploidy) & !(donorGen == ploidy & recurGen == 0))
   keepal <- keepal[!keepal %in% OneAllelePerMarker(object, commonAllele = TRUE)]
+  if(any(grepl(" ", GetAlleleNames(object)[keepal]))){
+    stop("Allele and locus names should not have spaces.")
+  }
   
   # Get chromosome and position
   if(is.null(object$locTable$Chr) || all(is.na(object$locTable$Chr))){
