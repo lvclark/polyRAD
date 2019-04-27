@@ -49,11 +49,12 @@ Currently there are export functions for the following software.  Genotypes are 
 * [rrBLUP](https://cran.r-project.org/web/packages/rrBLUP/)
 * [TASSEL](http://www.maizegenetics.net/tassel)
 
-There is an export function for discrete genotypes for the following software:
+There are export functions for discrete genotypes for the following software:
 
 * [polymapR](https://cran.r-project.org/package=polymapR)
+* [GWASpoly](https://potatobreeding.cals.wisc.edu/software/)
 
-In the development version of polyRAD, genotype probabilities can be exported to:
+Genotype probabilities can be exported to:
 
 * [MAPpoly](https://github.com/mmollina/MAPpoly)
 
