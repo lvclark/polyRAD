@@ -31,7 +31,7 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
     stop("possiblePloidies must be list")
   }
   possiblePloidies <- lapply(possiblePloidies, as.integer)
-  if(!all(sapply(possiblePloidies, function(x) all(!is.na(x) && x > 0)))){
+  if(!all(sapply(possiblePloidies, function(x) all(!is.na(x) & x > 0)))){
     stop("Each element of possiblePloidies should be a vector of integers greater than zero.")
   }
   if(contamRate < 0 || contamRate > 1){
