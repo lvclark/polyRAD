@@ -1,78 +1,107 @@
 polyRAD Tutorial
 ================
 Lindsay V. Clark, University of Illinois, Urbana-Champaign
-07 March 2019
+27 April 2019
 
--   [Introduction <a name="introduction"></a>](#introduction)
--   [Summary of available functions <a name="functions"></a>](#summary-of-available-functions)
--   [Estimating genotype probabilities in a mapping population <a name="mapping"></a>](#estimating-genotype-probabilities-in-a-mapping-population)
--   [Estimating genotype probabilities in a diversity panel <a name="diversity"></a>](#estimating-genotype-probabilities-in-a-diversity-panel)
--   [Considerations for RAM and processing time <a name="considerations"></a>](#considerations-for-ram-and-processing-time)
--   [Citing polyRAD <a name="citation"></a>](#citing-polyrad)
+## Introduction <a name="introduction"></a>
 
-Introduction <a name="introduction"></a>
-----------------------------------------
+polyRAD is an R package that assists with genotype calling from DNA
+sequence datasets such as genotyping-by-sequencing (GBS) or restriction
+site-associated DNA sequencing (RAD) in polyploids and diploids.
+Genotype likelihoods are estimated from allelic read depth, genotype
+prior probabilities are estimated from population parameters, and then
+genotype posterior probabilities are estimated from likelihoods and
+prior probabilities. Posterior probabilities can be used directly in
+downstream analysis, converted to posterior mean genotypes for analyses
+of additive genetic effects, or used for export of the most probable
+genotypes for analyses that require discrete genotypic data.
 
-polyRAD is an R package that assists with genotype calling from DNA sequence datasets such as genotyping-by-sequencing (GBS) or restriction site-associated DNA sequencing (RAD) in polyploids and diploids. Genotype likelihoods are estimated from allelic read depth, genotype prior probabilities are estimated from population parameters, and then genotype posterior probabilities are estimated from likelihoods and prior probabilities. Posterior probabilities can be used directly in downstream analysis, converted to posterior mean genotypes for analyses of additive genetic effects, or used for export of the most probable genotypes for analyses that require discrete genotypic data.
+Analyses in polyRAD center around objects of an S3 class called
+`RADdata`. A single `RADdata` object contains the entire dataset of read
+depth and locus information, as well as parameters that are estimated
+during the course of analysis.
 
-Analyses in polyRAD center around objects of an S3 class called `RADdata`. A single `RADdata` object contains the entire dataset of read depth and locus information, as well as parameters that are estimated during the course of analysis.
+## Summary of available functions <a name="functions"></a>
 
-Summary of available functions <a name="functions"></a>
--------------------------------------------------------
+For any function named in this section, see its help page for more
+information. (For example by typing `?VCF2RADdata` into the R console.)
 
-For any function named in this section, see its help page for more information. (For example by typing `?VCF2RADdata` into the R console.)
+Several functions are available for import of read depth data and
+(optionally) alignment information into a RADdata object:
 
-Several functions are available for import of read depth data and (optionally) alignment information into a RADdata object:
+  - `VCF2RADdata`
+  - `readTagDigger`
+  - `readStacks`
+  - `readHMC`
+  - `readTASSELGBSv2`
 
--   `VCF2RADdata`
--   `readTagDigger`
--   `readStacks`
--   `readHMC`
--   `readTASSELGBSv2`
+More generally, the `RADdata` function is used for constructing RADdata
+objects; see the help page for that function for more information on
+what data are needed.
 
-More generally, the `RADdata` function is used for constructing RADdata objects; see the help page for that function for more information on what data are needed.
+Several pipelines are available for genotype estimation, depending on
+how the population is structured (i.e. what the genotype prior
+probabilities should be):
 
-Several pipelines are available for genotype estimation, depending on how the population is structured (i.e. what the genotype prior probabilities should be.):
-
--   `PipelineMapping2Parents`
--   `IterateHWE`
--   `IterateHWE_LD`
--   `IteratePopStruct`
--   `IteratePopStructLD`
+  - `PipelineMapping2Parents`
+  - `IterateHWE`
+  - `IterateHWE_LD`
+  - `IteratePopStruct`
+  - `IteratePopStructLD`
 
 For exporting the estimated genotypes to other software:
 
--   `ExportGAPIT`
--   `Export_rrBLUP_Amat`
--   `Export_rrBLUP_GWAS`
--   `Export_TASSEL_Numeric`
--   `Export_polymapR`
+  - `ExportGAPIT`
+  - `Export_rrBLUP_Amat`
+  - `Export_rrBLUP_GWAS`
+  - `Export_TASSEL_Numeric`
+  - `Export_polymapR`
+  - `Export_MAPpoly`
+  - `Export_GWASpoly`
 
-If you need continuous numerical genotypes exported in some other format, see `GetWeightedMeanGenotypes`. If you need discrete numerical genotypes, see `GetProbableGenotypes`. Also, `GetLikelyGen` returns the most likely genotypes (based on read depth only) for a single sample.
+If you need continuous numerical genotypes exported in some other
+format, see `GetWeightedMeanGenotypes`. If you need discrete numerical
+genotypes, see `GetProbableGenotypes`. Also, `GetLikelyGen` returns the
+most likely genotypes (based on read depth only) for a single sample.
 
 There are also various utilities for manipulating RADdata objects:
 
--   `SubsetByTaxon`
--   `SubsetByLocus`
--   `SplitByChromosome`
--   `MergeRareHaplotypes`
--   `MergeTaxaDepth`
--   `RemoveMonomorphicLoci`
--   `RemoveHighDepthLoci`
--   `EstimateContaminationRate`
--   `StripDown`
--   `LocusInfo`
+  - `SubsetByTaxon`
+  - `SubsetByLocus`
+  - `SubsetByPloidy`
+  - `SplitByChromosome`
+  - `MergeRareHaplotypes`
+  - `MergeTaxaDepth`
+  - `RemoveMonomorphicLoci`
+  - `RemoveHighDepthLoci`
+  - `RemoveUngenotypedLoci`
+  - `EstimateContaminationRate`
+  - `StripDown`
+  - `LocusInfo`
 
-See `?GetTaxa` for a list of accessor functions as well.
+See `?GetTaxa` for a list of accessor functions as
+well.
 
-Estimating genotype probabilities in a mapping population <a name="mapping"></a>
---------------------------------------------------------------------------------
+## Estimating genotype probabilities in a mapping population <a name="mapping"></a>
 
-In this example, we'll import some data from an F1 mapping population of *Miscanthus sinensis* that were output by the [UNEAK](https://doi.org/10.1371/journal.pgen.1003215) pipeline. These data are from a study by Liu *et al.* (2015; [doi:10.1111/gcbb.12275](https://doi.org/10.1111/gcbb.12275); data available at <http://hdl.handle.net/2142/79522>), and can be found in the "extdata" folder of the polyRAD installation. *Miscanthus* is an ancient tetraploid that has undergone diploidization. Given the ability of the UNEAK pipeline to filter paralogs, we expect most loci to behave in a diploid fashion, but some may behave in an allotetraploid fashion.
+In this example, we’ll import some data from an F1 mapping population of
+*Miscanthus sinensis* that were output by the
+[UNEAK](https://doi.org/10.1371/journal.pgen.1003215) pipeline. These
+data are from a study by Liu *et al.* (2015;
+[doi:10.1111/gcbb.12275](https://doi.org/10.1111/gcbb.12275); data
+available at <http://hdl.handle.net/2142/79522>), and can be found in
+the “extdata” folder of the polyRAD installation. *Miscanthus* is an
+ancient tetraploid that has undergone diploidization. Given the ability
+of the UNEAK pipeline to filter paralogs, we expect most loci to behave
+in a diploid fashion, but some may behave in an allotetraploid fashion.
 
-We'll start by loading polyRAD and importing the data into a `RADdata` object. The `possiblePloidies` argument indicates the expected inheritance modes: diploid (2) and allotetraploid (2 2).
+We’ll start by loading polyRAD and importing the data into a `RADdata`
+object. The `possiblePloidies` argument indicates the expected
+inheritance modes: diploid (2) and allotetraploid (2 2).
 
-With your own dataset, you will not need to use `system.file`. Instead, directly create a text string indicating the name of your file (and its location if it is not in the working directory.)
+With your own dataset, you will not need to use `system.file`. Instead,
+directly create a text string indicating the name of your file (and its
+location if it is not in the working directory.)
 
 ``` r
 library(polyRAD)
@@ -81,7 +110,7 @@ maphmcfile <- system.file("extdata", "ClareMap_HapMap.hmc.txt",
 maphmcfile
 ```
 
-    ## [1] "C:/Users/lvclark/Documents/R/win-library/3.5/polyRAD/extdata/ClareMap_HapMap.hmc.txt"
+    ## [1] "D:/Program Files/R-3.6.0/library/polyRAD/extdata/ClareMap_HapMap.hmc.txt"
 
 ``` r
 mydata <- readHMC(maphmcfile,
@@ -111,14 +140,23 @@ GetTaxa(mydata)[c(1:10,293:299)]
     ## [13] "Map1-490"        "Map1-491"        "Zebrinus-Justin"
     ## [16] "p196-150A-c"     "p877-348-b"
 
-All names starting with "Map" are progeny. "Kaskade-Justin" and "Zebrinus-Justin" are the parents. "IGR-2011-001", "p196-150A-c"", and "p877-348-b" aren't part of the population, but were doubled haploid lines that were used to screen for paralogous markers. We can tell polyRAD which taxa are the parents; since this is an F1 population it doesn't matter which is "donor" and which is "recurrent".
+All names starting with “Map” are progeny. “Kaskade-Justin” and
+“Zebrinus-Justin” are the parents. “IGR-2011-001”, “p196-150A-c”“,
+and”p877-348-b" aren’t part of the population, but were doubled
+haploid lines that were used to screen for paralogous markers. We can
+tell polyRAD which taxa are the parents; since this is an F1 population
+it doesn’t matter which is “donor” and which is “recurrent”.
 
 ``` r
 mydata <- SetDonorParent(mydata, "Kaskade-Justin")
 mydata <- SetRecurrentParent(mydata, "Zebrinus-Justin")
 ```
 
-The next thing we'll want to do is add our genomic alignment data. For this dataset, we have alignment data stored in a CSV file, also in the "extdata" directory of the polyRAD installation. We'll add it to the `locTable` slot of our `RADdata` object. Be sure to name the new columns "Chr" and "Pos".
+The next thing we’ll want to do is add our genomic alignment data. For
+this dataset, we have alignment data stored in a CSV file, also in the
+“extdata” directory of the polyRAD installation. We’ll add it to the
+`locTable` slot of our `RADdata` object. Be sure to name the new columns
+“Chr” and “Pos”.
 
 ``` r
 alignfile <- system.file("extdata", "ClareMap_alignments.csv", 
@@ -150,9 +188,18 @@ head(mydata$locTable)
     ## TP19030   1 7576879
     ## TP26698   1 6972841
 
-If you don't have alignment data in your own dataset, you can still use the pipeline described here. Just set `useLinkage = FALSE` in the code below. The advantage of including alignment data is that gentoypes at linked markers are used for imputing missing or correcting erroneous genotypes.
+If you don’t have alignment data in your own dataset, you can still use
+the pipeline described here. Just set `useLinkage = FALSE` in the code
+below. The advantage of including alignment data is that gentoypes at
+linked markers are used for imputing missing or correcting erroneous
+genotypes.
 
-It is important that the only individuals included in the analysis are those that are truly part of the population. Allele frequencies are used for inferring segregation pattern, and could be incorrect if many individuals are included that are not part of the population. Additionally, the genotype priors will be incorrect for individuals that are not part of the population, leading to incorrect genotypes.
+It is important that the only individuals included in the analysis are
+those that are truly part of the population. Allele frequencies are used
+for inferring segregation pattern, and could be incorrect if many
+individuals are included that are not part of the population.
+Additionally, the genotype priors will be incorrect for individuals that
+are not part of the population, leading to incorrect genotypes.
 
 At this point we would normally do
 
@@ -160,7 +207,10 @@ At this point we would normally do
 mydata <- AddPCA(mydata)
 ```
 
-However, because a very small number of markers was used in this example dataset, the PCA does not accurately reflect the relatedness of individuals. Here I will load a PCA that was done with the full set of markers.
+However, because a very small number of markers was used in this example
+dataset, the PCA does not accurately reflect the relatedness of
+individuals. Here I will load a PCA that was done with the full set of
+markers.
 
 ``` r
 load(system.file("extdata", "examplePCA.RData", package = "polyRAD"))
@@ -173,9 +223,11 @@ Now a plot can be used for visualizing the relationship among taxa.
 plot(mydata)
 ```
 
-![](polyRADtutorial_files/figure-markdown_github/unnamed-chunk-7-1.png)
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
-Now we'll extract a subset of taxa that we actually want to analyze. We can see from the plot that a fair number of them were the product of self-fertilization of "Zebrinus-Justin" and should be eliminated.
+Now we’ll extract a subset of taxa that we actually want to analyze. We
+can see from the plot that a fair number of them were the product of
+self-fertilization of “Zebrinus-Justin” and should be eliminated.
 
 ``` r
 realprogeny <- GetTaxa(mydata)[mydata$PCA[,"PC1"] > -10 &
@@ -190,9 +242,22 @@ mydata <- SubsetByTaxon(mydata, taxa = keeptaxa)
 plot(mydata)
 ```
 
-![](polyRADtutorial_files/figure-markdown_github/unnamed-chunk-8-1.png)
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
-Now we can perform a preliminary run of the pipeline. The `allowedDeviation` argument indicates how different the apparent allele frequency (based on read depth ratios) can be from an expected allele frequency (determined based on ploidy and mapping population type) and still be classified as that allele frequency. The default settings assume an F1 population, but the population type can be adjusted using the `n.gen.backcrossing`, `n.gen.intermating`, and `n.gen.selfing` arguments. We'll also lower `minLikelihoodRatio` from the default because one of the parents has many uncertain genotypes under the tetraploid model (which was determined by exploration of the dataset outside of this tutorial; many NA values were observed in `priorProb` under the default). Since this first run is for a rough estimate of genotypes, we'll set `useLinkage = FALSE` to save a little computational time.
+Now we can perform a preliminary run of the pipeline. The
+`allowedDeviation` argument indicates how different the apparent allele
+frequency (based on read depth ratios) can be from an expected allele
+frequency (determined based on ploidy and mapping population type) and
+still be classified as that allele frequency. The default settings
+assume an F1 population, but the population type can be adjusted using
+the `n.gen.backcrossing`, `n.gen.intermating`, and `n.gen.selfing`
+arguments. We’ll also lower `minLikelihoodRatio` from the default
+because one of the parents has many uncertain genotypes under the
+tetraploid model (which was determined by exploration of the dataset
+outside of this tutorial; many NA values were observed in `priorProb`
+under the default). Since this first run is for a rough estimate of
+genotypes, we’ll set `useLinkage = FALSE` to save a little computational
+time.
 
 ``` r
 mydata2 <- PipelineMapping2Parents(mydata, 
@@ -205,7 +270,11 @@ mydata2 <- PipelineMapping2Parents(mydata,
 
     ## Done.
 
-We can use these preliminary estimates to determine whether we need to adjust the overdispersion parameter. Exactly how much does read depth distribution deviate from what would be expected under binomial distibution? The `TestOverdispersion` function will help us here. We will use the `qqman` package to visualize the results.
+We can use these preliminary estimates to determine whether we need to
+adjust the overdispersion parameter. Exactly how much does read depth
+distribution deviate from what would be expected under binomial
+distibution? The `TestOverdispersion` function will help us here. We
+will use the `qqman` package to visualize the results.
 
 ``` r
 library(qqman)
@@ -213,33 +282,35 @@ overdispersionP <- TestOverdispersion(mydata2, to_test = 6:10)
 qq(overdispersionP[["6"]])
 ```
 
-![](polyRADtutorial_files/figure-markdown_github/unnamed-chunk-10-1.png)
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ``` r
 qq(overdispersionP[["7"]])
 ```
 
-![](polyRADtutorial_files/figure-markdown_github/unnamed-chunk-10-2.png)
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-10-2.png)<!-- -->
 
 ``` r
 qq(overdispersionP[["8"]])
 ```
 
-![](polyRADtutorial_files/figure-markdown_github/unnamed-chunk-10-3.png)
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-10-3.png)<!-- -->
 
 ``` r
 qq(overdispersionP[["9"]])
 ```
 
-![](polyRADtutorial_files/figure-markdown_github/unnamed-chunk-10-4.png)
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-10-4.png)<!-- -->
 
 ``` r
 qq(overdispersionP[["10"]])
 ```
 
-![](polyRADtutorial_files/figure-markdown_github/unnamed-chunk-10-5.png)
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-10-5.png)<!-- -->
 
-It looks like `9` follows the red line most closely, so we'll use that for the overdispersion parameter. Now we can re-run the pipeline to properly call the genotypes.
+It looks like `9` follows the red line most closely, so we’ll use that
+for the overdispersion parameter. Now we can re-run the pipeline to
+properly call the genotypes.
 
 ``` r
 mydata <- PipelineMapping2Parents(mydata, 
@@ -254,7 +325,9 @@ mydata <- PipelineMapping2Parents(mydata,
 
     ## Done.
 
-We can examine the allele frequencies. Allele frequencies that fall outside of the expected ranges will be recorded as they were estimated from read depth. In this case all are within the expected ranges.
+We can examine the allele frequencies. Allele frequencies that fall
+outside of the expected ranges will be recorded as they were estimated
+from read depth. In this case all are within the expected ranges.
 
 ``` r
 table(mydata$alleleFreq)
@@ -264,7 +337,10 @@ table(mydata$alleleFreq)
     ## 0.125  0.25 0.375   0.5 0.625  0.75 0.875 
     ##     1    42     1    12     1    42     1
 
-Genotype likelihood is also stored in the object for each possible genotype at each locus, taxon, and ploidy. This is the probability of seeing the observed distribution of reads.
+Genotype likelihood is also stored in the object for each possible
+genotype at each locus, taxon, and ploidy. This is the probability of
+seeing the observed distribution of
+    reads.
 
 ``` r
 mydata$alleleDepth[8,19:26]
@@ -305,9 +381,22 @@ mydata$genotypeLikelihood[[2]][,8,19:26]
     ## 3 2.003410e-02 1.118037e-01 1.128698e-03
     ## 4 3.064777e-06 2.257439e-04 2.688637e-08
 
-Above, for one individal (Map1-018), we see its read depth at eight alleles (four loci), followed by the genotype likelihoods under diploid and tetraploid models. For example, at locus TP35570, heterozygosity is the most likely state, although there is a chance that this individual is homozygous for allele 0 and the four reads of allele 1 were due to contamination. If this locus is allotetraploid, it is most likely that there is one copy of allele 1 and three copies of allele 0. Other loci have higher depth and as a result there is less uncertainty in the genotype, particularly for the diploid model.
+Above, for one individal (Map1-018), we see its read depth at eight
+alleles (four loci), followed by the genotype likelihoods under diploid
+and tetraploid models. For example, at locus TP35570, heterozygosity is
+the most likely state, although there is a chance that this individual
+is homozygous for allele 0 and the four reads of allele 1 were due to
+contamination. If this locus is allotetraploid, it is most likely that
+there is one copy of allele 1 and three copies of allele 0. Other loci
+have higher depth and as a result there is less uncertainty in the
+genotype, particularly for the diploid model.
 
-The prior genotype probabilities (expected genotype distributions) are also stored in the object for each possible ploidy. These distributions are estimated based on the most likely parent genotypes. Low confidence parent genotypes can be ignored by increasing the `minLikelihoodRatio` argument to `PipelineMapping2Parents`.
+The prior genotype probabilities (expected genotype distributions) are
+also stored in the object for each possible ploidy. These distributions
+are estimated based on the most likely parent genotypes. Low confidence
+parent genotypes can be ignored by increasing the `minLikelihoodRatio`
+argument to
+    `PipelineMapping2Parents`.
 
 ``` r
 mydata$priorProb[[1]][,19:26]
@@ -339,9 +428,19 @@ mydata$priorProb[[2]][,19:26]
     ## 3       0.0
     ## 4       0.0
 
-Here we see some pretty big differences under the diploid and allotetraploid models. For example, if TP35570 is behaving in a diploid fashion we expect F2-like segregation since both parents were heterozygous. However, if TP35570 is behaving in an allotetraploid fashion, a 1:1 segregation ratio is expected due to one parent being heterozygous at one isolocus and the other being homozygous at both isoloci.
+Here we see some pretty big differences under the diploid and
+allotetraploid models. For example, if TP35570 is behaving in a diploid
+fashion we expect F2-like segregation since both parents were
+heterozygous. However, if TP35570 is behaving in an allotetraploid
+fashion, a 1:1 segregation ratio is expected due to one parent being
+heterozygous at one isolocus and the other being homozygous at both
+isoloci.
 
-Now we want to determine which ploidy is the best fit for each locus. This is done by comparing genotype prior probabilities to genotype likelihoods and estimating a *χ*<sup>2</sup> statistic. Lower values indicate a better fit.
+Now we want to determine which ploidy is the best fit for each locus.
+This is done by comparing genotype prior probabilities to genotype
+likelihoods and estimating a \(\chi^2\) statistic. Lower values indicate
+a better
+    fit.
 
 ``` r
 mydata$ploidyChiSq[,19:26]
@@ -354,7 +453,8 @@ mydata$ploidyChiSq[,19:26]
     ## [1,]  5.818905  5.818905
     ## [2,] 88.956011 88.956011
 
-We can make a plot to get an overall sense of how well the markers fit the diploid versus tetraploid model.
+We can make a plot to get an overall sense of how well the markers fit
+the diploid versus tetraploid model.
 
 ``` r
 plot(mydata$ploidyChiSq[1,], mydata$ploidyChiSq[2,], 
@@ -362,11 +462,15 @@ plot(mydata$ploidyChiSq[1,], mydata$ploidyChiSq[2,],
      ylab = "Chi-squared for tetraploid model")
 ```
 
-![](polyRADtutorial_files/figure-markdown_github/unnamed-chunk-16-1.png)
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
-For each allele, whichever model gives the lower Chi-squared value is the one with the best fit. In this case it looks like everything is diploid with fairly high confidence.
+For each allele, whichever model gives the lower Chi-squared value is
+the one with the best fit. In this case it looks like everything is
+diploid with fairly high confidence.
 
-Now we'll examine the posterior genotype probabilities. These are still estimated separately for each ploidy.
+Now we’ll examine the posterior genotype probabilities. These are still
+estimated separately for each
+    ploidy.
 
 ``` r
 mydata$posteriorProb[[1]][,10,19:26]
@@ -398,56 +502,97 @@ mydata$posteriorProb[[2]][,10,19:26]
     ## 3 0.0000000000
     ## 4 0.0000000000
 
-We can export the results for use in downstream analysis. The function below weights possible ploidies for each allele based on the results in `mydata$ploidyChiSq`, and for each taxon outputs a continuous, numerical genotype that is the mean of all possible genotypes weighted by genotype posterior probabilities (*i.e.* the posterior mean genotype). By default, one allele per locus is discarded in order to avoid mathematical singularities in downstream analysis. The continuous genotypes also range from zero to one by default, which can be changed with the `minval` and `maxval` arguments.
+Since we decided from the Chi-squared results that the markers were only
+segregating in a diploid manner, we can remove allotetraploidy from the
+dataset.
+
+``` r
+mydata <- SubsetByPloidy(mydata, ploidies = list(2))
+```
+
+Typically in a mapping population, due to noisy data polyRAD will not be
+able to determine the segregation patterns of some markers, which end up
+having `NA` values for their prior and posterior probabilities. There
+may also be some cases where both parents were homozygous and as a
+result there is no segregation in an F1 population. In this example
+dataset, these issues are not present (as long as diploidy is assumed)
+because the markers were curated from a set that had already been
+filtered for mapping. Generally, however, you would want to find and
+remove such markers using `RemoveUngenotypedLoci`:
+
+``` r
+mydata <- RemoveUngenotypedLoci(mydata)
+```
+
+We can export the results for use in downstream analysis. The function
+below weights possible ploidies for each allele based on the results in
+`mydata$ploidyChiSq`, and for each taxon outputs a continuous, numerical
+genotype that is the mean of all possible genotypes weighted by genotype
+posterior probabilities (*i.e.* the posterior mean genotype). By
+default, one allele per locus is discarded in order to avoid
+mathematical singularities in downstream analysis. The continuous
+genotypes also range from zero to one by default, which can be changed
+with the `minval` and `maxval` arguments.
 
 ``` r
 mywm <- GetWeightedMeanGenotypes(mydata)
-mywm[c(276, 277, 1:5), 10:13]
+round(mywm[c(276, 277, 1:5), 10:13], 3)
 ```
 
-    ##                    TP31810_0    TP34632_1    TP34939_1  TP35570_1
-    ## Kaskade-Justin  7.155005e-07 5.005078e-01 5.001090e-01 0.49322780
-    ## Zebrinus-Justin 5.000697e-01 5.513391e-06 4.831070e-07 0.49893123
-    ## Map1-001        4.998047e-01 3.457929e-03 8.646485e-18 0.49290029
-    ## Map1-002        1.625360e-04 3.457929e-03 1.606743e-16 0.01542878
-    ## Map1-003        6.890262e-03 4.965421e-01 5.000000e-01 0.02755674
-    ## Map1-005        4.998177e-01 3.457929e-03 1.314400e-15 0.49444951
-    ## Map1-008        1.616524e-04 4.965420e-01 1.514873e-08 0.01535917
+    ##                 TP31810_0 TP34632_1 TP34939_1 TP35570_1
+    ## Kaskade-Justin      0.000       0.5       0.5     0.500
+    ## Zebrinus-Justin     0.500       0.0       0.0     0.500
+    ## Map1-001            0.500       0.0       0.0     0.500
+    ## Map1-002            0.000       0.0       0.0     0.000
+    ## Map1-003            0.007       0.5       0.5     0.009
+    ## Map1-005            0.500       0.0       0.0     0.500
+    ## Map1-008            0.000       0.5       0.0     0.000
 
-Note that the parent posterior mean genotypes were estimated using gentoype likelihood only, ignoring the priors set for the progeny. In some places they may not match the progeny genotypes, indicating a likely error in parental genotype calling. We can see the parental genotypes that were used for estimating progeny priors using `$likelyGeno_donor` and `$likelyGeno_recurrent`.
+Note that the parent posterior mean genotypes were estimated using
+gentoype likelihood only, ignoring the priors set for the progeny. In
+some places they may not match the progeny genotypes, indicating a
+likely error in parental genotype calling. We can see the parental
+genotypes that were used for estimating progeny priors using
+`$likelyGeno_donor` and
+    `$likelyGeno_recurrent`.
 
 ``` r
 mydata$likelyGeno_donor[,19:26]
 ```
 
-    ##   TP31810_0 TP31810_1 TP34632_0 TP34632_1 TP34939_0 TP34939_1 TP35570_0
-    ## 2         0         2         1         1         1         1         1
-    ## 4         0         4         2         2        NA        NA         3
-    ##   TP35570_1
-    ## 2         1
-    ## 4         1
+    ## TP31810_0 TP31810_1 TP34632_0 TP34632_1 TP34939_0 TP34939_1 TP35570_0 
+    ##         0         2         1         1         1         1         1 
+    ## TP35570_1 
+    ##         1
 
 ``` r
 mydata$likelyGeno_recurrent[,19:26]
 ```
 
-    ##   TP31810_0 TP31810_1 TP34632_0 TP34632_1 TP34939_0 TP34939_1 TP35570_0
-    ## 2         1         1         2         0         2         0         1
-    ## 4         2         2         4         0         4         0         2
-    ##   TP35570_1
-    ## 2         1
-    ## 4         2
+    ## TP31810_0 TP31810_1 TP34632_0 TP34632_1 TP34939_0 TP34939_1 TP35570_0 
+    ##         1         1         2         0         2         0         1 
+    ## TP35570_1 
+    ##         1
 
-Estimating genotype probabilities in a diversity panel <a name="diversity"></a>
--------------------------------------------------------------------------------
+## Estimating genotype probabilities in a diversity panel <a name="diversity"></a>
 
-Pipelines in polyRAD for processing a diversity panel (i.e. a germplasm collection, a set of samples collected in the wild, or a panel for genome-wide association analysis or genomic prediction) use iterative algorithms. Essentially, allele frequencies are re-estimated with each iteration until convergence is reached.
+Pipelines in polyRAD for processing a diversity panel (i.e. a germplasm
+collection, a set of samples collected in the wild, or a panel for
+genome-wide association analysis or genomic prediction) use iterative
+algorithms. Essentially, allele frequencies are re-estimated with each
+iteration until convergence is reached.
 
-Here we'll import a RAD-seq dataset from a large collection of wild and ornamental *Miscanthus* from Clark *et al.* (2014; [doi:10.1093/aob/mcu084](http://hdl.handle.net/10.1093/aob/mcu084)).
+Here we’ll import a RAD-seq dataset from a large collection of wild and
+ornamental *Miscanthus* from Clark *et al.* (2014;
+[doi:10.1093/aob/mcu084](http://hdl.handle.net/10.1093/aob/mcu084)).
 
-Since the data are in VCF format, we will need the Bioconductor package VariantAnnotation to load them. See <https://bioconductor.org/packages/release/bioc/html/VariantAnnotation.html> for installation instructions.
+Since the data are in VCF format, we will need the Bioconductor package
+VariantAnnotation to load them. See
+<https://bioconductor.org/packages/release/bioc/html/VariantAnnotation.html>
+for installation instructions.
 
-Again, with your own dataset you will not need to use `system.file` (see section on mapping populations).
+Again, with your own dataset you will not need to use `system.file` (see
+section on mapping populations).
 
 ``` r
 library(VariantAnnotation)
@@ -455,14 +600,20 @@ library(VariantAnnotation)
 myVCF <- system.file("extdata", "Msi01genes.vcf", package = "polyRAD")
 ```
 
-For your own VCF files, you will want to compress and index them before reading them. This has already been done for the file supplied with polyRAD, but here is how you would do it:
+For your own VCF files, you will want to compress and index them before
+reading them. This has already been done for the file supplied with
+polyRAD, but here is how you would do it:
 
 ``` r
 mybg <- bgzip(myVCF)
 indexTabix(mybg, format = "vcf")
 ```
 
-Now we can make our `RADdata` object. Because this is a small example dataset, we are setting `expectedLoci` and `expectedAlleles` to very low values; in a real dataset they should reflect how much data you are actually expecting. It is best to slightly overestimate the number of expected alleles and loci.
+Now we can make our `RADdata` object. Because this is a small example
+dataset, we are setting `expectedLoci` and `expectedAlleles` to very low
+values; in a real dataset they should reflect how much data you are
+actually expecting. It is best to slightly overestimate the number of
+expected alleles and loci.
 
 ``` r
 mydata <- VCF2RADdata(myVCF, possiblePloidies = list(2, c(2,2)),
@@ -500,7 +651,9 @@ mydata
     ## Autodiploid (2)
     ## Allotetraploid (2 2)
 
-For natural populations and diversity panels, we can run `TestOverdispersion` before performing any genotype calling.
+For natural populations and diversity panels, we can run
+`TestOverdispersion` before performing any genotype
+    calling.
 
 ``` r
 overdispersionP <- TestOverdispersion(mydata, to_test = 8:10)
@@ -512,39 +665,52 @@ overdispersionP <- TestOverdispersion(mydata, to_test = 8:10)
 qq(overdispersionP[["8"]])
 ```
 
-![](polyRADtutorial_files/figure-markdown_github/unnamed-chunk-23-1.png)
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
 ``` r
 qq(overdispersionP[["9"]])
 ```
 
-![](polyRADtutorial_files/figure-markdown_github/unnamed-chunk-23-2.png)
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-25-2.png)<!-- -->
 
 ``` r
 qq(overdispersionP[["10"]])
 ```
 
-![](polyRADtutorial_files/figure-markdown_github/unnamed-chunk-23-3.png)
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-25-3.png)<!-- -->
 
 Again, nine looks like a good value.
 
-We can iteratively estimate genotype probabilities assuming Hardy-Weinberg equilibrium. The argument `tol` is set to a higher value than the default here in order to help the tutorial run more quickly. Since *Miscanthus* is highly outcrossing, we will leave the `selfing.rate` argument at its default of zero.
+We can iteratively estimate genotype probabilities assuming
+Hardy-Weinberg equilibrium. The argument `tol` is set to a higher value
+than the default here in order to help the tutorial run more quickly.
+Since *Miscanthus* is highly outcrossing, we will leave the
+`selfing.rate` argument at its default of zero.
 
 ``` r
 mydataHWE <- IterateHWE(mydata, tol = 1e-3, overdispersion = 9)
 ```
 
-Let's take a look at allele frequencies:
+Let’s take a look at allele frequencies:
 
 ``` r
 hist(mydataHWE$alleleFreq, breaks = 20)
 ```
 
-![](polyRADtutorial_files/figure-markdown_github/unnamed-chunk-25-1.png)
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
-We can do a different genotype probability estimation that models population structure and variation in allele frequencies among populations. We don't need to specify populations, since principal components analysis is used to assess population structure assuming an isolation-by-distance model, with gradients of gene flow across many groups of individuals. This dataset includes a very broad sampling of *Miscanthus* across Asia, so it is very appropriate to model population structure in this case.
+We can do a different genotype probability estimation that models
+population structure and variation in allele frequencies among
+populations. We don’t need to specify populations, since principal
+components analysis is used to assess population structure assuming an
+isolation-by-distance model, with gradients of gene flow across many
+groups of individuals. This dataset includes a very broad sampling of
+*Miscanthus* across Asia, so it is very appropriate to model population
+structure in this case.
 
-For this example, since random number generation is used internally by `IteratePopStruct` for probabalistic principal components analysis, I am setting a seed so that the vignette always renders in the same way.
+For this example, since random number generation is used internally by
+`IteratePopStruct` for probabalistic principal components analysis, I am
+setting a seed so that the vignette always renders in the same way.
 
 ``` r
 set.seed(3908)
@@ -558,17 +724,22 @@ Allele frequency estimates have changed slightly:
 hist(mydataPopStruct$alleleFreq, breaks = 20)
 ```
 
-![](polyRADtutorial_files/figure-markdown_github/unnamed-chunk-27-1.png)
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
-Here's some of the population structure that was used for modeling allele frequencies (fairly weak in this case because so few markers were used):
+Here’s some of the population structure that was used for modeling
+allele frequencies (fairly weak in this case because so few markers were
+used):
 
 ``` r
 plot(mydataPopStruct)
 ```
 
-![](polyRADtutorial_files/figure-markdown_github/unnamed-chunk-28-1.png)
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
 
-And here's an example of allele frequency varying across the environment. Allele frequencies were estimated for each taxon, and are stored in the `$alleleFreqByTaxa` slot. In the plot below, color indicates estimated local allele frequency.
+And here’s an example of allele frequency varying across the
+environment. Allele frequencies were estimated for each taxon, and are
+stored in the `$alleleFreqByTaxa` slot. In the plot below, color
+indicates estimated local allele frequency.
 
 ``` r
 myallele <- 1
@@ -576,9 +747,10 @@ freqcol <- heat.colors(101)[round(mydataPopStruct$alleleFreqByTaxa[,myallele] * 
 plot(mydataPopStruct, pch = 21, bg = freqcol)
 ```
 
-![](polyRADtutorial_files/figure-markdown_github/unnamed-chunk-29-1.png)
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
 
-As before, we can export the posterior mean genotypes for downstream analysis.
+As before, we can export the posterior mean genotypes for downstream
+analysis.
 
 ``` r
 wmgenoPopStruct <- GetWeightedMeanGenotypes(mydataPopStruct)
@@ -608,24 +780,57 @@ wmgenoPopStruct[1:10,1:5]
     ## JM0058.001            1.000000e-04  3.471470e-03
     ## UI10-00086-Silberfeil 3.114721e-03  5.711384e-06
 
-If you expect that your species has high linkage disequilibrium, the functions `IterateHWE_LD` and `IteratePopStructLD` behave like `IterateHWE` and `IteratePopStruct`, respectively, but also update priors based on genotypes at linked loci.
+If you expect that your species has high linkage disequilibrium, the
+functions `IterateHWE_LD` and `IteratePopStructLD` behave like
+`IterateHWE` and `IteratePopStruct`, respectively, but also update
+priors based on genotypes at linked
+loci.
 
-Considerations for RAM and processing time <a name="considerations"></a>
-------------------------------------------------------------------------
+## Considerations for RAM and processing time <a name="considerations"></a>
 
-`RADdata` objects contain large matrices and arrays for storing read depth and the parameters that are estimated by the pipeline functions, and as a result require a lot of RAM (computer memory) in comparison to the posterior mean genotypes that are exported. A `RADdata` object that has just been imported will take up less RAM than one that has been processed by a pipeline function. `RADdata` objects will also take up more RAM (and take longer for pipeline functions to process) if they have more possible ploidies and/or higher ploidies.
+`RADdata` objects contain large matrices and arrays for storing read
+depth and the parameters that are estimated by the pipeline functions,
+and as a result require a lot of RAM (computer memory) in comparison to
+the posterior mean genotypes that are exported. A `RADdata` object that
+has just been imported will take up less RAM than one that has been
+processed by a pipeline function. `RADdata` objects will also take up
+more RAM (and take longer for pipeline functions to process) if they
+have more possible ploidies and/or higher ploidies.
 
-If you have hundreds of thousands, or possibly even tens of thousands, of markers in your dataset, it may be too large to process as one object on a typical computer. In that case, I recommend using the `SplitByChromosome` function immediately after import. This function will create separate `RADdata` objects by chromosomes or groups of chromosomes, and will save those objects to separate R workspace (.RData) files on your hard drive. You can then run a loop to re-import those objects one at a time, process each one with a pipeline function, and export posterior mean geneotypes (or any other parameters you wish to keep) to a file or a smaller R object. If you have access to a high performance computing cluster, you may instead wish to process individual chromosomes as parallel jobs.
+If you have hundreds of thousands, or possibly even tens of thousands,
+of markers in your dataset, it may be too large to process as one object
+on a typical computer. In that case, I recommend using the
+`SplitByChromosome` function immediately after import. This function
+will create separate `RADdata` objects by chromosomes or groups of
+chromosomes, and will save those objects to separate R workspace
+(.RData) files on your hard drive. You can then run a loop to re-import
+those objects one at a time, process each one with a pipeline function,
+and export posterior mean geneotypes (or any other parameters you wish
+to keep) to a file or a smaller R object. If you have access to a high
+performance computing cluster, you may instead wish to process
+individual chromosomes as parallel jobs.
 
-If you don't have alignment positions for your markers, or if you want to divide them up some other way than by chromosome, see `SubsetByLocus`. If you are importing from VCF but don't want to import the whole genome at once, see the examples on the help page for `VCF2RADdata` for how to import just a particular genomic region.
+If you don’t have alignment positions for your markers, or if you want
+to divide them up some other way than by chromosome, see
+`SubsetByLocus`. If you are importing from VCF but don’t want to import
+the whole genome at once, see the examples on the help page for
+`VCF2RADdata` for how to import just a particular genomic region.
 
-You might use `SubsetByLocus` and select a random subset of ~1000 loci to use with `TestOverdispersion` for estimating the overdispersion parameter.
+You might use `SubsetByLocus` and select a random subset of \~1000 loci
+to use with `TestOverdispersion` for estimating the overdispersion
+parameter.
 
-If you are using one of the iterative pipelines, it is possible to set the `tol` argument higher in order to reduce processing time at the expense of accuracy.
+If you are using one of the iterative pipelines, it is possible to set
+the `tol` argument higher in order to reduce processing time at the
+expense of accuracy.
 
-After you have run a pipeline, if you want to keep the `RADdata` object but discard any components that are not needed for genotype export, you can use the `StripDown` function.
+After you have run a pipeline, if you want to keep the `RADdata` object
+but discard any components that are not needed for genotype export, you
+can use the `StripDown` function.
 
-Below is an example script showing how I processed a real dataset with hundreds of thousands of SNPs. Note that the (very large) VCF files are not included with the polyRAD installation.
+Below is an example script showing how I processed a real dataset with
+hundreds of thousands of SNPs. Note that the (very large) VCF files are
+not included with the polyRAD installation.
 
 ``` r
 library(polyRAD)
@@ -726,7 +931,9 @@ GD.all <- cbind(GAPITlist[[1]]$GD, GAPITlist[[2]]$GD[,-1],
 #save(GD.all, GM.all, file = "180525GM_GD_all_polyRAD.RData") # 1076888 markers
 ```
 
-Citing polyRAD <a name="citation"></a>
---------------------------------------
+## Citing polyRAD <a name="citation"></a>
 
-Clark LV, Lipka AE, and Sacks EJ (2019) polyRAD: Genotype calling with uncertainty from sequencing data in polyploids and diploids. *G3* 9(3):663--673, [10.1534/g3.118.200913](https://doi.org/10.1534/g3.118.200913).
+Clark LV, Lipka AE, and Sacks EJ (2019) polyRAD: Genotype calling with
+uncertainty from sequencing data in polyploids and diploids. *G3*
+9(3):663–673,
+[10.1534/g3.118.200913](https://doi.org/10.1534/g3.118.200913).
