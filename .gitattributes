@@ -15,3 +15,6 @@
 *.PDF	 diff=astextplain
 *.rtf	 diff=astextplain
 *.RTF	 diff=astextplain
+
+# Don't put Windows line endings into VCF
+inst/extdata/Msi01genes.vcf text eol=lf
