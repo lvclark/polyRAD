@@ -631,7 +631,8 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
     VariantAnnotation::vcfFixed(svparam) <- 
       c(VariantAnnotation::vcfFixed(svparam), "ALT")
   }
-  if(is.na(VariantAnnotation::vcfGeno(svparam))){
+  if(length(VariantAnnotation::vcfGeno(svparam)) > 0 && 
+     is.na(VariantAnnotation::vcfGeno(svparam)[1])){
     stop("geno field must be provided in svparam.")
   }
   if(!identical(VariantAnnotation::vcfGeno(svparam), "AD")){
