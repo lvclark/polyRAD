@@ -53,7 +53,7 @@ vignettes/.RData
 .Rproj.user
 *.o
 *.dll
+*README.html
 
 # polyRAD project file
 polyRAD.Rproj
-
