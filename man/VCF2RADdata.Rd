@@ -130,6 +130,11 @@ final \code{RADdata} object.
 \value{
 A \code{\link{RADdata}} object.
 }
+\note{
+In the \code{python} directory of the \pkg{polyRAD} installation, there is a
+script called \code{tassel_vcf_tags.py} that can identify the full tag
+sequence(s) for every allele imported by \code{VCF2RADdata}.
+}
 \references{
 Variant Call Format specification: \url{http://samtools.github.io/hts-specs/}
 
