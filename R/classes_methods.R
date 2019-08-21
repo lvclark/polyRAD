@@ -1631,6 +1631,9 @@ SubsetByPloidy.RADdata <- function(object, ploidies, ...){
   if(!is.null(object$priorProb)){
     object$priorProb <- object$priorProb[pldindex]
   }
+  if(!is.null(object$posteriorProb)){
+    object$posteriorProb <- object$posteriorProb[pldindex]
+  }
   if(!is.null(object$ploidyChiSq)){
     object$ploidyChiSq <- object$ploidyChiSq[pldindex,, drop = FALSE]
   }
