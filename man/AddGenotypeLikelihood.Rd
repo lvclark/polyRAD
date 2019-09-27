@@ -12,7 +12,7 @@ distribution of read counts that are recorded for that taxon and locus.
 \code{AddDepthSamplingPermutations} is called by \code{AddGenotypeLikelihood}
 the first time it is run, so that part of the likelihood calcluation is
 stored in the \code{RADdata} object and doesn't need to be re-run on each
-iteration of the \link[dest=IterateHWE]{pipeline} functions.
+iteration of the \link[=IterateHWE]{pipeline} functions.
 }
 \usage{
 AddGenotypeLikelihood(object, ...)
