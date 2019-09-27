@@ -59,10 +59,6 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   
   expandedLocDepth <- locDepth[,as.character(alleles2loc), drop = FALSE]
   
-  # get log of number of permutations of order in which each allele could have
-  # been sampled from total depth from that locus.
-  depthSamplingPermutations <- lchoose(expandedLocDepth, alleleDepth)
-  dimnames(depthSamplingPermutations)[[2]] <- dimnames(alleleDepth)[[2]]
   # for each allele and taxon, get proportion of reads for that locus
   depthRatio <- alleleDepth/expandedLocDepth
   # depth of reads for each locus that do NOT belong to a given allele
@@ -71,8 +67,7 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   
   return(structure(list(alleleDepth = alleleDepth, alleles2loc = alleles2loc,
                         locTable = locTable, possiblePloidies = possiblePloidies,
-                        locDepth = locDepth, 
-                        depthSamplingPermutations = depthSamplingPermutations,
+                        locDepth = locDepth,
                         depthRatio = depthRatio, antiAlleleDepth = antiAlleleDepth,
                         alleleNucleotides = alleleNucleotides), 
                    class = "RADdata", taxa = taxa, nTaxa = nTaxa, nLoci = nLoci,
@@ -133,6 +128,18 @@ print.RADdata <- function(x, ...){
 }
 
 #### parameter estimation generic functions and methods ####
+AddDepthSamplingPermutations <- function(object, ...){
+  UseMethod("AddDepthSamplingPermutations", object)
+}
+AddDepthSamplingPermutations.RADdata <- function(object, ...){
+  # get log of number of permutations of order in which each allele could have
+  # been sampled from total depth from that locus.
+  expandedLocDepth <- object$alleleDepth + object$antiAlleleDepth
+  depthSamplingPermutations <- lchoose(expandedLocDepth, object$alleleDepth)
+  dimnames(depthSamplingPermutations)[[2]] <- dimnames(object$alleleDepth)[[2]]
+  object$depthSamplingPermutations <- depthSamplingPermutations
+  return(object)
+}
 # estimate allele frequencies assuming mapping population.
 # Simple version using depth ratios.
 AddAlleleFreqMapping <- function(object, ...){
@@ -215,6 +222,10 @@ AddGenotypeLikelihood.RADdata <- function(object, overdispersion = 9, ...){
     object <- AddAlleleFreqHWE(object)
   }
   alFreq <- object$alleleFreq
+  if(is.null(object$depthSamplingPermutations)){
+    message("Generating sampling permutations for allele depth.")
+    object <- AddDepthSamplingPermutations(object)
+  }
   
   # get ploidies, ignoring inheritance pattern
   ploidies <- sort(unique(sapply(object$possiblePloidies, sum)))
@@ -1459,13 +1470,15 @@ SubsetByTaxon.RADdata <- function(object, taxa, ...){
   splitRADdata$locTable <- object$locTable
   splitRADdata$possiblePloidies <- object$possiblePloidies
   splitRADdata$locDepth <- object$locDepth[taxa, , drop = FALSE]
-  splitRADdata$depthSamplingPermutations <- 
-    object$depthSamplingPermutations[taxa, , drop = FALSE]
   splitRADdata$depthRatio <- object$depthRatio[taxa, , drop = FALSE]
   splitRADdata$antiAlleleDepth <- object$antiAlleleDepth[taxa, , drop = FALSE]
   splitRADdata$alleleNucleotides <- object$alleleNucleotides
   
   # slots that may have been added by other functions
+  if(!is.null(object$depthSamplingPermutations)){
+    splitRADdata$depthSamplingPermutations <- 
+      object$depthSamplingPermutations[taxa, , drop = FALSE]
+  }
   if(!is.null(object$alleleFreq)){
     splitRADdata$alleleFreq <- object$alleleFreq
   }
@@ -1539,13 +1552,15 @@ SubsetByLocus.RADdata <- function(object, loci, ...){
   splitRADdata$possiblePloidies <- object$possiblePloidies
   splitRADdata$locDepth <- object$locDepth[, as.character(loci), drop = FALSE]
   dimnames(splitRADdata$locDepth)[[2]] <- as.character(1:length(loci))
-  splitRADdata$depthSamplingPermutations <- 
-    object$depthSamplingPermutations[, thesealleles, drop = FALSE]
   splitRADdata$depthRatio <- object$depthRatio[, thesealleles, drop = FALSE]
   splitRADdata$antiAlleleDepth <- object$antiAlleleDepth[, thesealleles, drop = FALSE]
   splitRADdata$alleleNucleotides <- object$alleleNucleotides[thesealleles]
   
   # additional components that may exist if some processing has already been done
+  if(!is.null(object$depthSamplingPermutations)){
+    splitRADdata$depthSamplingPermutations <- 
+      object$depthSamplingPermutations[, thesealleles, drop = FALSE]
+  }
   if(!is.null(object$alleleFreq)){
     splitRADdata$alleleFreq <- object$alleleFreq[thesealleles]
   }
@@ -1811,7 +1826,7 @@ MergeRareHaplotypes <- function(object, ...){
 }
 MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
                                         ...){
-  if(!is.null(object$alleleFreq)){
+  if(!is.null(object$alleleFreq) || !is.null(object$depthSamplingPermutations)){
     stop("Run MergeRareHaplotypes before running any pipeline functions.")
   }
 
@@ -1861,8 +1876,6 @@ MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
         object$antiAlleleDepth[,alToMerge] - object$alleleDepth[,thisAl]
       object$depthRatio[,alToMerge] <- 
         object$depthRatio[,alToMerge] + object$depthRatio[,thisAl]
-      object$depthSamplingPermutations[,alToMerge] <-
-        lchoose(object$locDepth[,as.character(L)], object$alleleDepth[,alToMerge])
       Nindwithal[alToMerge] <- Nindwithal[alToMerge] + Nindwithal[thisAl]
       # merge nucleotides
       newNt <- .mergeNucleotides(object$alleleNucleotides[[alToMerge]],
@@ -1889,8 +1902,6 @@ MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
   object$alleleDepth <- object$alleleDepth[,-allelesToRemove]
   object$antiAlleleDepth <- object$antiAlleleDepth[,-allelesToRemove]
   object$depthRatio <- object$depthRatio[,-allelesToRemove]
-  object$depthSamplingPermutations <- 
-    object$depthSamplingPermutations[,-allelesToRemove]
   object$alleleNucleotides <- object$alleleNucleotides[-allelesToRemove]
   object$alleles2loc <- object$alleles2loc[-allelesToRemove]
   return(object)
@@ -2104,7 +2115,7 @@ MergeTaxaDepth <- function(object, ...){
   UseMethod("MergeTaxaDepth", object)
 }
 MergeTaxaDepth.RADdata <- function(object, taxa, ...){
-  if(!is.null(object$alleleFreq)){
+  if(!is.null(object$alleleFreq) || !is.null(object$depthSamplingPermutations)){
     stop("Run MergeTaxaCounts before running any pipeline functions.")
   }
   if(length(taxa) < 2){
@@ -2136,11 +2147,6 @@ MergeTaxaDepth.RADdata <- function(object, taxa, ...){
   object$depthRatio <- object$depthRatio[-taxanum[-1],]
   object$depthRatio[taxa[1],] <- object$alleleDepth[taxa[1],]/
     (object$alleleDepth[taxa[1],] + object$antiAlleleDepth[taxa[1],])
-  
-  object$depthSamplingPermutations <- object$depthSamplingPermutations[-taxanum[-1],]
-  object$depthSamplingPermutations[taxa[1],] <- 
-    lchoose(object$alleleDepth[taxa[1],] + object$antiAlleleDepth[taxa[1],],
-            object$alleleDepth[taxa[1],])
   
   return(object)
 }

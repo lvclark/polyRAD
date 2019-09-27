@@ -1,6 +1,7 @@
 \name{AddGenotypeLikelihood}
 \alias{AddGenotypeLikelihood}
 \alias{AddGenotypeLikelihood.RADdata}
+\alias{AddDepthSamplingPermutations}
 \title{
 Estimate Genotype Likelihoods in a RADdata object
 }
@@ -8,11 +9,17 @@ Estimate Genotype Likelihoods in a RADdata object
 For each possible allele copy number across each possible ploidy in each taxon,
 \code{AddGenotypeLikelihood} estimates the probability of observing the 
 distribution of read counts that are recorded for that taxon and locus.
+\code{AddDepthSamplingPermutations} is called by \code{AddGenotypeLikelihood}
+the first time it is run, so that part of the likelihood calcluation is
+stored in the \code{RADdata} object and doesn't need to be re-run on each
+iteration of the \link[dest=IterateHWE]{pipeline} functions.
 }
 \usage{
 AddGenotypeLikelihood(object, ...)
 
 \method{AddGenotypeLikelihood}{RADdata}(object, overdispersion = 9, \dots)
+
+AddDepthSamplingPermutations(object, ...)
 }
 \arguments{
   \item{object}{
@@ -54,7 +61,8 @@ where
 }
 
 B is the beta function, and \eqn{d} is the overdispersion parameter set by 
-\code{overdispersion}.
+\code{overdispersion}.  \eqn{{{nr_i + nr_j}\choose{nr_i}}}{[(nr_i + nr_j) choose nr_i]}
+is calculated by \code{AddDepthSamplingPermutations}.
 }
 \value{
 A \code{"RADdata"} object identical to that passed to the function, but with

@@ -5,6 +5,13 @@ imported from TASSEL-GBSv2 using VCF2RADdata.
 
 A bug has been fixed in SubsetByPloidy.
 
+The AddDepthSamplingPermutations function has been added.  Permutations for
+estimating genotype likelihoods are no longer calculated at the time of data
+import, but instead are calculated the first time that genotype likelihoods
+are calculated.  This is to avoid unnessasary calculation and recalculation
+when alleles and taxa are filtered or merged before running genotype calling.
+From the user perspective, there isn't any change except faster import.
+
 ## Changes in v1.1 ##
 
 A plot method has been added for RADdata objects.
