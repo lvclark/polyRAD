@@ -261,8 +261,8 @@ polyRADsubmat <- matrix(c(0,1,1,1, 0,0,0,1,1,1, 0,0,0,1, 0,1, # A
       # add to current gamete set
       nGamCurr <- dim(thisAl)[1]
       nGamNew <- dim(thisIsoGametes)[1]
-      thisAl <- thisAl[rep(1:nGamCurr, each = nGamNew),] + 
-        thisIsoGametes[rep(1:nGamNew, times = nGamCurr),]
+      thisAl <- thisAl[rep(1:nGamCurr, each = nGamNew),, drop = FALSE] + 
+        thisIsoGametes[rep(1:nGamNew, times = nGamCurr),, drop = FALSE]
     }
   } else { # autopolyploids
     thisAl <- sapply(alCopy, function(x){
@@ -274,11 +274,11 @@ polyRADsubmat <- matrix(c(0,1,1,1, 0,0,0,1,1,1, 0,0,0,1, 0,1, # A
     if(rnd > 1){
       # recursively add alleles to gametes for polyploid
       nReps <- factorial(ploidy-1)/factorial(ploidy - rnd)
-      thisAl <- thisAl[rep(1:ploidy, each = nReps),]
+      thisAl <- thisAl[rep(1:ploidy, each = nReps),, drop = FALSE]
       for(i in 1:ploidy){
         thisAl[((i-1)*nReps+1):(i*nReps),] <- 
-          thisAl[((i-1)*nReps+1):(i*nReps),] + 
-          .makeGametes(alCopy - thisAl[i*nReps,], ploidy - 1, rnd - 1)
+          thisAl[((i-1)*nReps+1):(i*nReps),, drop=FALSE] + 
+          .makeGametes(alCopy - thisAl[i*nReps,, drop = FALSE], ploidy - 1, rnd - 1)
       }
     }
   }
@@ -287,8 +287,15 @@ polyRADsubmat <- matrix(c(0,1,1,1, 0,0,0,1,1,1, 0,0,0,1, 0,1, # A
 # function to get probability of a gamete with a given allele copy number,
 # given output from makeGametes
 .gameteProb <- function(makeGamOutput, ploidy){
-  return(t(sapply(0:(sum(ploidy)/2), 
-                  function(x) colMeans(makeGamOutput == x))))
+  outmat <- sapply(0:(sum(ploidy)/2), 
+                   function(x) colMeans(makeGamOutput == x))
+  if(ncol(makeGamOutput) == 1){
+    outmat <- matrix(outmat, nrow = ploidy/2 + 1, ncol = 1)
+  } else {
+    outmat <- t(outmat)
+  }
+  
+  return(outmat)
 }
 # function to take two sets of gamete probabilities (from two parents)
 # and output genotype probabilities
