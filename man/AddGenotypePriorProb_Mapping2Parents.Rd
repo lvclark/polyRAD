@@ -1,17 +1,30 @@
 \name{AddGenotypePriorProb_Mapping2Parents}
 \alias{AddGenotypePriorProb_Mapping2Parents}
 \alias{AddGenotypePriorProb_Mapping2Parents.RADdata}
+\alias{EstimateParentalGenotypes}
+\alias{EstimateParentalGenotypes.RADdata}
 \title{
 Expected Genotype Frequencies in Mapping Populations
 }
 \description{
-Given the most likely genotypes of two parent taxa, expected genotype
-frequencies are estimated for a population of progeny and are added to the
+\code{EstimateParentalGenotypes} estimates the most likely genotypes of two
+parent taxa.  Using those parental genotypes,
+\code{AddGenotypePriorProb_Mapping2Parents} estimates expected genotype
+frequencies for a population of progeny, which are added to the
 \code{"\link{RADdata}"} object in the \code{$priorProb} slot.
 }
 \usage{
 AddGenotypePriorProb_Mapping2Parents(object, ...)
 \method{AddGenotypePriorProb_Mapping2Parents}{RADdata}(object,
+    donorParent = GetDonorParent(object), 
+    recurrentParent = GetRecurrentParent(object), 
+    n.gen.backcrossing = 0, n.gen.intermating = 0, n.gen.selfing = 0,
+    donorParentPloidies = object$possiblePloidies,
+    recurrentParentPloidies = object$possiblePloidies,
+    minLikelihoodRatio = 10, \dots)
+    
+EstimateParentalGenotypes(object, ...)
+\method{EstimateParentalGenotypes}{RADdata}(object,
     donorParent = GetDonorParent(object), 
     recurrentParent = GetRecurrentParent(object), 
     n.gen.backcrossing = 0, n.gen.intermating = 0, n.gen.selfing = 0,
@@ -68,17 +81,21 @@ parental taxa.
 }
 }
 \details{
-The function first determines which combinations of inheritance modes from
+\code{AddGenotypePriorProb_Mapping2Parents} first calls
+\code{EstimateParentalGenotypes} internally to determine which combinations
+of inheritance modes from
 the two parents should be examined in the progeny.  The expected progeny
 ploidy must be in \code{object$possiblePloidies} for a given combination
 to be examined.
 
-The most likely genotypes for the two parents are estimated using
+The most likely genotypes for the two parents are estimated by
+\code{EstimateParentalGenotypes} using
 \code{\link{GetLikelyGen}}.  If parental gentoypes don't match progeny allele
 frequencies, the function attempts to correct the parental genotypes to the
 most likely combination that matches the allele frequency.
-For each ploidy being examined, F1 genotype probabilities are then calculated.
 
+For each ploidy being examined, F1 genotype probabilities are then calculated
+by \code{AddGenotypePriorProb_Mapping2Parents}.
 Genotype probabilities are updated for each backcrossing generation, then each
 intermating generation, then each selfing generation.
 

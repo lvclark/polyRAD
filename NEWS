@@ -12,6 +12,15 @@ are calculated.  This is to avoid unnessasary calculation and recalculation
 when alleles and taxa are filtered or merged before running genotype calling.
 From the user perspective, there isn't any change except faster import.
 
+The EstimateParentalGenotypes function has been added, using code that was
+previously in the AddGenotypePriorProb_Mapping2Parents.  This does not
+impact anything frin the user's perspective, but makes the code slightly
+less unweildy and allows parental genotype estimations to be used for other
+purposes.
+
+Internal functions for simulating gametes and calculating their frequencies have
+been corrected so that they still work when only one allele is being simulated.
+
 ## Changes in v1.1 ##
 
 A plot method has been added for RADdata objects.
