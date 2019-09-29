@@ -5,6 +5,9 @@ imported from TASSEL-GBSv2 using VCF2RADdata.
 
 A bug has been fixed in SubsetByPloidy.
 
+MergeTaxaDepth now generates a more useful error if taxa are specified that
+do not exist in the object.
+
 The AddDepthSamplingPermutations function has been added.  Permutations for
 estimating genotype likelihoods are no longer calculated at the time of data
 import, but instead are calculated the first time that genotype likelihoods

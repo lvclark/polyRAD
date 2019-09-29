@@ -2150,6 +2150,10 @@ MergeTaxaDepth.RADdata <- function(object, taxa, ...){
                 ".", sep = ""))
   
   taxanum <- match(taxa, GetTaxa(object))
+  if(any(is.na(taxanum))){
+    stop(paste("Taxa not found in object:",
+               paste(taxa[is.na(taxanum)], collapse = " ")))
+  }
   
   # sum read depths and remove taxa from matrices
   object$alleleDepth[taxanum[1],] <- 
