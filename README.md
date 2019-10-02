@@ -17,6 +17,8 @@ If you're like me, you don't want to waste a lot of money sequencing your DNA sa
 
 The answer that polyRAD provides is a Bayesian genotype caller with many options for specifying genotype prior probabilties.  When read depth is low, **accurate priors make a big difference in the accuracy of genotype calls.**  And because some genotype calls are going to be uncertain no matter how sophisticated our algorithm is, polyRAD can export genotypes as continuous numeric variables reflecting the probabilities of all possible allele copy numbers.  This includes genotypes with zero reads, where the priors themselves are used for imputation.
 
+For an explanation of Bayesian genotype calling and posterior mean genotypes, see a [seminar](https://youtu.be/Z2xwLQYc8OA?t=1158) of mine.
+
 **Genotype priors in diversity panels and natural populations:**
 
 * Either assume no population structure (HWE), or let polyRAD infer population structure and model allele frequency gradients.
