@@ -43,6 +43,61 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// GiniSimpson
+double GiniSimpson(NumericVector counts);
+RcppExport SEXP _polyRAD_GiniSimpson(SEXP countsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type counts(countsSEXP);
+    rcpp_result_gen = Rcpp::wrap(GiniSimpson(counts));
+    return rcpp_result_gen;
+END_RCPP
+}
+// HindHeMat
+NumericMatrix HindHeMat(IntegerMatrix alleleDepth, NumericMatrix depthRatio, IntegerVector alleles2loc, int nLoci, NumericVector He);
+RcppExport SEXP _polyRAD_HindHeMat(SEXP alleleDepthSEXP, SEXP depthRatioSEXP, SEXP alleles2locSEXP, SEXP nLociSEXP, SEXP HeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type alleleDepth(alleleDepthSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type depthRatio(depthRatioSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type alleles2loc(alleles2locSEXP);
+    Rcpp::traits::input_parameter< int >::type nLoci(nLociSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type He(HeSEXP);
+    rcpp_result_gen = Rcpp::wrap(HindHeMat(alleleDepth, depthRatio, alleles2loc, nLoci, He));
+    return rcpp_result_gen;
+END_RCPP
+}
+// HoOneParent
+NumericVector HoOneParent(IntegerVector genotypes, IntegerVector alleles2loc, IntegerVector keeploc, double ploidy);
+RcppExport SEXP _polyRAD_HoOneParent(SEXP genotypesSEXP, SEXP alleles2locSEXP, SEXP keeplocSEXP, SEXP ploidySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector >::type genotypes(genotypesSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type alleles2loc(alleles2locSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type keeploc(keeplocSEXP);
+    Rcpp::traits::input_parameter< double >::type ploidy(ploidySEXP);
+    rcpp_result_gen = Rcpp::wrap(HoOneParent(genotypes, alleles2loc, keeploc, ploidy));
+    return rcpp_result_gen;
+END_RCPP
+}
+// HoTwoParents
+NumericVector HoTwoParents(IntegerVector genotypes1, IntegerVector genotypes2, IntegerVector alleles2loc, IntegerVector keeploc, double ploidy);
+RcppExport SEXP _polyRAD_HoTwoParents(SEXP genotypes1SEXP, SEXP genotypes2SEXP, SEXP alleles2locSEXP, SEXP keeplocSEXP, SEXP ploidySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector >::type genotypes1(genotypes1SEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type genotypes2(genotypes2SEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type alleles2loc(alleles2locSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type keeploc(keeplocSEXP);
+    Rcpp::traits::input_parameter< double >::type ploidy(ploidySEXP);
+    rcpp_result_gen = Rcpp::wrap(HoTwoParents(genotypes1, genotypes2, alleles2loc, keeploc, ploidy));
+    return rcpp_result_gen;
+END_RCPP
+}
 // ThirdDimProd
 NumericMatrix ThirdDimProd(NumericVector probs, int ngen, int ntaxa);
 RcppExport SEXP _polyRAD_ThirdDimProd(SEXP probsSEXP, SEXP ngenSEXP, SEXP ntaxaSEXP) {
@@ -61,6 +116,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_polyRAD_AdjustAlleleFreq", (DL_FUNC) &_polyRAD_AdjustAlleleFreq, 3},
     {"_polyRAD_BestGenos", (DL_FUNC) &_polyRAD_BestGenos, 4},
     {"_polyRAD_BestPloidies", (DL_FUNC) &_polyRAD_BestPloidies, 1},
+    {"_polyRAD_GiniSimpson", (DL_FUNC) &_polyRAD_GiniSimpson, 1},
+    {"_polyRAD_HindHeMat", (DL_FUNC) &_polyRAD_HindHeMat, 5},
+    {"_polyRAD_HoOneParent", (DL_FUNC) &_polyRAD_HoOneParent, 4},
+    {"_polyRAD_HoTwoParents", (DL_FUNC) &_polyRAD_HoTwoParents, 5},
     {"_polyRAD_ThirdDimProd", (DL_FUNC) &_polyRAD_ThirdDimProd, 3},
     {NULL, NULL, 0}
 };
