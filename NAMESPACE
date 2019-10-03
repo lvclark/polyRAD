@@ -13,7 +13,8 @@ Export_MAPpoly, Export_polymapR, Export_rrBLUP_Amat, Export_rrBLUP_GWAS,
 Export_TASSEL_Numeric, GetAlleleNames,
 GetBlankTaxa, GetContamRate, GetDonorParent, GetLikelyGen, 
 GetLocDepth, GetLoci, GetProbableGenotypes, GetRecurrentParent, 
-GetTaxa, GetWeightedMeanGenotypes, IterateHWE, IterateHWE_LD,
+GetTaxa, GetWeightedMeanGenotypes, HindHe, HindHeMapping,
+IterateHWE, IterateHWE_LD,
 IteratePopStruct, IteratePopStructLD, LocusInfo, MakeTasselVcfFilter,
 MergeRareHaplotypes, MergeTaxaDepth, nTaxa, nAlleles, nLoci,
 OneAllelePerMarker, 
@@ -63,6 +64,8 @@ S3method(GetProbableGenotypes, RADdata)
 S3method(GetRecurrentParent, RADdata)
 S3method(GetTaxa, RADdata)
 S3method(GetWeightedMeanGenotypes, RADdata)
+S3method(HindHe, RADdata)
+S3method(HindHeMapping, RADdata)
 S3method(LocusInfo, RADdata)
 S3method(MergeRareHaplotypes, RADdata)
 S3method(MergeTaxaDepth, RADdata)

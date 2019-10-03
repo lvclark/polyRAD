@@ -1,5 +1,9 @@
 ## Changes in v1.2 ##
 
+The functions HindHe and HindHeMapping have been added, to assist with filtering
+loci that are behaving in a non-Mendelian fashion, as well as individuals that
+do not behave like the expected ploidy
+
 A Python script has been added to help identify full tag sequences for alleles
 imported from TASSEL-GBSv2 using VCF2RADdata.
 
