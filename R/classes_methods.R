@@ -152,7 +152,8 @@ AddAlleleFreqMapping.RADdata <- function(object,
                                                          GetRecurrentParent(object),
                                                          GetBlankTaxa(object)), ...){#,
 #                                         deleteLociOutsideFreqRange = FALSE){
-  if(min(dist(expectedFreqs, method = "manhattan"))/2 < allowedDeviation){
+  maxdev <- min(dist(expectedFreqs, method = "manhattan"))/2
+  if(maxdev < allowedDeviation && !isTRUE(all.equal(maxdev, allowedDeviation))){
     stop("allowedDeviation is too large given intervals within expectedFreqs")
   }
   if(!is.character(excludeTaxa)){
@@ -361,7 +362,7 @@ EstimateParentalGenotypes.RADdata <-
       possfreq <- seq(0, 1, length.out = (n.gen.backcrossing + 1) * allelesin + 1)
       alldev <- (possfreq[2] - possfreq[1])/2
       object <- AddAlleleFreqMapping(object, allowedDeviation = alldev, 
-                                     expectedFreq = possfreq)
+                                     expectedFreqs = possfreq)
     }
     if(is.null(object$genotypeLikelihood)){
       message("Genotype likelihoods not found.  Estimating.")
