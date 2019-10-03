@@ -21,10 +21,9 @@ HindHeMapping.RADdata <- function(object, n.gen.backcrossing = 0,
                                   n.gen.intermating = 0, n.gen.selfing = 0,
                                   ploidy = object$possiblePloidies[[1]],
                                   minLikelihoodRatio = 10,
-                                  progeny = GetTaxa(object)[!GetTaxa(object) %in%
-                                                              c(GetDonorParent(object), 
-                                                                GetRecurrentParent(object), 
-                                                                GetBlankTaxa(object))]){
+                                  omitTaxa = c(GetDonorParent(object), 
+                                               GetRecurrentParent(object), 
+                                               GetBlankTaxa(object)), ...){
   if(length(ploidy) != 1){
     stop("Current implementation for autopolyploids only")
   }
@@ -33,6 +32,7 @@ HindHeMapping.RADdata <- function(object, n.gen.backcrossing = 0,
   }
   donorParent <- GetDonorParent(object)
   recurrentParent <- GetRecurrentParent(object)
+  progeny <- GetTaxa(object)[!GetTaxa(object) %in% omitTaxa]
   object <- EstimateParentalGenotypes(object, donorParent = donorParent,
                                       recurrentParent = recurrentParent,
                                       n.gen.backcrossing = n.gen.backcrossing,
