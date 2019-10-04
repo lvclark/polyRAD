@@ -679,7 +679,7 @@ ggplot(data.frame(Depth = TotDepthT, HindHe = myHindHeByInd,
 
 ![](polyRADtutorial_files/figure-markdown_github/unnamed-chunk-36-1.png)
 
-Dashed lines indicate the expected value under Hardy-Weinberg Equilibrium. This is $\\frac{ploidy - 1}{ploidy}$, *e.g.* 0.5 for diploids and 0.75 for tetraploids. Since there is some population structure, most individuals show a lower value. However, some interspecific hybrids have values higher than expected. We can also see that it is fairly easy to distinguish diploids and tetraploids. This method is not a replacement for flow cytometry, but can complement it if some minority of samples in the dataset have unknown ploidy.
+Dashed lines indicate the expected value under Hardy-Weinberg Equilibrium. This is (ploidy - 1)/ploidy, *e.g.* 0.5 for diploids and 0.75 for tetraploids. Since there is some population structure, most individuals show a lower value. However, some interspecific hybrids have values higher than expected. We can also see that it is fairly easy to distinguish diploids and tetraploids. This method is not a replacement for flow cytometry, but can complement it if some minority of samples in the dataset have unknown ploidy.
 
 Let's divide the *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> results into those for diploids vs. tetraploids.
 
