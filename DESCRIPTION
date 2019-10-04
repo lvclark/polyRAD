@@ -13,7 +13,7 @@ Depends: R (>= 3.5.0)
 Imports: fastmatch, pcaMethods, methods, Rcpp
 Suggests: rrBLUP, Rsamtools, GenomeInfoDb, Biostrings, GenomicRanges, VariantAnnotation,
   SummarizedExperiment, S4Vectors, IRanges, BiocGenerics, knitr, rmarkdown,
-  GenomicFeatures, qqman
+  GenomicFeatures, qqman, ggplot2
 LinkingTo: Rcpp
 VignetteBuilder: knitr, rmarkdown
 Description: Read depth data from genotyping-by-sequencing (GBS) or restriction 

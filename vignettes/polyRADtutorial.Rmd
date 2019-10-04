@@ -90,6 +90,10 @@ There are also various utilities for manipulating RADdata objects:
 * `StripDown`
 * `LocusInfo`
 
+For identifying problematic loci and individuals:
+* `HindHe`
+* `HindHeMapping`
+
 See `?GetTaxa` for a list of accessor functions as well.
 
 ## Estimating genotype probabilities in a mapping population <a name="mapping"></a>
@@ -515,6 +519,109 @@ If you expect that your species has high linkage disequilibrium, the functions
 `IterateHWE_LD` and `IteratePopStructLD` behave like 
 `IterateHWE` and `IteratePopStruct`, respectively, but also
 update priors based on genotypes at linked loci.
+
+## $H_{ind}/H_E$ for filtering markers and individuals <a name="hindhe"></a>
+
+GBS/RAD data are inherently messy.  Some markers may behave in a non-Mendelian
+fashion due to misalignments, amplification bias, presence-absence variation,
+or other issues.  In addition to filtering out problematic markers, you may also
+want to confirm that all individuals in the dataset are well-behaved.
+
+The $H_{ind}/H_E$ statistic, to be described in an upcoming preprint, helps to
+filter such markers and individuals.  In a mapping population it can be run
+using the `HindHeMapping` function, which requires a single ploidy to be input,
+along with the mapping population design.  In a natural population or diversity
+panel, the `HindHe` function can be used.  `HindHe` should also be used for
+mapping populations in which the most recent generation was created by
+random intermating among all progeny.
+
+Below we'll work with a dataset from *Miscanthus sacchariflorus*, including 635
+individuals and 5182 loci.  The `RADdata` object is not provided here due to
+size, but the following objects were created from it:
+
+```{r eval = FALSE}
+myHindHe <- HindHe(myRAD)
+TotDepthT <- rowSums(myRAD$locDepth)
+```
+
+We will load these:
+
+```{r}
+print(load(system.file("extdata", "MsaHindHe.RData", package = "polyRAD")))
+```
+
+This additionally provides a vector called `ploidies` indicating the ploidy of
+each individual, determined primarily by flow cytometry.  `myHindHe` is a matrix
+with one value per individual*locus, and `TotDepthT` is a vector showing the
+total read depth at each locus.
+
+To investigate individuals, we can take the row means of the matrix:
+
+```{r}
+myHindHeByInd <- rowMeans(myHindHe, na.rm = TRUE)
+```
+
+Then we can plot these versus depth for each ploidy.
+
+```{r}
+library(ggplot2)
+ggplot(data.frame(Depth = TotDepthT, HindHe = myHindHeByInd,
+                  Ploidy = ploidies),
+  mapping = aes(x = Depth, y = HindHe, color = Ploidy)) +
+  geom_point() +
+  scale_x_log10() +
+  facet_wrap(~ Ploidy) +
+  geom_hline(data = data.frame(Ploidy = c("2x", "3x", "4x"),
+                               ExpHindHe = c(1/2, 2/3, 3/4)),
+             mapping = aes(yintercept = ExpHindHe), lty = 2) +
+  labs(x = "Read Depth", y = "Hind/He", color = "Ploidy")
+```
+
+Dashed lines indicate the expected value under Hardy-Weinberg Equilibrium.
+This is $\frac{ploidy - 1}{ploidy}$, *e.g.* 0.5 for diploids and 0.75 for
+tetraploids.
+Since there is some population structure, most individuals show a lower value.
+However, some interspecific hybrids have values higher than expected.  We can
+also see that it is fairly easy to distinguish diploids and tetraploids.  This
+method is not a replacement for flow cytometry, but can complement it if some
+minority of samples in the dataset have unknown ploidy.
+
+Let's divide the $H_{ind}/H_E$ results into those for diploids vs. tetraploids.
+
+```{r}
+myHindHe2x <- myHindHe[ploidies == "2x",]
+myHindHe4x <- myHindHe[ploidies == "4x",]
+```
+
+Now we can look a the distribution of values across markers.
+
+```{r}
+myHindHeByLoc2x <- colMeans(myHindHe2x, na.rm = TRUE)
+hist(myHindHeByLoc2x, breaks = 50, xlab = "Hind/He",
+     main = "Distribution of Hind/He among loci in diploids",
+     col = "lightgrey")
+abline(v = 0.5, col = "blue", lwd = 2)
+
+myHindHeByLoc4x <- colMeans(myHindHe4x, na.rm = TRUE)
+hist(myHindHeByLoc4x, breaks = 50, xlab = "Hind/He",
+     main = "Distribution of Hind/He among loci in tetraploids",
+     col = "lightgrey")
+abline(v = 0.75, col = "blue", lwd = 2)
+```
+
+Most loci look good, but those to the right of the blue line should probably be
+filtered from the dataset.
+
+```{r}
+goodLoci <- colnames(myHindHe)[myHindHeByLoc2x < 0.5 & myHindHeByLoc4x < 0.75]
+length(goodLoci) # 3233 out of 5182 markers retained
+head(goodLoci)
+```
+
+The `goodLoci` vector that we created here could then be used by `SubsetByLocus`
+to filter the dataset.  Remember that you would also want to use `SubsetByTaxon`
+in this case to make sure that each `RADdata` object was uniform ploidy across
+individuals.
 
 ## Considerations for RAM and processing time <a name="considerations"></a>
 
