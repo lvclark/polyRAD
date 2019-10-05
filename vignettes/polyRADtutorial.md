@@ -249,8 +249,8 @@ plot(mydata)
 
 Next we can check for markers that are behaving in a non-Mendelian
 fashion. If we are expecting diploid segregation, all markers should
-show a \(H_{ind}/H_E\) value of 0.5 or less. (For an autopolyploid, the
-expected value is \(\frac{ploidy - 1}{ploidy}\).)
+show a *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> value of 0.5 or less. (For an autopolyploid, the
+expected value is (ploidy - 1)/ploidy.)
 
 ``` r
 myhindhe <- HindHeMapping(mydata, ploidy = 2L)
@@ -496,7 +496,7 @@ plot(mydata$ploidyChiSq[1,], mydata$ploidyChiSq[2,],
 For each allele, whichever model gives the lower Chi-squared value is
 the one with the best fit. In this case it looks like everything is
 diploid with fairly high confidence, in agreement with our
-\(H_{ind}/H_E\) results.
+*H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> results.
 
 Now we’ll examine the posterior genotype probabilities. These are still
 estimated separately for each
@@ -682,7 +682,7 @@ mydata
     ## Allotetraploid (2 2)
 
 Before we perform genotype calling, we can test for diploid segregation
-at each marker using the \(H_{ind}/H_E\) statistic.
+at each marker using the *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> statistic.
 
 ``` r
 myhindhe <- HindHe(mydata)
@@ -813,7 +813,7 @@ abline(a = 0, b = 1, col = "blue", lwd = 2)
 ![](polyRADtutorial_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
 
 It seems that some markers look allotetraploid, and others look diploid.
-We can see if this matches \(H_{ind}/H_E\)
+We can see if this matches *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub>
 results.
 
 ``` r
@@ -874,7 +874,7 @@ functions `IterateHWE_LD` and `IteratePopStructLD` behave like
 priors based on genotypes at linked
 loci.
 
-## \(H_{ind}/H_E\) for filtering markers and individuals <a name="hindhe"></a>
+## *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> for filtering markers and individuals <a name="hindhe"></a>
 
 GBS/RAD data are inherently messy. Some markers may behave in a
 non-Mendelian fashion due to misalignments, amplification bias,
@@ -882,7 +882,7 @@ presence-absence variation, or other issues. In addition to filtering
 out problematic markers, you may also want to confirm that all
 individuals in the dataset are well-behaved.
 
-The \(H_{ind}/H_E\) statistic, to be described in an upcoming preprint,
+The *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> statistic, to be described in an upcoming preprint,
 helps to filter such markers and individuals. In a mapping population it
 can be run using the `HindHeMapping` function, which requires a single
 ploidy to be input, along with the mapping population design. In a
@@ -942,7 +942,7 @@ ggplot(data.frame(Depth = TotDepthT, HindHe = myHindHeByInd,
 ![](polyRADtutorial_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
 
 Dashed lines indicate the expected value under Hardy-Weinberg
-Equilibrium. This is \(\frac{ploidy - 1}{ploidy}\), *e.g.* 0.5 for
+Equilibrium. This is (ploidy - 1)/ploidy, *e.g.* 0.5 for
 diploids and 0.75 for tetraploids. Since there is some population
 structure, most individuals show a lower value. However, some
 interspecific hybrids have values higher than expected. We can also see
@@ -950,7 +950,7 @@ that it is fairly easy to distinguish diploids and tetraploids. This
 method is not a replacement for flow cytometry, but can complement it if
 some minority of samples in the dataset have unknown ploidy.
 
-Let’s divide the \(H_{ind}/H_E\) results into those for diploids
+Let’s divide the *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> results into those for diploids
 vs. tetraploids.
 
 ``` r

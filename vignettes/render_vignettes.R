@@ -11,4 +11,8 @@ render("polyRADtutorial.Rmd",
 mylines <- readLines("polyRADtutorial.md")
 mylines <- gsub("$\\\\frac{ploidy - 1}{ploidy}$", "(ploidy - 1)/ploidy", fixed = TRUE,
                 mylines)
+mylines <- gsub("\\(\\frac{ploidy - 1}{ploidy}\\)", "(ploidy - 1)/ploidy", fixed = TRUE,
+                mylines)
+mylines <- gsub("\\(H_{ind}/H_E\\)", "*H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub>",
+                fixed = TRUE, mylines)
 writeLines(mylines, con = "polyRADtutorial.md")
