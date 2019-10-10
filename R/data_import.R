@@ -1233,3 +1233,143 @@ readTASSELGBSv2 <- function(tagtaxadistFile, samFile, min.ind.with.reads = 200,
   radout <- RemoveMonomorphicLoci(radout)
   return(radout)
 }
+
+# Function to read output of process_sam_multi.py, so the user can get a
+# preliminary look at Hind/He distribution before going forward with
+# the isolocus_splitter script.
+readProcessSamMulti <- function(alignfile, depthfile = sub("align", "depth", alignfile),
+                                expectedLoci = 1000, min.ind.with.reads = 200,
+                                min.ind.with.minor.allele = 10, possiblePloidies = list(2),
+                                contamRate = 0.001, expectedAlleles = expectedLoci * 10,
+                                maxLoci = expectedLoci){
+  # read file headers
+  aligncon <- file(alignfile, open = 'r')
+  depthcon <- file(depthfile, open = 'r')
+  alignheader <- scan(aligncon, sep = ",", nlines = 1, what = character(),
+                      quiet = TRUE)
+  depthheader <- scan(depthcon, sep = ",", nlines = 1, what = character(),
+                      quiet = TRUE)
+  nalign <- (length(alignheader) - 1) / 2 # number of alignment positions reported
+  samples <- depthheader[-1]
+  nsam <- length(samples)
+  
+  # set up objects to go into RADdata object
+  locTable <- data.frame(Chr = rep(NA_character_, expectedLoci),
+                         Pos = rep(NA_integer_, expectedLoci),
+                         stringsAsFactors = FALSE)
+  locnames <- rep(NA_character_, expectedLoci)
+  alleles2loc <- rep(NA_integer_, expectedAlleles)
+  alleleNucleotides <- rep(NA_character_, expectedAlleles)
+  alleleDepth <- matrix(0L, nrow = nsam, ncol = expectedAlleles,
+                        dimnames = list(samples, NULL))
+  allelenames <- rep(NA_character_, expectedAlleles)
+  
+  # count loci and alleles read in (passing any filtering)
+  loccount <- 0L
+  alcount <- 0L
+  
+  # read the files
+  nscan <- 1e4 # number of lines to read at once
+  whatlistalign <- list(character(), integer())
+  whatlistalign <- whatlistalign[c(rep(1, nalign + 1), rep(2, nalign))]
+  whatlistdepth <- list(character(), integer())
+  whatlistdepth <- whatlistdepth[c(1, rep(2, nsam))]
+  # dummy objects; will hold the last partial marker read
+  lastdepthmat <- matrix(integer(0), nrow = 0, ncol = nsam)
+  lastaligndata <- whatlistalign
+  lastchunk <- FALSE # indicates if we have read the last chunk of the file
+  while(loccount < maxLoci && !lastchunk){
+    aligndata <- scan(aligncon, sep = ",", what = whatlistalign, nlines = nscan,
+                      quiet = TRUE)
+    depthdata <- scan(depthcon, sep = ",", what = whatlistdepth, nlines = nscan,
+                      quiet = TRUE)
+    nread <- length(aligndata[[1]])
+    lastchunk <- nread == 0 # is this the last chunk of the file?
+    stopifnot(nread == length(depthdata[[1]]))
+    if(lastchunk){ # end of file
+      depthmat <- lastdepthmat
+      aligndata <- lastaligndata
+      if(nrow(depthmat) == 0) break
+    } else {
+      depthmat <- matrix(unlist(depthdata[-1]), nrow = nread, ncol = nsam)
+      # merge in any potentially unfinished markers from last chunk
+      depthmat <- rbind(lastdepthmat, depthmat)
+      for(i in 1:length(whatlistalign)){
+        aligndata[[i]] <- c(lastaligndata[[i]], aligndata[[i]])
+      }
+    }
+    nread <- nrow(depthmat) # updated if any loci from last chunk added in
+    if(nread < 2) break # quit if there's nothing left to process
+    # convert number of mutations to matrix for easier processing
+    NM <- matrix(unlist(aligndata[(1:nalign) + (1 + nalign)]),
+                 nrow = nread, ncol = nalign)
+    
+    # find groups of alleles from the same set of alignment positions and process them
+    theseal <- 1L
+    for(i in 2:nread){
+      samegroup <- all(sapply(1:nalign, function(x) aligndata[[x]][i] == aligndata[[x]][i-1]))
+      if(samegroup){
+        theseal <- c(theseal, i)
+      }
+      if(i == nread){
+        lastaligndata <- lapply(aligndata, function(x) x[theseal])
+        lastdepthmat <- depthmat[theseal,]
+      }
+      if(!samegroup || (lastchunk && i == nread)) { # we have one complete group of alleles
+        # divide up into loci based on number of mutations from reference
+        thisNM <- NM[theseal,, drop = FALSE]
+        thisNM <- thisNM[,!is.na(thisNM[1,]), drop = FALSE]
+        hapAssign <- InitHapAssign(thisNM)
+        hapAssign <- lapply(1:nalign, function(x) which(hapAssign == x))
+        for(L in 1:nalign){
+          # skip monomorphic loci or those with no alleles
+          if(length(hapAssign[[L]]) < 2) next
+          # filter by missing data rate
+          thesealSub <- theseal[hapAssign[[L]]]
+          if(sum(colSums(depthmat[thesealSub,]) > 0) < min.ind.with.reads) next
+          # filter by minor allele frequency
+          if(sum(rowSums(depthmat[thesealSub,] > 0) >= min.ind.with.minor.allele) < 2) next
+          # add the locus in if it passed everything
+          loccount <- loccount + 1L
+          firstal <- alcount + 1L
+          alcount <- alcount + length(thesealSub)
+          locnames[loccount] <- aligndata[[L]][thesealSub[1]]
+          splitlocname <- strsplit(locnames[loccount], "-")[[1]]
+          locTable$Chr[loccount] <- splitlocname[1]
+          locTable$Pos[loccount] <- as.integer(splitlocname[2])
+          alleles2loc[firstal:alcount] <- loccount
+          alleleNucleotides[firstal:alcount] <- aligndata[[nalign+1]][thesealSub]
+          allelenames[firstal:alcount] <-
+            paste(locnames[loccount], alleleNucleotides[firstal:alcount], sep = "_")
+          if(alcount > ncol(alleleDepth)){
+            alleleDepth <- alleleDepth[,1:(firstal-1)]
+            alleleDepth <- cbind(alleleDepth, t(depthmat[thesealSub,]))
+          } else {
+            alleleDepth[,firstal:alcount] <- t(depthmat[thesealSub,])
+          }
+        }
+      }
+      if(!samegroup){
+        theseal <- i
+      }
+      if(loccount >= maxLoci) break
+    }
+  }
+  
+  # wrap-up and build RADdata object
+  close(aligncon)
+  close(depthcon)
+  locnames <- locnames[1:loccount]
+  locTable <- locTable[1:loccount,]
+  allelenames <- allelenames[1:alcount]
+  alleleNucleotides <- alleleNucleotides[1:alcount]
+  alleleDepth <- alleleDepth[,1:alcount]
+  alleles2loc <- alleles2loc[1:alcount]
+  rownames(locTable) <- locnames
+  colnames(alleleDepth) <- allelenames
+  out <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
+                 contamRate, alleleNucleotides)
+  out <- MergeRareHaplotypes(out, min.ind.with.haplotype = min.ind.with.minor.allele)
+  out <- RemoveMonomorphicLoci(out)
+  return(out)
+}

@@ -98,6 +98,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// InitHapAssign
+IntegerVector InitHapAssign(IntegerMatrix NMmat);
+RcppExport SEXP _polyRAD_InitHapAssign(SEXP NMmatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type NMmat(NMmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(InitHapAssign(NMmat));
+    return rcpp_result_gen;
+END_RCPP
+}
 // ThirdDimProd
 NumericMatrix ThirdDimProd(NumericVector probs, int ngen, int ntaxa);
 RcppExport SEXP _polyRAD_ThirdDimProd(SEXP probsSEXP, SEXP ngenSEXP, SEXP ntaxaSEXP) {
@@ -120,6 +131,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_polyRAD_HindHeMat", (DL_FUNC) &_polyRAD_HindHeMat, 5},
     {"_polyRAD_HoOneParent", (DL_FUNC) &_polyRAD_HoOneParent, 4},
     {"_polyRAD_HoTwoParents", (DL_FUNC) &_polyRAD_HoTwoParents, 5},
+    {"_polyRAD_InitHapAssign", (DL_FUNC) &_polyRAD_InitHapAssign, 1},
     {"_polyRAD_ThirdDimProd", (DL_FUNC) &_polyRAD_ThirdDimProd, 3},
     {NULL, NULL, 0}
 };
