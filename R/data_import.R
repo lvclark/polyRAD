@@ -1382,7 +1382,7 @@ readProcessSamMulti <- function(alignfile, depthfile = sub("align", "depth", ali
   colnames(alleleDepth) <- allelenames
   out <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
                  contamRate, alleleNucleotides)
-  out <- MergeRareHaplotypes(out, min.ind.with.haplotype = min.ind.with.minor.allele)
-  out <- RemoveMonomorphicLoci(out)
+#  out <- MergeRareHaplotypes(out, min.ind.with.haplotype = min.ind.with.minor.allele)
+#  out <- RemoveMonomorphicLoci(out)
   return(out)
 }
