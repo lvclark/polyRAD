@@ -1330,14 +1330,19 @@ readProcessSamMulti <- function(alignfile, depthfile = sub("align", "depth", ali
           # filter by minor allele frequency
           if(sum(rowSums(depthmat[thesealSub,] > 0) >= min.ind.with.minor.allele) < 2) next
           # add the locus in if it passed everything
-          loccount <- loccount + 1L
+          thislocname <-aligndata[[L]][thesealSub[1]]
           firstal <- alcount + 1L
           alcount <- alcount + length(thesealSub)
-          locnames[loccount] <- aligndata[[L]][thesealSub[1]]
-          splitlocname <- strsplit(locnames[loccount], "-")[[1]]
-          locTable$Chr[loccount] <- splitlocname[1]
-          locTable$Pos[loccount] <- as.integer(splitlocname[2])
-          alleles2loc[firstal:alcount] <- loccount
+          if(thislocname %in% locnames){ # same locus may show up in multiple groups
+            alleles2loc[firstal:alcount] <- match(thislocname, locnames)
+          } else {
+            loccount <- loccount + 1L
+            locnames[loccount] <- thislocname
+            splitlocname <- strsplit(locnames[loccount], "-")[[1]]
+            locTable$Chr[loccount] <- splitlocname[1]
+            locTable$Pos[loccount] <- as.integer(splitlocname[2])
+            alleles2loc[firstal:alcount] <- loccount
+          }
           alleleNucleotides[firstal:alcount] <- aligndata[[nalign+1]][thesealSub]
           allelenames[firstal:alcount] <-
             paste(locnames[loccount], alleleNucleotides[firstal:alcount], sep = "_")
@@ -1359,12 +1364,20 @@ readProcessSamMulti <- function(alignfile, depthfile = sub("align", "depth", ali
   # wrap-up and build RADdata object
   close(aligncon)
   close(depthcon)
+  
   locnames <- locnames[1:loccount]
   locTable <- locTable[1:loccount,]
   allelenames <- allelenames[1:alcount]
   alleleNucleotides <- alleleNucleotides[1:alcount]
   alleleDepth <- alleleDepth[,1:alcount]
   alleles2loc <- alleles2loc[1:alcount]
+  
+  alleleorder <- order(alleles2loc)
+  allelenames <- allelenames[alleleorder]
+  alleleNucleotides <- alleleNucleotides[alleleorder]
+  alleleDepth <- alleleDepth[,alleleorder]
+  alleles2loc <- alleles2loc[alleleorder]
+  
   rownames(locTable) <- locnames
   colnames(alleleDepth) <- allelenames
   out <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
