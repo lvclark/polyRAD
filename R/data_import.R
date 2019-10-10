@@ -1240,7 +1240,7 @@ readTASSELGBSv2 <- function(tagtaxadistFile, samFile, min.ind.with.reads = 200,
 readProcessSamMulti <- function(alignfile, depthfile = sub("align", "depth", alignfile),
                                 expectedLoci = 1000, min.ind.with.reads = 200,
                                 min.ind.with.minor.allele = 10, possiblePloidies = list(2),
-                                contamRate = 0.001, expectedAlleles = expectedLoci * 10,
+                                contamRate = 0.001, expectedAlleles = expectedLoci * 15,
                                 maxLoci = expectedLoci){
   # read file headers
   aligncon <- file(alignfile, open = 'r')
