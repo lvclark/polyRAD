@@ -1249,7 +1249,7 @@ readProcessSamMulti <- function(alignfile, depthfile = sub("align", "depth", ali
                       quiet = TRUE)
   depthheader <- scan(depthcon, sep = ",", nlines = 1, what = character(),
                       quiet = TRUE)
-  nalign <- (length(alignheader) - 1) / 2 # number of alignment positions reported
+  nalign <- (length(alignheader) - 1) / 3 # number of alignment positions reported
   samples <- depthheader[-1]
   nsam <- length(samples)
   
