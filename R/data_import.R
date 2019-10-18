@@ -1270,8 +1270,8 @@ readProcessSamMulti <- function(alignfile, depthfile = sub("align", "depth", ali
   
   # read the files
   nscan <- 1e4 # number of lines to read at once
-  whatlistalign <- list(character(), integer())
-  whatlistalign <- whatlistalign[c(rep(1, nalign + 1), rep(2, nalign))]
+  whatlistalign <- list(character(), integer(), NULL)
+  whatlistalign <- whatlistalign[c(rep(1, nalign + 1), rep(2, nalign), rep(3, nalign))]
   whatlistdepth <- list(character(), integer())
   whatlistdepth <- whatlistdepth[c(1, rep(2, nsam))]
   # dummy objects; will hold the last partial marker read
