@@ -1294,7 +1294,7 @@ readProcessSamMulti <- function(alignfile, depthfile = sub("align", "depth", ali
       depthmat <- matrix(unlist(depthdata[-1]), nrow = nread, ncol = nsam)
       # merge in any potentially unfinished markers from last chunk
       depthmat <- rbind(lastdepthmat, depthmat)
-      for(i in 1:length(whatlistalign)){
+      for(i in 1:(length(whatlistalign) - nalign)){
         aligndata[[i]] <- c(lastaligndata[[i]], aligndata[[i]])
       }
     }
