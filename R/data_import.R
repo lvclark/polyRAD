@@ -1386,3 +1386,45 @@ readProcessSamMulti <- function(alignfile, depthfile = sub("align", "depth", ali
 #  out <- RemoveMonomorphicLoci(out)
   return(out)
 }
+
+readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
+                               min.ind.with.minor.allele = 10,
+                               possiblePloidies = list(2), contamRate = 0.001,
+                               nameFromTagStart = TRUE){
+  incon <- file(sortedfile, open = "r")
+  # read header
+  header <- scan(incon, sep = ",", nlines = 1, what = character(), quiet = TRUE)
+  samples <- header[-(1:4)]
+  nSam <- length(samples)
+  scanwhat <- list(character(), integer(), character(), NULL, integer())
+  scanwhat <- scanwhat[c(1:4, rep(5, nSam))]
+  
+  # read file
+  mydata <- scan(incon, sep = ",", what = scanwhat, quiet = TRUE)
+  close(incon)
+  nAl <- length(mydata[[1]])
+  
+  # get depth matrix
+  alleleDepths <- matrix(unlist(mydata[5:nSam]), nrow = nSam, ncol = nAl,
+                         byrow = TRUE, dimnames = list(samples, NULL))
+  if(any(is.na(alleleDepths))){
+    stop("Missing data in depth matrix.")
+  }
+  mydata <- mydata[1:3] # free up space
+  # factor by locus, sorting locus names
+  alleles2loc_factor <- as.factor(mydata[[1]])
+  loci <- levels(alleles2loc_factor)
+  nLoc <- length(loci)
+  alleles2loc <- as.integer(alleles2loc_factor)
+  
+  # perform filtering
+  keeploc <- integer(0)
+  for(L in 1:nLoc){
+    submat <- alleleDepth[,alleles2loc == L]
+    if(sum(rowSums(submat) > 0) >= min.ind.with.reads &&
+       sum(colSums(submat > 0) >= min.ind.with.minor.allele) > 1){
+      keeploc <- c(keeploc, L)
+    }
+  }
+  keepal <- which(alleles2loc %fin% keeploc)
+}
