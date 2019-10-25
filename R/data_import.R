@@ -1391,6 +1391,7 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
                                min.ind.with.minor.allele = 10,
                                possiblePloidies = list(2), contamRate = 0.001,
                                nameFromTagStart = TRUE){
+  message("Reading file...")
   incon <- file(sortedfile, open = "r")
   # read header
   header <- scan(incon, sep = ",", nlines = 1, what = character(), quiet = TRUE)
@@ -1405,9 +1406,9 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   nAl <- length(mydata[[1]])
   
   # get depth matrix
-  alleleDepths <- matrix(unlist(mydata[5:nSam]), nrow = nSam, ncol = nAl,
+  alleleDepth <- matrix(unlist(mydata[(1:nSam) + 4]), nrow = nSam, ncol = nAl,
                          byrow = TRUE, dimnames = list(samples, NULL))
-  if(any(is.na(alleleDepths))){
+  if(any(is.na(alleleDepth))){
     stop("Missing data in depth matrix.")
   }
   mydata <- mydata[1:3] # free up space
@@ -1418,6 +1419,7 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   alleles2loc <- as.integer(alleles2loc_factor)
   
   # perform filtering
+  message("Filtering and sorting loci...")
   keeploc <- integer(0)
   for(L in 1:nLoc){
     submat <- alleleDepth[,alleles2loc == L]
@@ -1427,4 +1429,35 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
     }
   }
   keepal <- which(alleles2loc %fin% keeploc)
+  
+  alleles2loc_factor <- droplevels(alleles2loc_factor[keepal])
+  loci <- levels(alleles2loc_factor)
+  alleleDepth <- alleleDepth[,keepal, drop = FALSE]
+  alleles2loc <- as.integer(alleles2loc_factor)
+  alleleNucleotides <- mydata[[3]][keepal]
+  
+  # sort by locus name (i.e. position and chromosome)
+  alorder <- order(alleles2loc)
+  alleleDepth <- alleleDepth[, alorder, drop = FALSE]
+  alleleNucleotides <- alleleNucleotides[alorder]
+  alleles2loc <- alleles2loc[alorder]
+  
+  # build locTable
+  chrom <- sub("\\-.*$", "", loci)
+  pos <- mydata[[2]][fmatch(loci, mydata[[1]])]
+  if(!nameFromTagStart){
+    loci <- paste(chrom, pos, sep = "-")
+  }
+  locTable <- data.frame(row.names = loci,
+                         Chr = chrom, Pos = pos)
+  
+  # build RADdata object
+  message("Building RADdata object...")
+  attr(alleleNucleotides, "Variable_sites_only") <- FALSE
+  radout <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
+                    contamRate, alleleNucleotides)
+  radout <- MergeRareHaplotypes(radout, 
+                                min.ind.with.haplotype = min.ind.with.minor.allele)
+  radout <- RemoveMonomorphicLoci(radout)
+  return(radout)
 }
