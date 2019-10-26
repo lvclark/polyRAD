@@ -1390,7 +1390,8 @@ readProcessSamMulti <- function(alignfile, depthfile = sub("align", "depth", ali
 readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
                                min.ind.with.minor.allele = 10,
                                possiblePloidies = list(2), contamRate = 0.001,
-                               nameFromTagStart = TRUE){
+                               nameFromTagStart = TRUE,
+                               mergeRareHap = TRUE){
   message("Reading file...")
   incon <- file(sortedfile, open = "r")
   # read header
@@ -1456,8 +1457,10 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   attr(alleleNucleotides, "Variable_sites_only") <- FALSE
   radout <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
                     contamRate, alleleNucleotides)
-  radout <- MergeRareHaplotypes(radout, 
-                                min.ind.with.haplotype = min.ind.with.minor.allele)
-  radout <- RemoveMonomorphicLoci(radout)
+  if(mergeRareHap){
+    radout <- MergeRareHaplotypes(radout, 
+                                  min.ind.with.haplotype = min.ind.with.minor.allele)
+    radout <- RemoveMonomorphicLoci(radout)
+  }
   return(radout)
 }
