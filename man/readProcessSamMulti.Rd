@@ -67,9 +67,9 @@ A \code{"RADdata"} object.
 Lindsay V. Clark
 }
 
-%\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-%}
+\seealso{
+\code{\link{readProcessIsoloci}}
+}
 \examples{
 \dontrun{
 myRAD <- readProcessSamMulti("mydata_2_align.csv")
