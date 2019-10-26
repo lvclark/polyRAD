@@ -16,7 +16,7 @@ readProcessSamMulti(alignfile,
                     min.ind.with.minor.allele = 10,
                     possiblePloidies = list(2),
                     contamRate = 0.001,
-                    expectedAlleles = expectedLoci * 10,
+                    expectedAlleles = expectedLoci * 15,
                     maxLoci = expectedLoci)
 }
 \arguments{

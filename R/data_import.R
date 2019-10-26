@@ -1444,7 +1444,7 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   
   # build locTable
   chrom <- sub("\\-.*$", "", loci)
-  pos <- mydata[[2]][fmatch(loci, mydata[[1]])]
+  pos <- mydata[[2]][fastmatch::fmatch(loci, mydata[[1]])]
   if(!nameFromTagStart){
     loci <- paste(chrom, pos, sep = "-")
   }
