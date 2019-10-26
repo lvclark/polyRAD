@@ -1390,6 +1390,7 @@ readProcessSamMulti <- function(alignfile, depthfile = sub("align", "depth", ali
 
 readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
                                min.ind.with.minor.allele = 10,
+                               min.median.read.depth = 10,
                                possiblePloidies = list(2), contamRate = 0.001,
                                nameFromTagStart = TRUE,
                                mergeRareHap = TRUE){
@@ -1425,8 +1426,10 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   keeploc <- integer(0)
   for(L in 1:nLoc){
     submat <- alleleDepth[,alleles2loc == L]
-    if(sum(rowSums(submat) > 0) >= min.ind.with.reads &&
-       sum(colSums(submat > 0) >= min.ind.with.minor.allele) > 1){
+    depthperind <- rowSums(submat)
+    if(sum(depthperind > 0) >= min.ind.with.reads &&
+       sum(colSums(submat > 0) >= min.ind.with.minor.allele) > 1 &&
+       median(depthperind) >= min.median.read.depth){
       keeploc <- c(keeploc, L)
     }
   }

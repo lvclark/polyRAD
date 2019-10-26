@@ -11,6 +11,7 @@ resulting CSV to a \code{"\link{RADdata}"} object.
 \usage{
 readProcessIsoloci(sortedfile, min.ind.with.reads = 200,
                    min.ind.with.minor.allele = 10,
+                   min.median.read.depth = 10,
                    possiblePloidies = list(2),
                    contamRate = 0.001,
                    nameFromTagStart = TRUE, mergeRareHap = TRUE)
@@ -25,6 +26,10 @@ Minimum number of individuals with reads needed to retain a locus.
   \item{min.ind.with.minor.allele}{
 Minimum number of individuals with reads in a minor allele needed to retain
 a locus.
+}
+  \item{min.median.read.depth}{
+Minimum median read depth across individuals (including individuals with depth 0)
+needed to retain a locus.
 }
   \item{possiblePloidies}{
 A list indicating possible inheritance modes of loci.  See \code{\link{RADdata}}.
