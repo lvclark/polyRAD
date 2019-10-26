@@ -1352,6 +1352,7 @@ readProcessSamMulti <- function(alignfile, depthfile = sub("align", "depth", ali
           } else {
             alleleDepth[,firstal:alcount] <- t(depthmat[thesealSub,])
           }
+          if(loccount >= maxLoci) break
         }
       }
       if(!samegroup){
