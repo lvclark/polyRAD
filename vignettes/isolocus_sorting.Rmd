@@ -1,0 +1,55 @@
+---
+title: "Variant and Genotype Calling in Highly Duplicated Genomes"
+author: "Lindsay V. Clark, University of Illinois, Urbana-Champaign"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{polyRAD Tutorial}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## When and why to use this pipeline
+
+The variant and genotype calling pipeline described in this vignette is
+intended for recent or ancient allopolyploid species, in which the reference
+genome sequence contains many paralogous regions that do not recombine with
+each other at meiosis.  In highly duplicated genomes such as these, conventional
+alignment software will often align sequences to the incorrect paralog if only
+allowed to return one alignment, causing issues with variant genotype calling
+downstream.  The pipeline described in this vignette uses read depth
+distribution across a population (the $H_{ind}/H_E$ statistic) to determine
+whether a group of tags is behaving like a Mendelian locus. Attempting to 
+optimize this statistic, it rearranges tags among paralogous alignment locations
+to correct alignments and generate well-behaved markers.
+
+This pipeline is currently only designed for natural populations, diversity
+panels, or mapping populations where the most recent generation was produced by
+random intermating among all progeny.  F1, self-fertilized, and backcrossed
+populations will not be processed correctly because expected heterozygosity
+cannot be estimated directly from allele frequencies in these populations.
+However, the $H_{ind}/H_E$ statistic can still be used from within polyRAD
+to filter non-Mendelian markers from these populations.
+
+## Steps in the pipeline
+
+1. Use TASSEL-GBSv2 to find all unique sequence tags in a dataset, and the
+depths of those tags in all taxa.
+2. Align tags to the reference genome using Bowtie2, allowing multiple
+alignments to be returned.
+3. Use `process_sam_multi.py` to group tags based on sets of alignment
+locations.
+4. Import a small subset of the resulting data to polyRAD using
+`readProcessSamMulti`.  Run `HindHe` on the imported data to identify
+problematic samples and estimate inbreeding.
+5. Use `process_isoloci.py` to sort tags into their correct alignment locations
+within the groups of paralogs identified by `process_sam_multi.py`, and filter
+out tags that cannot be adequately sorted.
+6. Import the output of the previous step into polyRAD using
+`readProcessIsoloci`, then perform genotype calling.
