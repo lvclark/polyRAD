@@ -21,17 +21,17 @@ The variant and genotype calling pipeline described in this vignette is
 intended for recent or ancient allopolyploid species, in which the reference
 genome sequence contains many paralogous regions that do not recombine with
 each other at meiosis.  In highly duplicated genomes such as these, conventional
-alignment software will often align sequences to the incorrect paralog if only
-allowed to return one alignment, causing issues with variant genotype calling
-downstream.  The pipeline described in this vignette uses read depth
-distribution across a population (the $H_{ind}/H_E$ statistic) to determine
-whether a group of tags is behaving like a Mendelian locus. Attempting to 
-optimize this statistic, it rearranges tags among paralogous alignment locations
+alignment software, especially when restricted to only returning one alignment,
+will often align sequences to the incorrect paralog, causing issues with variant
+and genotype calling downstream.  The pipeline described in this vignette uses
+read depth distribution across a population (the $H_{ind}/H_E$ statistic) to
+determine whether a group of tags is behaving like a Mendelian locus. Attempting
+to optimize this statistic, it rearranges tags among paralogous alignment locations
 to correct alignments and generate well-behaved markers.
 
 This pipeline is currently only designed for natural populations, diversity
 panels, or mapping populations in which the most recent generation was produced
-bymrandom intermating among all progeny.  F1, self-fertilized, and backcrossed
+by random intermating among all progeny.  F1, self-fertilized, and backcrossed
 populations will not be processed correctly because expected heterozygosity
 cannot be estimated directly from allele frequencies in these populations.
 However, the $H_{ind}/H_E$ statistic can still be used from within polyRAD
@@ -41,8 +41,8 @@ function.
 ## Pipeline overview
 
 Below is an overview of the pipeline.  It uses a combination of existing
-bioinformatics tools, custom Python scripts included with polyRAD, and functions
-within polyRAD.
+bioinformatics tools, custom Python scripts included with polyRAD, and R
+functions within polyRAD.
 
 1. Use TASSEL-GBSv2 to find all unique sequence tags in a dataset, and the
 depths of those tags in all taxa.
@@ -59,18 +59,57 @@ out tags that cannot be adequately sorted.
 6. Import the output of the previous step into polyRAD using
 `readProcessIsoloci`, then perform genotype calling.
 
+Everything except for the R portion of this pipeline will need to be run on your
+operating system's Terminal/Shell/Command Prompt.  Bowtie2 requires Mac or
+Linux.  Python 3 is needed for the Python portions of the pipeline.  If any of
+this presents a barrier to you, I recommend finding someone experienced with
+bioinformatics at your institution who can give you some advice.
+
 ## TASSEL-GBSv2
 
 An overview of the TASSEL-GBSv2 pipeline is available at
 https://bitbucket.org/tasseladmin/tassel-5-source/wiki/Tassel5GBSv2Pipeline.
 TASSEL can be downloaded from https://www.maizegenetics.net/tassel.
 
-We will only run the first couple steps of the TASSEL-GBS pipeline.  If for
-some reason you can't use TASSEL-GBS (for example, your FASTQ files don't have
-inline barcodes) you might be able to craft a custom alternative for yourself.
-What you will need out of this step is a file formatted identically to a
-TagTaxaDist file from TASSEL, and a FASTA or FASTQ file containing all the
-same sequence tags as the TagTaxaDist file.
+We will only run the first couple steps of the TASSEL-GBS pipeline.  The files
+that you will need to start with are the
+[key file](https://bitbucket.org/tasseladmin/tassel-5-source/wiki/Tassel5GBSv2Pipeline/KeyFileExample)
+and your FASTQ files.
+
+1. Run the [GBSSeqToTagDBPlugin](https://bitbucket.org/tasseladmin/tassel-5-source/wiki/Tassel5GBSv2Pipeline/GBSSeqToTagDBPlugin).
+This requires your key file and FASTQ files as input, and will generate a
+database file.
+2. Run the [TagExportToFastqPlugin](https://bitbucket.org/tasseladmin/tassel-5-source/wiki/Tassel5GBSv2Pipeline/TagExportToFastqPlugin).
+This requires your database file as input, and outputs a FASTQ with each tag
+present once.  Set the `-c` parameter to something higher than the default
+(10 is still pretty conservative but will discard most sequencing errors) to
+save some processing downstream.
+3. Run the [GetTagTaxaDistFromDBPlugin](https://bitbucket.org/tasseladmin/tassel-5-source/wiki/Tassel5GBSv2Pipeline/GetTagTaxaDistFromDBPlugin).  This requires the database as input, and outputs a tab-delimited
+text file showing the depth of each tag in each sample.
+
+The commands might look like (on Windows):
+
+```
+run_pipeline.bat -fork1 -GBSSeqToTagDBPlugin -e PstI-MspI -i D:\Msa\raw_data\
+-db D:\Msa\Msa.db -k D:\Msa\key.txt -kmerLength 80 -endPlugin -runfork1
+
+run_pipeline.bat -fork1 -TagExportToFastqPlugin -c 10 -db D:\Msa\Msa.db
+-o D:\Msa\Msa_tags.fq -endPlugin -runfork1
+
+run_pipeline.bat -fork1 -GetTagTaxaDistFromDBPlugin -db D:\Msa\Msa.db
+-o D:\Msa\Msa_ttd.txt -endPlugin -runfork1
+```
+
+You may need to adjust the memory parameters to accomodate a large dataset.
+
+### If TASSEL-GBS won't work for your dataset
+
+If for some reason you can't use TASSEL-GBS (for example, your FASTQ files don't
+have inline barcodes, or your protocol doesn't involve restriction enzymes) you
+might be able to craft a custom alternative for yourself. What you will need out
+of this step is a file formatted identically to a TagTaxaDist file from TASSEL,
+and a FASTA or FASTQ file containing the same sequence tags as the
+TagTaxaDist file.
 
 A TagTaxaDist file is a tab-delimited text file formatted as below, and contains
 the read depth of every tag in every sample (taxon).  I have used a simple
@@ -83,7 +122,86 @@ Depending on the complexity of your dataset, it can be quite a large file.
 | TGCAGAACAGGATACGATACCCCTT| 2 | 0 | 0 | 0 |
 | TGCAGAACAGTATACGATACCCCTT| 0 | 5 | 0 | 0 |
 
-Assuming you are running TASSEL-GBSv2 and not something custom, the files that
-you will need to start with are the
-[key file](https://bitbucket.org/tasseladmin/tassel-5-source/wiki/Tassel5GBSv2Pipeline/KeyFileExample)
-and your FASTQ files.
+## Alignment with Bowtie2
+
+Next, align the FASTQ file generated in step 2 of the previous section to your
+reference genome.  If you have never used
+[Bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml)
+on your reference genome before, you will first need to
+[make an index](http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#the-bowtie2-build-indexer).
+
+```
+bowtie2-build Msinensis_497_v7.0.hardmasked.fa Msi_DH1_7
+```
+
+Importantly, you will need to set the `-k` argument to something higher than the
+number of subgenomes within your reference genome.  For example, in an
+allotetraploid do at least `-k 3`, and in an allohexaploid at least `-k 4`.
+
+For my *Miscanthus* dataset, I ran:
+
+```
+bowtie2 -k 3 --very-sensitive -x Msi_DH1_7 -U Msa_tags.fq -S Msa_align.sam
+```
+
+## Grouping tags by alignment sets
+
+Next you will run `process_sam_multi.py`.  To locate this file, in R run
+
+```{r}
+system.file("python", "process_sam_multi.py", package = "polyRAD")
+```
+
+For convenience, you might copy this file to somewhere closer to your working
+directory where you have the files generated in the previous step.
+
+As input, you will need the SAM file generated by Bowtie2 and the TagTaxaDist
+file from TASSEL.  Be sure to set the `-g` argument to the number of subgenomes
+if it is different from the default of 2 (allotetraploids); for example, in
+an allohexaploid you should set `-g 3`.
+
+For descriptions of other arguments, see
+
+```
+python process_sam_multi.py --help
+```
+
+The `-c` argument is useful if you want to divide your data into smaller chunks
+for downstream processing (if you are limited on RAM or have many processors at
+your disposal).  If there were some samples in your TASSEL database that you
+already know you want to get rid of, you can list the samples that you want to
+keep in a text file (one sample name per line) and pass that to the `-s`
+argument.
+
+In my *Miscanthus* data, the command looked like:
+
+```
+python process_sam_multi.py Msa_align.sam Msa_ttd.txt split_depths/Msa_split -c 5
+```
+
+The output will be a pair of CSVs for each chunk. One is named "align",
+containing the set of alignment locations for each tag, with their respective
+number of mutations and CIGAR strings.  The other, named "depth", is a subsetted
+version of the TagTaxaDist file, containing the same tags in the same order as
+"align".
+
+## Filtering samples and estimating inbreeding
+
+Before proceeding, we will want to get a look at the data to identify any
+outlier samples that may be a different ploidy from the rest, interspecific
+hybrids, or highly contaminated.  I recommend removing them to avoid biasing
+$H_{ind}/H_E$ estimates, but keep in mind that this means they will be excluded
+from all downstream analysis.  If a sample is important to your study and
+you know of a reason why it would have a different heterozygosity from most
+samples, you should keep it.
+
+We will import just 1000 loci using `readProcessSamMulti`.  Sequence tags will
+be assigned preliminary alignment locations based on where they had highest
+sequence similarity, or to a random location if there was a tie.
+
+```{r eval = FALSE}
+myRADprelim <- readProcessSamMulti("Msa_split_1_align.csv")
+```
+
+We will then estimate a $H_{ind}/H_E$ matrix for this data.
+
