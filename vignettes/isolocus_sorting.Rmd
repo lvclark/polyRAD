@@ -30,14 +30,19 @@ optimize this statistic, it rearranges tags among paralogous alignment locations
 to correct alignments and generate well-behaved markers.
 
 This pipeline is currently only designed for natural populations, diversity
-panels, or mapping populations where the most recent generation was produced by
-random intermating among all progeny.  F1, self-fertilized, and backcrossed
+panels, or mapping populations in which the most recent generation was produced
+bymrandom intermating among all progeny.  F1, self-fertilized, and backcrossed
 populations will not be processed correctly because expected heterozygosity
 cannot be estimated directly from allele frequencies in these populations.
 However, the $H_{ind}/H_E$ statistic can still be used from within polyRAD
-to filter non-Mendelian markers from these populations.
+to filter non-Mendelian markers from these populations using the `HindHeMapping`
+function.
 
-## Steps in the pipeline
+## Pipeline overview
+
+Below is an overview of the pipeline.  It uses a combination of existing
+bioinformatics tools, custom Python scripts included with polyRAD, and functions
+within polyRAD.
 
 1. Use TASSEL-GBSv2 to find all unique sequence tags in a dataset, and the
 depths of those tags in all taxa.
@@ -53,3 +58,32 @@ within the groups of paralogs identified by `process_sam_multi.py`, and filter
 out tags that cannot be adequately sorted.
 6. Import the output of the previous step into polyRAD using
 `readProcessIsoloci`, then perform genotype calling.
+
+## TASSEL-GBSv2
+
+An overview of the TASSEL-GBSv2 pipeline is available at
+https://bitbucket.org/tasseladmin/tassel-5-source/wiki/Tassel5GBSv2Pipeline.
+TASSEL can be downloaded from https://www.maizegenetics.net/tassel.
+
+We will only run the first couple steps of the TASSEL-GBS pipeline.  If for
+some reason you can't use TASSEL-GBS (for example, your FASTQ files don't have
+inline barcodes) you might be able to craft a custom alternative for yourself.
+What you will need out of this step is a file formatted identically to a
+TagTaxaDist file from TASSEL, and a FASTA or FASTQ file containing all the
+same sequence tags as the TagTaxaDist file.
+
+A TagTaxaDist file is a tab-delimited text file formatted as below, and contains
+the read depth of every tag in every sample (taxon).  I have used a simple
+convention for sample names here, but the names can be anything you want.
+Depending on the complexity of your dataset, it can be quite a large file.
+
+| Tag | Sam1 | Sam2 | Sam3| Sam4 |
+|-----|------|------|-----|------|
+| TGCAGAAATCATAGATTAAGGATAT| 0 | 24 | 1 | 0 |
+| TGCAGAACAGGATACGATACCCCTT| 2 | 0 | 0 | 0 |
+| TGCAGAACAGTATACGATACCCCTT| 0 | 5 | 0 | 0 |
+
+Assuming you are running TASSEL-GBSv2 and not something custom, the files that
+you will need to start with are the
+[key file](https://bitbucket.org/tasseladmin/tassel-5-source/wiki/Tassel5GBSv2Pipeline/KeyFileExample)
+and your FASTQ files.
