@@ -75,3 +75,14 @@ HindHeMapping.RADdata <- function(object, n.gen.backcrossing = 0,
   
   return(outmat)
 }
+
+InbreedingFromHindHe <- function(hindhe, ploidy){
+  if(length(ploidy) != 1 || is.list(ploidy)){
+    stop("Please provide a single number to indicate ploidy.")
+  }
+  if(ploidy < 2 || ploidy %% 1 != 0){
+    stop("Ploidy should be an integer of 2 or higher.")
+  }
+  
+  return(1 - hindhe * ploidy / (ploidy - 1))
+}

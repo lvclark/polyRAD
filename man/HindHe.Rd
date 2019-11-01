@@ -116,9 +116,9 @@ A preprint is in the works.  In the meantime, see a seminar describing
 Lindsay V. Clark
 }
 
-%\seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
-%}
+\seealso{
+\code{\link{InbreedingFromHindHe}}
+}
 \examples{
 data(exampleRAD)
 
