@@ -7,7 +7,7 @@ output:
     toc: true
 vignette: >
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteIndexEntry{polyRAD Tutorial}
+  %\VignetteIndexEntry{Variant and Genotype Calling in Highly Duplicated Genomes}
   %\VignetteEncoding{UTF-8}
 ---
 

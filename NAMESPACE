@@ -26,7 +26,8 @@ SplitByChromosome, StripDown, SubsetByLocus, SubsetByPloidy, SubsetByTaxon,
 TestOverdispersion, VCF2RADdata)
 
 importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom",
-           "hclust", "cutree", "as.dist", "cor", "residuals", "lm.fit", "sd")
+           "hclust", "cutree", "as.dist", "cor", "residuals", "lm.fit", "sd",
+           "median")
 importFrom("utils", "read.csv", "write.table", "write.csv")
 importFrom("fastmatch", "%fin%")
 importFrom("methods", "is")
