@@ -26,7 +26,9 @@ A single integer indicating the ploidy of the population.
 }
 
 \value{
-A number indicating the inbreeding statistic \eqn{F}.
+A number indicating the inbreeding statistic \eqn{F}.  This is calculated as:
+
+\deqn{1 - hindhe * ploidy / (ploidy - 1)}
 }
 %\references{
 %% ~put references to the literature/web site here ~
