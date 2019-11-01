@@ -226,7 +226,7 @@ hh <- myHindHe
 rm(myHindHe)
 # get all the diploids, and a few tetraploids to demo filtering
 keepind <- sort(c(which(ploidies == "2x"), 
-                  match(c("KMS346", "KMS444", "UI11-00032"), rownames(hh))))
+                  match(c("KMS397", "KMS444", "UI11-00032"), rownames(hh))))
 hh <- hh[keepind,]
 ploidies <- ploidies[keepind]
 TotDepthT <- TotDepthT[keepind]
