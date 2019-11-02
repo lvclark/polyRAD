@@ -306,10 +306,13 @@ input ploidy).
 
 ## Genotype calling
 
-We can now import the sorted dataset into polyRAD.
+We can now import the sorted dataset into polyRAD.  Since there is a small
+number of individuals in this dataset, we will lower the filtering thresholds
+for loci we import.
 
 ```{r eval = FALSE}
-myRAD <- readProcessIsoloci("Msa_split_1_sorted.csv")
+myRAD <- readProcessIsoloci("Msa_split_1_sorted.csv", min.ind.with.reads = 80,
+                            min.ind.with.minor.allele = 5)
 ```
 
 We can see what the distribution of $H_{ind}/H_E$ looks like after we have
