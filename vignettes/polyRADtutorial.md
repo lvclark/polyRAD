@@ -1,7 +1,20 @@
 polyRAD Tutorial
 ================
 Lindsay V. Clark, University of Illinois, Urbana-Champaign
-05 October 2019
+02 November 2019
+
+  - [Introduction <a name="introduction"></a>](#introduction)
+  - [Summary of available functions
+    <a name="functions"></a>](#summary-of-available-functions)
+  - [Estimating genotype probabilities in a mapping population
+    <a name="mapping"></a>](#estimating-genotype-probabilities-in-a-mapping-population)
+  - [Estimating genotype probabilities in a diversity panel
+    <a name="diversity"></a>](#estimating-genotype-probabilities-in-a-diversity-panel)
+  - [*H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> for filtering markers and individuals
+    <a name="hindhe"></a>](#h_indh_e-for-filtering-markers-and-individuals)
+  - [Considerations for RAM and processing time
+    <a name="considerations"></a>](#considerations-for-ram-and-processing-time)
+  - [Citing polyRAD <a name="citation"></a>](#citing-polyrad)
 
 ## Introduction <a name="introduction"></a>
 
@@ -82,8 +95,7 @@ There are also various utilities for manipulating RADdata objects:
 For identifying problematic loci and individuals: \* `HindHe` \*
 `HindHeMapping`
 
-See `?GetTaxa` for a list of accessor functions as
-well.
+See `?GetTaxa` for a list of accessor functions as well.
 
 ## Estimating genotype probabilities in a mapping population <a name="mapping"></a>
 
@@ -261,8 +273,7 @@ hist(colMeans(myhindhe, na.rm = TRUE), col = "lightgrey",
 ![](polyRADtutorial_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 In this case, all of the markers look fine, but if they didn’t, we would
-filter poor quality markers from the
-dataset.
+filter poor quality markers from the dataset.
 
 ``` r
 goodMarkers <- colnames(myhindhe)[which(colMeans(myhindhe, na.rm = TRUE) < 0.5)]
@@ -368,8 +379,7 @@ table(mydata$alleleFreq)
 
 Genotype likelihood is also stored in the object for each possible
 genotype at each locus, taxon, and ploidy. This is the probability of
-seeing the observed distribution of
-    reads.
+seeing the observed distribution of reads.
 
 ``` r
 mydata$alleleDepth[8,19:26]
@@ -424,8 +434,7 @@ The prior genotype probabilities (expected genotype distributions) are
 also stored in the object for each possible ploidy. These distributions
 are estimated based on the most likely parent genotypes. Low confidence
 parent genotypes can be ignored by increasing the `minLikelihoodRatio`
-argument to
-    `PipelineMapping2Parents`.
+argument to `PipelineMapping2Parents`.
 
 ``` r
 mydata$priorProb[[1]][,19:26]
@@ -468,8 +477,7 @@ isoloci.
 Now we want to determine which ploidy is the best fit for each locus.
 This is done by comparing genotype prior probabilities to genotype
 likelihoods and estimating a \(\chi^2\) statistic. Lower values indicate
-a better
-    fit.
+a better fit.
 
 ``` r
 mydata$ploidyChiSq[,19:26]
@@ -499,8 +507,7 @@ diploid with fairly high confidence, in agreement with our
 *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> results.
 
 Now we’ll examine the posterior genotype probabilities. These are still
-estimated separately for each
-    ploidy.
+estimated separately for each ploidy.
 
 ``` r
 mydata$posteriorProb[[1]][,10,19:26]
@@ -583,8 +590,7 @@ gentoype likelihood only, ignoring the priors set for the progeny. In
 some places they may not match the progeny genotypes, indicating a
 likely error in parental genotype calling. We can see the parental
 genotypes that were used for estimating progeny priors using
-`$likelyGeno_donor` and
-    `$likelyGeno_recurrent`.
+`$likelyGeno_donor` and `$likelyGeno_recurrent`.
 
 ``` r
 mydata$likelyGeno_donor[,19:26]
@@ -701,8 +707,7 @@ them from the output of `colMeans` and remove them using `SubsetByLocus`
 (see section on mapping populations).
 
 For natural populations and diversity panels, we can run
-`TestOverdispersion` before performing any genotype
-    calling.
+`TestOverdispersion` before performing any genotype calling.
 
 ``` r
 overdispersionP <- TestOverdispersion(mydata, to_test = 8:10)
@@ -813,8 +818,7 @@ abline(a = 0, b = 1, col = "blue", lwd = 2)
 ![](polyRADtutorial_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
 
 It seems that some markers look allotetraploid, and others look diploid.
-We can see if this matches *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub>
-results.
+We can see if this matches *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> results.
 
 ``` r
 myChiSqRat <- mydataPopStruct$ploidyChiSq[1,] / mydataPopStruct$ploidyChiSq[2,]
@@ -846,33 +850,32 @@ wmgenoPopStruct[1:10,1:5]
 ```
 
     ##                       S01_138045_G S01_139820_TT S01_139820_CT
-    ## KMS207-8              2.121035e-06    0.07826646    0.18363045
-    ## JM0051.003            1.960683e-01    0.31724781    0.20377208
-    ## JM0034.001            1.000000e-04    0.00010000    0.12903134
-    ## JM0220.001            1.000000e-04    0.50485295    0.20647566
-    ## NC-2010-003-001       4.238161e-01    0.00010000    0.00010000
-    ## JM0026.001            1.267297e-01    0.00010000    0.17797905
-    ## JM0026.002            8.283588e-04    0.07539674    0.20510083
-    ## PI294605-US64-0007-01 9.597573e-07    0.01082588    0.07149441
-    ## JM0058.001            6.569028e-01    0.00010000    0.23944415
-    ## UI10-00086-Silberfeil 9.307387e-01    0.00010000    0.12717438
+    ## KMS207-8              2.032250e-06  3.586199e-01    0.14174610
+    ## JM0051.003            3.383834e-01  4.953134e-01    0.26725791
+    ## JM0034.001            4.196939e-01  3.916827e-01    0.29739092
+    ## JM0220.001            1.000000e-04  2.697395e-01    0.20473643
+    ## NC-2010-003-001       4.474625e-01  2.330400e-01    0.13247119
+    ## JM0026.001            5.267148e-01  1.848312e-01    0.31313911
+    ## JM0026.002            4.702695e-03  1.867954e-01    0.12853517
+    ## PI294605-US64-0007-01 9.160780e-07  9.818227e-06    0.01040152
+    ## JM0058.001            6.388936e-01  1.429932e-01    0.28576168
+    ## UI10-00086-Silberfeil 8.779090e-01  2.640081e-01    0.18223017
     ##                       S01_139883_G S01_150928_GG
-    ## KMS207-8              7.169509e-02  3.800123e-05
-    ## JM0051.003            5.730691e-03  3.169649e-06
-    ## JM0034.001            5.005010e-03  2.022024e-03
-    ## JM0220.001            1.616635e-01  1.219048e-06
-    ## NC-2010-003-001       2.764331e-05  1.351630e-01
-    ## JM0026.001            1.000000e-04  1.182203e-04
-    ## JM0026.002            7.560629e-03  1.128420e-01
-    ## PI294605-US64-0007-01 8.961110e-02  2.685860e-05
-    ## JM0058.001            1.000000e-04  3.471470e-03
-    ## UI10-00086-Silberfeil 3.114721e-03  5.711384e-06
+    ## KMS207-8                0.07397171  5.484269e-05
+    ## JM0051.003              0.01008114  6.649769e-04
+    ## JM0034.001              0.01929718  1.707771e-03
+    ## JM0220.001              0.15703953  1.197342e-06
+    ## NC-2010-003-001         0.01797379  2.507431e-02
+    ## JM0026.001              0.00010000  1.483629e-04
+    ## JM0026.002              0.01199974  1.342848e-01
+    ## PI294605-US64-0007-01   0.09387813  2.067076e-05
+    ## JM0058.001              0.00010000  3.463161e-03
+    ## UI10-00086-Silberfeil   0.01322387  6.718608e-06
 
 If you expect that your species has high linkage disequilibrium, the
 functions `IterateHWE_LD` and `IteratePopStructLD` behave like
 `IterateHWE` and `IteratePopStruct`, respectively, but also update
-priors based on genotypes at linked
-loci.
+priors based on genotypes at linked loci.
 
 ## *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> for filtering markers and individuals <a name="hindhe"></a>
 
@@ -904,8 +907,7 @@ myHindHe <- HindHe(mydata)
 TotDepthT <- rowSums(mydata$locDepth)
 ```
 
-We will load
-these:
+We will load these:
 
 ``` r
 print(load(system.file("extdata", "MsaHindHe.RData", package = "polyRAD")))
@@ -981,28 +983,26 @@ abline(v = 0.75, col = "blue", lwd = 2)
 ![](polyRADtutorial_files/figure-gfm/unnamed-chunk-43-2.png)<!-- -->
 
 Most loci look good, but those to the right of the blue line should
-probably be filtered from the
-dataset.
+probably be filtered from the dataset.
 
 ``` r
 goodLoci <- colnames(myHindHe)[myHindHeByLoc2x < 0.5 & myHindHeByLoc4x < 0.75]
 length(goodLoci) # 3233 out of 5182 markers retained
 ```
 
-    ## [1] 3233
+    ## [1] 3218
 
 ``` r
 head(goodLoci)
 ```
 
-    ## [1] "S05_51928"  "S05_81981"  "S05_132813" "S05_140792" "S05_187981"
+    ## [1] "S05_51928"  "S05_81981"  "S05_132813" "S05_138583" "S05_140792"
     ## [6] "S05_254880"
 
 The `goodLoci` vector that we created here could then be used by
 `SubsetByLocus` to filter the dataset. Remember that you would also want
 to use `SubsetByTaxon` in this case to make sure that each `RADdata`
-object was uniform ploidy across
-individuals.
+object was uniform ploidy across individuals.
 
 ## Considerations for RAM and processing time <a name="considerations"></a>
 
