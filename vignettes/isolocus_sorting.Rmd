@@ -269,12 +269,12 @@ hhByLoc <- colMeans(hh, na.rm = TRUE)
 hist(hhByLoc, breaks = 100, xlab = "Hind/He", main = "Loci", col = "lightgrey")
 ```
 
-Again, we expect values below 0.5 ($\frac{ploidy - 1}{ploidy}$).  The tail that
-we observe above that value likely represents groups of tags that aligned to the
-same location but in fact represent paralogous loci.  The values near zero
-likely represent loci with very high amplification bias or overdispersion.  We
-will take the peak at 0.3 to represent typical well-behaved markers.  From
-this we estimate inbreeding (*F*):
+Again, we expect values below 0.5 (*i.e.* $\frac{ploidy - 1}{ploidy}$).  The
+tail that we observe above that value likely represents groups of tags that
+aligned to the same location but in fact represent paralogous loci.  The values
+near zero likely represent loci with very high amplification bias or
+overdispersion.  We will take the peak at 0.3 to represent typical well-behaved
+markers.  From this we estimate inbreeding (*F*):
 
 ```{r}
 InbreedingFromHindHe(hindhe = 0.3, ploidy = 2)
@@ -328,13 +328,29 @@ load(system.file("extdata", "MsaHindHe2.RData", package = "polyRAD"))
 ```
 
 ```{r}
-hist(hh2ByInd, xlab = "Hind/He", main = "Samples", breaks = 50, col = "lightgrey")
+hist(hh2ByInd, xlab = "Hind/He", main = "Samples", breaks = 20, col = "lightgrey")
 hist(hh2ByLoc, xlab = "Hind/He", main = "Loci", breaks = 50, col = "lightgrey")
+```
+
+By default, `readProcessIsoloci` runs `MergeRareHaplotypes` internally.  (This
+behavior can be turned off with `mergeRareHap = FALSE`.)  Those
+loci that now appear to have a very inflated $H_{ind}/H_E$ are ones where all
+true minor alleles were rare enough to be merged into the common allele, and
+any remaining minor alleles only represent sequencing error or alleles that were
+amplified very poorly.  We can get rid of these.
+
+```{r}
+mean(hh2ByLoc < 0.45) # proportion of loci retained
+keeploci <- names(hh2ByLoc)[hh2ByLoc < 0.45]
+head(keeploci)
+```
+```{r eval = FALSE}
+myRAD <- SubsetByLocus(myRAD, keeploci)
 ```
 
 Genotype calling can then be performed as normal.
 
-```{r}
+```{r eval = FALSE}
 myRAD <- IteratePopStruct(myRAD)
 ```
 

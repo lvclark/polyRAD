@@ -58,3 +58,11 @@ complement of the sequence seen in the tag.
 In my own data, this script has been successful in identifying tags for about
 90% of alleles.  The rest can be attributed to quirks in how TASSEL determines
 SNP locations, as well as errors in the phasing performed by `VCF2RADdata`.
+
+## Adjust tag alignments in highly duplicated genomes.
+
+The files `process_sam_multi.py`, `isoloci_fun.py`, and `process_isoloci.py` are
+intended to assist with assigning tags to correct genomic locations in highly
+duplicated reference genomes, such as those of recent or ancient allopolyploids.
+See the vignette "Variant and Genotype Calling in Highly Duplicated Genomes"
+(`isolocus_sorting.Rmd`) for more information.
