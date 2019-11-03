@@ -1,6 +1,6 @@
 Package: polyRAD
 Version: 1.2
-Date: 2019-09-27
+Date: 2019-11-03
 Title: Genotype Calling with Uncertainty from Sequencing Data in Polyploids and Diploids
 Authors@R: c(person("Lindsay V.", "Clark", email = "lvclark@illinois.edu",
                     role = c("aut", "cre"), 
@@ -19,8 +19,10 @@ VignetteBuilder: knitr, rmarkdown
 Description: Read depth data from genotyping-by-sequencing (GBS) or restriction 
   site-associated DNA sequencing (RAD-seq) are imported and used to make Bayesian
   probability estimates of genotypes in polyploids or diploids.  The genotype 
-  probabilities, or genotypes sampled from those probabilties, can then be exported
-  for downstream analysis.  'polyRAD' is described by Clark et al. (2019)
-  <doi:10.1534/g3.118.200913>.
+  probabilities, posterior mean genotypes, or most probable genotypes can then
+  be exported for downstream analysis.  'polyRAD' is described by Clark et al.
+  (2019) <doi:10.1534/g3.118.200913>.  A variant calling pipeline for highly
+  duplicated genomes is also included and will be described in an upcoming
+  preprint.
 License: GPL (>= 2)
 URL: https://github.com/lvclark/polyRAD
