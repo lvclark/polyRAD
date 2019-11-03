@@ -13,19 +13,21 @@ Export_MAPpoly, Export_polymapR, Export_rrBLUP_Amat, Export_rrBLUP_GWAS,
 Export_TASSEL_Numeric, GetAlleleNames,
 GetBlankTaxa, GetContamRate, GetDonorParent, GetLikelyGen, 
 GetLocDepth, GetLoci, GetProbableGenotypes, GetRecurrentParent, 
-GetTaxa, GetWeightedMeanGenotypes, IterateHWE, IterateHWE_LD,
+GetTaxa, GetWeightedMeanGenotypes, HindHe, HindHeMapping,
+InbreedingFromHindHe, IterateHWE, IterateHWE_LD,
 IteratePopStruct, IteratePopStructLD, LocusInfo, MakeTasselVcfFilter,
 MergeRareHaplotypes, MergeTaxaDepth, nTaxa, nAlleles, nLoci,
 OneAllelePerMarker, 
-PipelineMapping2Parents, RADdata, readHMC, readStacks, readTagDigger,
-readTASSELGBSv2, RemoveHighDepthLoci, RemoveMonomorphicLoci,
-RemoveUngenotypedLoci,
+PipelineMapping2Parents, RADdata, readHMC, readProcessSamMulti,
+readProcessIsoloci,readStacks, readTagDigger, readTASSELGBSv2,
+RemoveHighDepthLoci, RemoveMonomorphicLoci, RemoveUngenotypedLoci,
 SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent,
 SplitByChromosome, StripDown, SubsetByLocus, SubsetByPloidy, SubsetByTaxon,
 TestOverdispersion, VCF2RADdata)
 
 importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom",
-           "hclust", "cutree", "as.dist", "cor", "residuals", "lm.fit", "sd")
+           "hclust", "cutree", "as.dist", "cor", "residuals", "lm.fit", "sd",
+           "median")
 importFrom("utils", "read.csv", "write.table", "write.csv")
 importFrom("fastmatch", "%fin%")
 importFrom("methods", "is")
@@ -63,6 +65,8 @@ S3method(GetProbableGenotypes, RADdata)
 S3method(GetRecurrentParent, RADdata)
 S3method(GetTaxa, RADdata)
 S3method(GetWeightedMeanGenotypes, RADdata)
+S3method(HindHe, RADdata)
+S3method(HindHeMapping, RADdata)
 S3method(LocusInfo, RADdata)
 S3method(MergeRareHaplotypes, RADdata)
 S3method(MergeTaxaDepth, RADdata)

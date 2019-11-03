@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Lindsay V. Clark, University of Illinois, Urbana-Champaign" />
+
+<meta name="date" content="2019-11-02" />
+
+<title>Variant and Genotype Calling in Highly Duplicated Genomes</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#header {
+text-align: center;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Variant and Genotype Calling in Highly Duplicated Genomes</h1>
+<h4 class="author">Lindsay V. Clark, University of Illinois, Urbana-Champaign</h4>
+<h4 class="date">02 November 2019</h4>
+
+
+<div id="TOC">
+<ul>
+<li><a href="#when-and-why-to-use-this-pipeline">When and why to use this pipeline</a></li>
+<li><a href="#pipeline-overview">Pipeline overview</a></li>
+<li><a href="#tassel-gbsv2">TASSEL-GBSv2</a><ul>
+<li><a href="#if-tassel-gbs-wont-work-for-your-dataset">If TASSEL-GBS won’t work for your dataset</a></li>
+</ul></li>
+<li><a href="#alignment-with-bowtie2">Alignment with Bowtie2</a></li>
+<li><a href="#grouping-tags-by-alignment-sets">Grouping tags by alignment sets</a></li>
+<li><a href="#filtering-samples-and-estimating-inbreeding">Filtering samples and estimating inbreeding</a></li>
+<li><a href="#sorting-tags-into-isoloci-and-filtering-isoloci">Sorting tags into isoloci and filtering isoloci</a></li>
+<li><a href="#genotype-calling">Genotype calling</a></li>
+</ul>
+</div>
+
+<div id="when-and-why-to-use-this-pipeline" class="section level2">
+<h2>When and why to use this pipeline</h2>
+<p>The variant and genotype calling pipeline described in this vignette is intended for recent or ancient allopolyploid species, in which the reference genome sequence contains many paralogous regions that do not recombine with each other at meiosis. In highly duplicated genomes such as these, conventional alignment software, especially when restricted to only returning one alignment, will often align sequences to the incorrect paralog, causing issues with variant and genotype calling downstream. The pipeline described in this vignette uses read depth distribution across a population (the <span class="math inline">\(H_{ind}/H_E\)</span> statistic) to determine whether a group of tags is behaving like a Mendelian locus. Attempting to optimize this statistic, it rearranges tags among paralogous alignment locations to correct alignments and generate well-behaved markers.</p>
+<p>This pipeline is currently only designed for natural populations, diversity panels, or mapping populations in which the most recent generation was produced by random intermating among all progeny. F1, self-fertilized, and backcrossed populations will not be processed correctly because expected heterozygosity cannot be estimated directly from allele frequencies in these populations. However, the <span class="math inline">\(H_{ind}/H_E\)</span> statistic can still be used from within polyRAD to filter non-Mendelian markers from these populations using the <code>HindHeMapping</code> function.</p>
+</div>
+<div id="pipeline-overview" class="section level2">
+<h2>Pipeline overview</h2>
+<p>Below is an overview of the pipeline. It uses a combination of existing bioinformatics tools, custom Python scripts included with polyRAD, and R functions within polyRAD.</p>
+<ol style="list-style-type: decimal">
+<li>Use TASSEL-GBSv2 to find all unique sequence tags in a dataset, and the depths of those tags in all taxa.</li>
+<li>Align tags to the reference genome using Bowtie2, allowing multiple alignments to be returned.</li>
+<li>Use <code>process_sam_multi.py</code> to group tags based on sets of alignment locations.</li>
+<li>Import a small subset of the resulting data to polyRAD using <code>readProcessSamMulti</code>. Run <code>HindHe</code> on the imported data to identify problematic samples and estimate inbreeding.</li>
+<li>Use <code>process_isoloci.py</code> to sort tags into their correct alignment locations within the groups of paralogs identified by <code>process_sam_multi.py</code>, and filter out tags that cannot be adequately sorted.</li>
+<li>Import the output of the previous step into polyRAD using <code>readProcessIsoloci</code>, then perform genotype calling.</li>
+</ol>
+<p>Everything except for the R portion of this pipeline will need to be run on your operating system’s Terminal/Shell/Command Prompt. Bowtie2 requires Mac or Linux. Python 3 is needed for the Python portions of the pipeline. If any of this presents a barrier to you, I recommend finding someone experienced with bioinformatics at your institution who can give you some advice.</p>
+<p>Line breaks have been inserted in some terminal commands for readability in this tutorial. (Those same line breaks should not be typed at the command line.)</p>
+</div>
+<div id="tassel-gbsv2" class="section level2">
+<h2>TASSEL-GBSv2</h2>
+<p>An overview of the TASSEL-GBSv2 pipeline is available at <a href="https://bitbucket.org/tasseladmin/tassel-5-source/wiki/Tassel5GBSv2Pipeline" class="uri">https://bitbucket.org/tasseladmin/tassel-5-source/wiki/Tassel5GBSv2Pipeline</a>. TASSEL can be downloaded from <a href="https://www.maizegenetics.net/tassel" class="uri">https://www.maizegenetics.net/tassel</a>.</p>
+<p>We will only run the first couple steps of the TASSEL-GBS pipeline. The files that you will need to start with are the <a href="https://bitbucket.org/tasseladmin/tassel-5-source/wiki/Tassel5GBSv2Pipeline/KeyFileExample">key file</a> and your FASTQ files.</p>
+<ol style="list-style-type: decimal">
+<li>Run the <a href="https://bitbucket.org/tasseladmin/tassel-5-source/wiki/Tassel5GBSv2Pipeline/GBSSeqToTagDBPlugin">GBSSeqToTagDBPlugin</a>. This requires your key file and FASTQ files as input, and will generate a database file.</li>
+<li>Run the <a href="https://bitbucket.org/tasseladmin/tassel-5-source/wiki/Tassel5GBSv2Pipeline/TagExportToFastqPlugin">TagExportToFastqPlugin</a>. This requires your database file as input, and outputs a FASTQ with each tag present once. Set the <code>-c</code> parameter to something higher than the default (10 is still pretty conservative but will discard most sequencing errors) to save some processing downstream.</li>
+<li>Run the <a href="https://bitbucket.org/tasseladmin/tassel-5-source/wiki/Tassel5GBSv2Pipeline/GetTagTaxaDistFromDBPlugin">GetTagTaxaDistFromDBPlugin</a>. This requires the database as input, and outputs a tab-delimited text file showing the depth of each tag in each sample.</li>
+</ol>
+<p>The commands might look like (on Windows):</p>
+<pre><code>run_pipeline.bat -fork1 -GBSSeqToTagDBPlugin -e PstI-MspI -i D:\Msa\raw_data\
+-db D:\Msa\Msa.db -k D:\Msa\key.txt -kmerLength 80 -endPlugin -runfork1
+
+run_pipeline.bat -fork1 -TagExportToFastqPlugin -c 10 -db D:\Msa\Msa.db
+-o D:\Msa\Msa_tags.fq -endPlugin -runfork1
+
+run_pipeline.bat -fork1 -GetTagTaxaDistFromDBPlugin -db D:\Msa\Msa.db
+-o D:\Msa\Msa_ttd.txt -endPlugin -runfork1</code></pre>
+<p>You may need to adjust the memory parameters to accomodate a large dataset.</p>
+<div id="if-tassel-gbs-wont-work-for-your-dataset" class="section level3">
+<h3>If TASSEL-GBS won’t work for your dataset</h3>
+<p>If for some reason you can’t use TASSEL-GBS (for example, your FASTQ files don’t have inline barcodes, or your protocol doesn’t involve restriction enzymes) you might be able to craft a custom alternative for yourself. What you will need out of this step is a file formatted identically to a TagTaxaDist file from TASSEL, and a FASTA or FASTQ file containing the same sequence tags as the TagTaxaDist file.</p>
+<p>A TagTaxaDist file is a tab-delimited text file formatted as below, and contains the read depth of every tag in every sample (taxon). I have used a simple convention for sample names here, but the names can be anything you want. Depending on the complexity of your dataset, it can be quite a large file.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Tag</th>
+<th>Sam1</th>
+<th>Sam2</th>
+<th>Sam3</th>
+<th>Sam4</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>TGCAGAAATCATAGATTAAGGATAT</td>
+<td>0</td>
+<td>24</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>TGCAGAACAGGATACGATACCCCTT</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>TGCAGAACAGTATACGATACCCCTT</td>
+<td>0</td>
+<td>5</td>
+<td>0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="alignment-with-bowtie2" class="section level2">
+<h2>Alignment with Bowtie2</h2>
+<p>Next, align the FASTQ file generated in step 2 of the previous section to your reference genome. If you have never used <a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">Bowtie2</a> on your reference genome before, you will first need to <a href="http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#the-bowtie2-build-indexer">make an index</a>.</p>
+<pre><code>bowtie2-build Msinensis_497_v7.0.hardmasked.fa Msi_DH1_7</code></pre>
+<p>Importantly, you will need to set the <code>-k</code> argument to something higher than the number of subgenomes within your reference genome. For example, in an allotetraploid do at least <code>-k 3</code>, and in an allohexaploid at least <code>-k 4</code>.</p>
+<p>For my <em>Miscanthus</em> dataset, I ran:</p>
+<pre><code>bowtie2 -k 3 --very-sensitive -x Msi_DH1_7 -U Msa_tags.fq -S Msa_align.sam</code></pre>
+</div>
+<div id="grouping-tags-by-alignment-sets" class="section level2">
+<h2>Grouping tags by alignment sets</h2>
+<p>Next you will run <code>process_sam_multi.py</code>. To locate this file, in R run</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">system.file</span>(<span class="st">&quot;python&quot;</span>, <span class="st">&quot;process_sam_multi.py&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;polyRAD&quot;</span>)</span></code></pre></div>
+<pre><code>## [1] &quot;D:/Program Files/R-3.6.0/library/polyRAD/python/process_sam_multi.py&quot;</code></pre>
+<p>For convenience, you might copy this file to somewhere closer to your working directory where you have the files generated in the previous step. While you are at it, also copy <code>isoloci_fun.py</code> and <code>process_isoloci.py</code> to somewhere convenient.</p>
+<p>As input, you will need the SAM file generated by Bowtie2 and the TagTaxaDist file from TASSEL. Be sure to set the <code>-g</code> argument to the number of subgenomes if it is different from the default of 2 (allotetraploids); for example, in an allohexaploid you should set <code>-g 3</code>.</p>
+<p>For descriptions of other arguments, see</p>
+<pre><code>python process_sam_multi.py --help</code></pre>
+<p>The <code>-c</code> argument is useful if you want to divide your data into smaller chunks for downstream processing (if you are limited on RAM or have many processors at your disposal). If there were some samples in your TASSEL database that you already know you want to get rid of, you can list the samples that you want to keep in a text file (one sample name per line) and pass that to the <code>-s</code> argument.</p>
+<p>In my <em>Miscanthus</em> data, the command looked like:</p>
+<pre><code>python process_sam_multi.py Msa_align.sam Msa_ttd.txt split_depths/Msa_split -c 5</code></pre>
+<p>The output will be a pair of CSVs for each chunk. One is named “align”, containing the set of alignment locations for each tag, with their respective number of mutations and CIGAR strings. The other, named “depth”, is a subsetted version of the TagTaxaDist file, containing the same tags in the same order as “align”.</p>
+</div>
+<div id="filtering-samples-and-estimating-inbreeding" class="section level2">
+<h2>Filtering samples and estimating inbreeding</h2>
+<p>Before proceeding, we will want to get a look at the data to identify any outlier samples that may be a different ploidy from the rest, interspecific hybrids, or highly contaminated. I recommend removing them to avoid biasing <span class="math inline">\(H_{ind}/H_E\)</span> estimates, but keep in mind that this means they will be excluded from all downstream analysis. If a sample is important to your study and you know of a reason why it would have a different heterozygosity from most samples, you should keep it.</p>
+<p>We will import just 1000 loci using <code>readProcessSamMulti</code>. Sequence tags will be assigned preliminary alignment locations based on where they had highest sequence similarity, or to a random location if there was a tie. This is essentially a preview of what the data would look like if we went ahead with variant calling using the top alignments returned by Bowtie2.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">library</span>(polyRAD)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1"></a>myRADprelim &lt;-<span class="st"> </span><span class="kw">readProcessSamMulti</span>(<span class="st">&quot;Msa_split_1_align.csv&quot;</span>)</span></code></pre></div>
+<p>We will then estimate a <span class="math inline">\(H_{ind}/H_E\)</span> matrix for this data, as well as getting a sum of the read depth for each individual.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1"></a>hh &lt;-<span class="st"> </span><span class="kw">HindHe</span>(myRADprelim)</span>
+<span id="cb10-2"><a href="#cb10-2"></a>TotDepthT &lt;-<span class="st"> </span><span class="kw">rowSums</span>(myRADprelim<span class="op">$</span>locDepth)</span></code></pre></div>
+<p>Now we will look at the distribution of <span class="math inline">\(H_{ind}/H_E\)</span> across samples, and remove outlier samples.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1"></a>hhByInd &lt;-<span class="st"> </span><span class="kw">rowMeans</span>(hh, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb11-2"><a href="#cb11-2"></a></span>
+<span id="cb11-3"><a href="#cb11-3"></a><span class="kw">plot</span>(TotDepthT, hhByInd, <span class="dt">xlog =</span> <span class="ot">TRUE</span>,</span>
+<span id="cb11-4"><a href="#cb11-4"></a>     <span class="dt">xlab =</span> <span class="st">&quot;Depth&quot;</span>, <span class="dt">ylab =</span> <span class="st">&quot;Hind/He&quot;</span>, <span class="dt">main =</span> <span class="st">&quot;Samples&quot;</span>)</span>
+<span id="cb11-5"><a href="#cb11-5"></a><span class="kw">abline</span>(<span class="dt">h =</span> <span class="fl">0.5</span>, <span class="dt">lty =</span> <span class="dv">2</span>)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>For a diploid population, we aren’t expecting values above 0.5. (In general, you shouldn’t see values above <span class="math inline">\(\frac{ploidy - 1}{ploidy}\)</span>.) So, let’s check which those samples are, then remove them from the dataset.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a>hhByInd[hhByInd <span class="op">&gt;</span><span class="st"> </span><span class="fl">0.5</span>]</span></code></pre></div>
+<pre><code>##     KMS444     KMS397 UI11-00032 
+##  0.6070732  0.6022115  0.6507879</code></pre>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a>hh &lt;-<span class="st"> </span>hh[hhByInd <span class="op">&lt;=</span><span class="st"> </span><span class="fl">0.5</span>,]</span></code></pre></div>
+<p>If you remove any samples like this, you should also make a text file indicating samples to retain in the analysis, which we will use in the next Python step.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1"></a><span class="kw">writeLines</span>(<span class="kw">rownames</span>(hh), <span class="dt">con =</span> <span class="st">&quot;samples.txt&quot;</span>)</span></code></pre></div>
+<p>Now we can get a sense of what <span class="math inline">\(H_{ind}/H_E\)</span> looks like across loci. From this we can estimate inbreeding and get a rough sense of what proportion of loci will need to be adjusted or filtered by <code>process_isoloci.py</code>.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a>hhByLoc &lt;-<span class="st"> </span><span class="kw">colMeans</span>(hh, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb16-2"><a href="#cb16-2"></a></span>
+<span id="cb16-3"><a href="#cb16-3"></a><span class="kw">hist</span>(hhByLoc, <span class="dt">breaks =</span> <span class="dv">100</span>, <span class="dt">xlab =</span> <span class="st">&quot;Hind/He&quot;</span>, <span class="dt">main =</span> <span class="st">&quot;Loci&quot;</span>, <span class="dt">col =</span> <span class="st">&quot;lightgrey&quot;</span>)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>Again, we expect values below 0.5 (<em>i.e.</em> <span class="math inline">\(\frac{ploidy - 1}{ploidy}\)</span>). The tail that we observe above that value likely represents groups of tags that aligned to the same location but in fact represent paralogous loci. The values near zero likely represent loci with very high amplification bias or overdispersion. We will take the peak at 0.3 to represent typical well-behaved markers. From this we estimate inbreeding (<em>F</em>):</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1"></a><span class="kw">InbreedingFromHindHe</span>(<span class="dt">hindhe =</span> <span class="fl">0.3</span>, <span class="dt">ploidy =</span> <span class="dv">2</span>)</span></code></pre></div>
+<pre><code>## [1] 0.4</code></pre>
+</div>
+<div id="sorting-tags-into-isoloci-and-filtering-isoloci" class="section level2">
+<h2>Sorting tags into isoloci and filtering isoloci</h2>
+<p>We are now ready to run the script <code>process_isoloci.py</code>. It will be run individually on each pair of “align” and “depth” files generated by <code>process_sam_multi.py</code>. Note that <code>isoloci_fun.py</code> must be present in the same directory as <code>process_isoloci.py</code>. We will use the samples list and inbreeding coefficient that we generated above with R.</p>
+<pre><code>python process_isoloci.py split_depths/Msa_split_1_align.csv
+split_depths/Msa_split_1_depth.csv -p 2 -f 0.4 -s samples.txt</code></pre>
+<p>This will take some time to process, and will output a file called <code>Msa_split_1_sorted.csv</code> in the <code>split_depths</code> folder. This file will contain corrected alignment results, tag sequences, position and sequence for the variable portion of the tag with respect to the reference genome, and depth data for all retained samples. Tags are arranged into isoloci (<em>i.e.</em> assigned to alignment locations) to optimize <span class="math inline">\(H_{ind}/H_E\)</span> first and number of mutations from the genome second. Isoloci are removed from the dataset if they exceed the expected <span class="math inline">\(H_{ind}/H_E\)</span> by a certain amount (essentially, if it is closer to what would be expected for double the ploidy than for the input ploidy).</p>
+</div>
+<div id="genotype-calling" class="section level2">
+<h2>Genotype calling</h2>
+<p>We can now import the sorted dataset into polyRAD. Since there is a small number of individuals in this dataset, we will lower the filtering thresholds for loci we import.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a>myRAD &lt;-<span class="st"> </span><span class="kw">readProcessIsoloci</span>(<span class="st">&quot;Msa_split_1_sorted.csv&quot;</span>, <span class="dt">min.ind.with.reads =</span> <span class="dv">80</span>,</span>
+<span id="cb20-2"><a href="#cb20-2"></a>                            <span class="dt">min.ind.with.minor.allele =</span> <span class="dv">5</span>)</span></code></pre></div>
+<p>We can see what the distribution of <span class="math inline">\(H_{ind}/H_E\)</span> looks like after we have sorted and filtered isoloci.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1"></a>hh2 &lt;-<span class="st"> </span><span class="kw">HindHe</span>(myRAD)</span>
+<span id="cb21-2"><a href="#cb21-2"></a>hh2ByInd &lt;-<span class="st"> </span><span class="kw">rowMeans</span>(hh2, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)</span>
+<span id="cb21-3"><a href="#cb21-3"></a>hh2ByLoc &lt;-<span class="st"> </span><span class="kw">colMeans</span>(hh2, <span class="dt">na.rm =</span> <span class="ot">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a><span class="kw">hist</span>(hh2ByInd, <span class="dt">xlab =</span> <span class="st">&quot;Hind/He&quot;</span>, <span class="dt">main =</span> <span class="st">&quot;Samples&quot;</span>, <span class="dt">breaks =</span> <span class="dv">20</span>, <span class="dt">col =</span> <span class="st">&quot;lightgrey&quot;</span>)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1"></a><span class="kw">hist</span>(hh2ByLoc, <span class="dt">xlab =</span> <span class="st">&quot;Hind/He&quot;</span>, <span class="dt">main =</span> <span class="st">&quot;Loci&quot;</span>, <span class="dt">breaks =</span> <span class="dv">50</span>, <span class="dt">col =</span> <span class="st">&quot;lightgrey&quot;</span>)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>By default, <code>readProcessIsoloci</code> runs <code>MergeRareHaplotypes</code> internally. (This behavior can be turned off with <code>mergeRareHap = FALSE</code>.) Those loci that now appear to have a very inflated <span class="math inline">\(H_{ind}/H_E\)</span> are ones where all true minor alleles were rare enough to be merged into the common allele, and any remaining minor alleles only represent sequencing error or alleles that were amplified very poorly. We can get rid of these.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a><span class="kw">mean</span>(hh2ByLoc <span class="op">&lt;</span><span class="st"> </span><span class="fl">0.45</span>) <span class="co"># proportion of loci retained</span></span></code></pre></div>
+<pre><code>## [1] 0.9661941</code></pre>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1"></a>keeploci &lt;-<span class="st"> </span><span class="kw">names</span>(hh2ByLoc)[hh2ByLoc <span class="op">&lt;</span><span class="st"> </span><span class="fl">0.45</span>]</span>
+<span id="cb26-2"><a href="#cb26-2"></a><span class="kw">head</span>(keeploci)</span></code></pre></div>
+<pre><code>## [1] &quot;Chr01-000136198-top&quot; &quot;Chr01-000152532-top&quot; &quot;Chr01-000550935-bot&quot;
+## [4] &quot;Chr01-000689883-top&quot; &quot;Chr01-000703273-top&quot; &quot;Chr01-000934202-top&quot;</code></pre>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a>myRAD &lt;-<span class="st"> </span><span class="kw">SubsetByLocus</span>(myRAD, keeploci)</span></code></pre></div>
+<p>Genotype calling can then be performed as normal.</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1"></a>myRAD &lt;-<span class="st"> </span><span class="kw">IteratePopStruct</span>(myRAD)</span></code></pre></div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

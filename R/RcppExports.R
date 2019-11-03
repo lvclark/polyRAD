@@ -13,6 +13,26 @@ BestPloidies <- function(chisq) {
     .Call('_polyRAD_BestPloidies', PACKAGE = 'polyRAD', chisq)
 }
 
+GiniSimpson <- function(counts) {
+    .Call('_polyRAD_GiniSimpson', PACKAGE = 'polyRAD', counts)
+}
+
+HindHeMat <- function(alleleDepth, depthRatio, alleles2loc, nLoci, He) {
+    .Call('_polyRAD_HindHeMat', PACKAGE = 'polyRAD', alleleDepth, depthRatio, alleles2loc, nLoci, He)
+}
+
+HoOneParent <- function(genotypes, alleles2loc, keeploc, ploidy) {
+    .Call('_polyRAD_HoOneParent', PACKAGE = 'polyRAD', genotypes, alleles2loc, keeploc, ploidy)
+}
+
+HoTwoParents <- function(genotypes1, genotypes2, alleles2loc, keeploc, ploidy) {
+    .Call('_polyRAD_HoTwoParents', PACKAGE = 'polyRAD', genotypes1, genotypes2, alleles2loc, keeploc, ploidy)
+}
+
+InitHapAssign <- function(NMmat) {
+    .Call('_polyRAD_InitHapAssign', PACKAGE = 'polyRAD', NMmat)
+}
+
 ThirdDimProd <- function(probs, ngen, ntaxa) {
     .Call('_polyRAD_ThirdDimProd', PACKAGE = 'polyRAD', probs, ngen, ntaxa)
 }

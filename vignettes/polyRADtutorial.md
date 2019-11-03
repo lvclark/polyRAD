@@ -1,7 +1,20 @@
 polyRAD Tutorial
 ================
 Lindsay V. Clark, University of Illinois, Urbana-Champaign
-27 April 2019
+02 November 2019
+
+  - [Introduction <a name="introduction"></a>](#introduction)
+  - [Summary of available functions
+    <a name="functions"></a>](#summary-of-available-functions)
+  - [Estimating genotype probabilities in a mapping population
+    <a name="mapping"></a>](#estimating-genotype-probabilities-in-a-mapping-population)
+  - [Estimating genotype probabilities in a diversity panel
+    <a name="diversity"></a>](#estimating-genotype-probabilities-in-a-diversity-panel)
+  - [*H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> for filtering markers and individuals
+    <a name="hindhe"></a>](#h_indh_e-for-filtering-markers-and-individuals)
+  - [Considerations for RAM and processing time
+    <a name="considerations"></a>](#considerations-for-ram-and-processing-time)
+  - [Citing polyRAD <a name="citation"></a>](#citing-polyrad)
 
 ## Introduction <a name="introduction"></a>
 
@@ -79,8 +92,10 @@ There are also various utilities for manipulating RADdata objects:
   - `StripDown`
   - `LocusInfo`
 
-See `?GetTaxa` for a list of accessor functions as
-well.
+For identifying problematic loci and individuals: \* `HindHe` \*
+`HindHeMapping`
+
+See `?GetTaxa` for a list of accessor functions as well.
 
 ## Estimating genotype probabilities in a mapping population <a name="mapping"></a>
 
@@ -244,6 +259,27 @@ plot(mydata)
 
 ![](polyRADtutorial_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
+Next we can check for markers that are behaving in a non-Mendelian
+fashion. If we are expecting diploid segregation, all markers should
+show a *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> value of 0.5 or less. (For an autopolyploid, the
+expected value is (ploidy - 1)/ploidy.)
+
+``` r
+myhindhe <- HindHeMapping(mydata, ploidy = 2L)
+hist(colMeans(myhindhe, na.rm = TRUE), col = "lightgrey",
+     xlab = "Hind/He", main = "Histogram of Hind/He by locus")
+```
+
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+In this case, all of the markers look fine, but if they didn’t, we would
+filter poor quality markers from the dataset.
+
+``` r
+goodMarkers <- colnames(myhindhe)[which(colMeans(myhindhe, na.rm = TRUE) < 0.5)]
+mydata <- SubsetByLocus(mydata, goodMarkers)
+```
+
 Now we can perform a preliminary run of the pipeline. The
 `allowedDeviation` argument indicates how different the apparent allele
 frequency (based on read depth ratios) can be from an expected allele
@@ -268,6 +304,8 @@ mydata2 <- PipelineMapping2Parents(mydata,
 
     ## Making initial parameter estimates...
 
+    ## Generating sampling permutations for allele depth.
+
     ## Done.
 
 We can use these preliminary estimates to determine whether we need to
@@ -282,31 +320,31 @@ overdispersionP <- TestOverdispersion(mydata2, to_test = 6:10)
 qq(overdispersionP[["6"]])
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 ``` r
 qq(overdispersionP[["7"]])
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-10-2.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-12-2.png)<!-- -->
 
 ``` r
 qq(overdispersionP[["8"]])
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-10-3.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-12-3.png)<!-- -->
 
 ``` r
 qq(overdispersionP[["9"]])
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-10-4.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-12-4.png)<!-- -->
 
 ``` r
 qq(overdispersionP[["10"]])
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-10-5.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-12-5.png)<!-- -->
 
 It looks like `9` follows the red line most closely, so we’ll use that
 for the overdispersion parameter. Now we can re-run the pipeline to
@@ -320,6 +358,8 @@ mydata <- PipelineMapping2Parents(mydata,
 ```
 
     ## Making initial parameter estimates...
+
+    ## Generating sampling permutations for allele depth.
 
     ## Updating priors using linkage...
 
@@ -339,8 +379,7 @@ table(mydata$alleleFreq)
 
 Genotype likelihood is also stored in the object for each possible
 genotype at each locus, taxon, and ploidy. This is the probability of
-seeing the observed distribution of
-    reads.
+seeing the observed distribution of reads.
 
 ``` r
 mydata$alleleDepth[8,19:26]
@@ -395,8 +434,7 @@ The prior genotype probabilities (expected genotype distributions) are
 also stored in the object for each possible ploidy. These distributions
 are estimated based on the most likely parent genotypes. Low confidence
 parent genotypes can be ignored by increasing the `minLikelihoodRatio`
-argument to
-    `PipelineMapping2Parents`.
+argument to `PipelineMapping2Parents`.
 
 ``` r
 mydata$priorProb[[1]][,19:26]
@@ -439,8 +477,7 @@ isoloci.
 Now we want to determine which ploidy is the best fit for each locus.
 This is done by comparing genotype prior probabilities to genotype
 likelihoods and estimating a \(\chi^2\) statistic. Lower values indicate
-a better
-    fit.
+a better fit.
 
 ``` r
 mydata$ploidyChiSq[,19:26]
@@ -462,15 +499,15 @@ plot(mydata$ploidyChiSq[1,], mydata$ploidyChiSq[2,],
      ylab = "Chi-squared for tetraploid model")
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 For each allele, whichever model gives the lower Chi-squared value is
 the one with the best fit. In this case it looks like everything is
-diploid with fairly high confidence.
+diploid with fairly high confidence, in agreement with our
+*H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> results.
 
 Now we’ll examine the posterior genotype probabilities. These are still
-estimated separately for each
-    ploidy.
+estimated separately for each ploidy.
 
 ``` r
 mydata$posteriorProb[[1]][,10,19:26]
@@ -553,8 +590,7 @@ gentoype likelihood only, ignoring the priors set for the progeny. In
 some places they may not match the progeny genotypes, indicating a
 likely error in parental genotype calling. We can see the parental
 genotypes that were used for estimating progeny priors using
-`$likelyGeno_donor` and
-    `$likelyGeno_recurrent`.
+`$likelyGeno_donor` and `$likelyGeno_recurrent`.
 
 ``` r
 mydata$likelyGeno_donor[,19:26]
@@ -651,9 +687,27 @@ mydata
     ## Autodiploid (2)
     ## Allotetraploid (2 2)
 
+Before we perform genotype calling, we can test for diploid segregation
+at each marker using the *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> statistic.
+
+``` r
+myhindhe <- HindHe(mydata)
+myhindheByLoc <- colMeans(myhindhe, na.rm = TRUE)
+hist(myhindheByLoc, col = "lightgrey",
+     xlab = "Hind/He", main = "Histogram of Hind/He by locus")
+abline(v = 0.5, col = "blue", lwd = 2)
+```
+
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+
+Markers with values above 0.5 indicate a violation of diploid
+segregation, but since we are also modeling allotetraploidy we will
+leave them in for now. If we wanted to remove them, we could identify
+them from the output of `colMeans` and remove them using `SubsetByLocus`
+(see section on mapping populations).
+
 For natural populations and diversity panels, we can run
-`TestOverdispersion` before performing any genotype
-    calling.
+`TestOverdispersion` before performing any genotype calling.
 
 ``` r
 overdispersionP <- TestOverdispersion(mydata, to_test = 8:10)
@@ -661,23 +715,25 @@ overdispersionP <- TestOverdispersion(mydata, to_test = 8:10)
 
     ## Genotype estimates not found in object. Performing rough genotype estimation under HWE.
 
+    ## Generating sampling permutations for allele depth.
+
 ``` r
 qq(overdispersionP[["8"]])
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
 
 ``` r
 qq(overdispersionP[["9"]])
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-25-2.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-28-2.png)<!-- -->
 
 ``` r
 qq(overdispersionP[["10"]])
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-25-3.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-28-3.png)<!-- -->
 
 Again, nine looks like a good value.
 
@@ -694,10 +750,10 @@ mydataHWE <- IterateHWE(mydata, tol = 1e-3, overdispersion = 9)
 Let’s take a look at allele frequencies:
 
 ``` r
-hist(mydataHWE$alleleFreq, breaks = 20)
+hist(mydataHWE$alleleFreq, breaks = 20, col = "lightgrey")
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
 
 We can do a different genotype probability estimation that models
 population structure and variation in allele frequencies among
@@ -721,10 +777,10 @@ mydataPopStruct <- IteratePopStruct(mydata, nPcsInit = 8, tol = 5e-03,
 Allele frequency estimates have changed slightly:
 
 ``` r
-hist(mydataPopStruct$alleleFreq, breaks = 20)
+hist(mydataPopStruct$alleleFreq, breaks = 20, col = "lightgrey")
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
 
 Here’s some of the population structure that was used for modeling
 allele frequencies (fairly weak in this case because so few markers were
@@ -734,7 +790,7 @@ used):
 plot(mydataPopStruct)
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
 
 And here’s an example of allele frequency varying across the
 environment. Allele frequencies were estimated for each taxon, and are
@@ -747,7 +803,43 @@ freqcol <- heat.colors(101)[round(mydataPopStruct$alleleFreqByTaxa[,myallele] * 
 plot(mydataPopStruct, pch = 21, bg = freqcol)
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
+
+Let’s examine the inheritance mode of the markers again now that we have
+run the pipeline.
+
+``` r
+plot(mydataPopStruct$ploidyChiSq[1,], mydataPopStruct$ploidyChiSq[2,], 
+     xlab = "Chi-squared for diploid model",
+     ylab = "Chi-squared for allotetraploid model", log = "xy")
+abline(a = 0, b = 1, col = "blue", lwd = 2)
+```
+
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
+
+It seems that some markers look allotetraploid, and others look diploid.
+We can see if this matches *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> results.
+
+``` r
+myChiSqRat <- mydataPopStruct$ploidyChiSq[1,] / mydataPopStruct$ploidyChiSq[2,]
+myChiSqRat <- tapply(myChiSqRat, mydataPopStruct$alleles2loc, mean)
+allelesPerLoc <- as.vector(table(mydataPopStruct$alleles2loc))
+
+library(ggplot2)
+ggplot(mapping = aes(x = myhindheByLoc, y = myChiSqRat, fill = as.factor(allelesPerLoc))) +
+  geom_point(shape = 21, size = 3) +
+  labs(x = "Hind/He", y = "Ratio of Chi-squared values, diploid to allotetraploid",
+       fill = "Alleles per locus") +
+  geom_hline(yintercept = 1) +
+  geom_vline(xintercept = 0.5) +
+  scale_fill_brewer(palette = "YlOrRd")
+```
+
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
+
+Markers that fall in (or near) the lower-left quadrent are probably
+well-behaved diploid markers, but others might represent merged
+paralogs.
 
 As before, we can export the posterior mean genotypes for downstream
 analysis.
@@ -758,33 +850,159 @@ wmgenoPopStruct[1:10,1:5]
 ```
 
     ##                       S01_138045_G S01_139820_TT S01_139820_CT
-    ## KMS207-8              2.121035e-06    0.07826646    0.18363045
-    ## JM0051.003            1.960683e-01    0.31724781    0.20377208
-    ## JM0034.001            1.000000e-04    0.00010000    0.12903134
-    ## JM0220.001            1.000000e-04    0.50485295    0.20647566
-    ## NC-2010-003-001       4.238161e-01    0.00010000    0.00010000
-    ## JM0026.001            1.267297e-01    0.00010000    0.17797905
-    ## JM0026.002            8.283588e-04    0.07539674    0.20510083
-    ## PI294605-US64-0007-01 9.597573e-07    0.01082588    0.07149441
-    ## JM0058.001            6.569028e-01    0.00010000    0.23944415
-    ## UI10-00086-Silberfeil 9.307387e-01    0.00010000    0.12717438
+    ## KMS207-8              2.032250e-06  3.586199e-01    0.14174610
+    ## JM0051.003            3.383834e-01  4.953134e-01    0.26725791
+    ## JM0034.001            4.196939e-01  3.916827e-01    0.29739092
+    ## JM0220.001            1.000000e-04  2.697395e-01    0.20473643
+    ## NC-2010-003-001       4.474625e-01  2.330400e-01    0.13247119
+    ## JM0026.001            5.267148e-01  1.848312e-01    0.31313911
+    ## JM0026.002            4.702695e-03  1.867954e-01    0.12853517
+    ## PI294605-US64-0007-01 9.160780e-07  9.818227e-06    0.01040152
+    ## JM0058.001            6.388936e-01  1.429932e-01    0.28576168
+    ## UI10-00086-Silberfeil 8.779090e-01  2.640081e-01    0.18223017
     ##                       S01_139883_G S01_150928_GG
-    ## KMS207-8              7.169509e-02  3.800123e-05
-    ## JM0051.003            5.730691e-03  3.169649e-06
-    ## JM0034.001            5.005010e-03  2.022024e-03
-    ## JM0220.001            1.616635e-01  1.219048e-06
-    ## NC-2010-003-001       2.764331e-05  1.351630e-01
-    ## JM0026.001            1.000000e-04  1.182203e-04
-    ## JM0026.002            7.560629e-03  1.128420e-01
-    ## PI294605-US64-0007-01 8.961110e-02  2.685860e-05
-    ## JM0058.001            1.000000e-04  3.471470e-03
-    ## UI10-00086-Silberfeil 3.114721e-03  5.711384e-06
+    ## KMS207-8                0.07397171  5.484269e-05
+    ## JM0051.003              0.01008114  6.649769e-04
+    ## JM0034.001              0.01929718  1.707771e-03
+    ## JM0220.001              0.15703953  1.197342e-06
+    ## NC-2010-003-001         0.01797379  2.507431e-02
+    ## JM0026.001              0.00010000  1.483629e-04
+    ## JM0026.002              0.01199974  1.342848e-01
+    ## PI294605-US64-0007-01   0.09387813  2.067076e-05
+    ## JM0058.001              0.00010000  3.463161e-03
+    ## UI10-00086-Silberfeil   0.01322387  6.718608e-06
 
 If you expect that your species has high linkage disequilibrium, the
 functions `IterateHWE_LD` and `IteratePopStructLD` behave like
 `IterateHWE` and `IteratePopStruct`, respectively, but also update
-priors based on genotypes at linked
-loci.
+priors based on genotypes at linked loci.
+
+## *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> for filtering markers and individuals <a name="hindhe"></a>
+
+GBS/RAD data are inherently messy. Some markers may behave in a
+non-Mendelian fashion due to misalignments, amplification bias,
+presence-absence variation, or other issues. In addition to filtering
+out problematic markers, you may also want to confirm that all
+individuals in the dataset are well-behaved.
+
+The *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> statistic, to be described in an upcoming preprint,
+helps to filter such markers and individuals. In a mapping population it
+can be run using the `HindHeMapping` function, which requires a single
+ploidy to be input, along with the mapping population design. In a
+natural population or diversity panel, the `HindHe` function can be
+used. `HindHe` should also be used for mapping populations in which the
+most recent generation was created by random intermating among all
+progeny. In all cases, I recommend running `HindHe` or `HindHeMapping`
+before running `TestOverdispersion` or any of the genotype calling
+functions, as demonstrated in the previous sections.
+
+Below we’ll work with a dataset from *Miscanthus sacchariflorus*,
+including 635 individuals and 5182 loci ([Clark et
+al. 2018](https://doi.org/10.1093/aob/mcy161)). The `RADdata` object is
+not provided here due to size, but the following objects were created
+from it:
+
+``` r
+myHindHe <- HindHe(mydata)
+TotDepthT <- rowSums(mydata$locDepth)
+```
+
+We will load these:
+
+``` r
+print(load(system.file("extdata", "MsaHindHe.RData", package = "polyRAD")))
+```
+
+    ## [1] "myHindHe"  "ploidies"  "TotDepthT"
+
+This additionally provides a vector called `ploidies` indicating the
+ploidy of each individual, determined primarily by flow cytometry.
+`myHindHe` is a matrix with one value per individual\*locus, and
+`TotDepthT` is a vector showing the total read depth at each locus.
+
+To investigate individuals, we can take the row means of the matrix:
+
+``` r
+myHindHeByInd <- rowMeans(myHindHe, na.rm = TRUE)
+```
+
+Then we can plot these versus depth for each ploidy.
+
+``` r
+ggplot(data.frame(Depth = TotDepthT, HindHe = myHindHeByInd,
+                  Ploidy = ploidies),
+  mapping = aes(x = Depth, y = HindHe, color = Ploidy)) +
+  geom_point() +
+  scale_x_log10() +
+  facet_wrap(~ Ploidy) +
+  geom_hline(data = data.frame(Ploidy = c("2x", "3x", "4x"),
+                               ExpHindHe = c(1/2, 2/3, 3/4)),
+             mapping = aes(yintercept = ExpHindHe), lty = 2) +
+  labs(x = "Read Depth", y = "Hind/He", color = "Ploidy")
+```
+
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
+
+Dashed lines indicate the expected value under Hardy-Weinberg
+Equilibrium. This is (ploidy - 1)/ploidy, *e.g.* 0.5 for
+diploids and 0.75 for tetraploids. Since there is some population
+structure, most individuals show a lower value. However, some
+interspecific hybrids have values higher than expected. We can also see
+that it is fairly easy to distinguish diploids and tetraploids. This
+method is not a replacement for flow cytometry, but can complement it if
+some minority of samples in the dataset have unknown ploidy.
+
+Let’s divide the *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> results into those for diploids
+vs. tetraploids.
+
+``` r
+myHindHe2x <- myHindHe[ploidies == "2x",]
+myHindHe4x <- myHindHe[ploidies == "4x",]
+```
+
+Now we can look a the distribution of values across markers.
+
+``` r
+myHindHeByLoc2x <- colMeans(myHindHe2x, na.rm = TRUE)
+hist(myHindHeByLoc2x, breaks = 50, xlab = "Hind/He",
+     main = "Distribution of Hind/He among loci in diploids",
+     col = "lightgrey")
+abline(v = 0.5, col = "blue", lwd = 2)
+```
+
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-43-1.png)<!-- -->
+
+``` r
+myHindHeByLoc4x <- colMeans(myHindHe4x, na.rm = TRUE)
+hist(myHindHeByLoc4x, breaks = 50, xlab = "Hind/He",
+     main = "Distribution of Hind/He among loci in tetraploids",
+     col = "lightgrey")
+abline(v = 0.75, col = "blue", lwd = 2)
+```
+
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-43-2.png)<!-- -->
+
+Most loci look good, but those to the right of the blue line should
+probably be filtered from the dataset.
+
+``` r
+goodLoci <- colnames(myHindHe)[myHindHeByLoc2x < 0.5 & myHindHeByLoc4x < 0.75]
+length(goodLoci) # 3233 out of 5182 markers retained
+```
+
+    ## [1] 3218
+
+``` r
+head(goodLoci)
+```
+
+    ## [1] "S05_51928"  "S05_81981"  "S05_132813" "S05_138583" "S05_140792"
+    ## [6] "S05_254880"
+
+The `goodLoci` vector that we created here could then be used by
+`SubsetByLocus` to filter the dataset. Remember that you would also want
+to use `SubsetByTaxon` in this case to make sure that each `RADdata`
+object was uniform ploidy across individuals.
 
 ## Considerations for RAM and processing time <a name="considerations"></a>
 

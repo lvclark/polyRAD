@@ -5,7 +5,8 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.Rhistory$
-^vignettes/polyRADtutorial\.html$
-^vignettes/polyRADtutorial\.md$
-^vignettes/polyRADtutorial_files$
+^vignettes/*.\.html$
+^vignettes/*.\.md$
+^vignettes/*._files$
 ^vignettes/render_vignettes\.R$
+^inst/python/__pycache__$

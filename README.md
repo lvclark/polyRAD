@@ -11,6 +11,8 @@ I'm always interested in new collaboration!  If you have new feature requests I 
 
 Genotypes derived from genotyping-by-sequencing (GBS) and restriction site-associated DNA sequencing (RAD-seq) have inherent uncertainty associated with them due to sampling error, i.e. some alleles might not get sequenced at all, or might not be sequenced in exact proportion to their copy number in the genome.  This package imports read depth in a variety of formats output by various bioinformatics pipelines and estimates the probability of each possible genotype for each taxon and locus.  Unlike similar pipelines, polyRAD can account for population structure and variable inheritance modes (autopolyploid, allopolyploid, intermediate).  Genotypes and/or probability distributions can then be exported for downstream analysis such as genome-wide association, genomic selection, QTL mapping, or population structure analysis.
 
+Starting with version 1.2, polyRAD also includes its own variant calling pipeline.  It is designed for highly duplicated (typically allopolyploid) reference genomes, and can help correct and filter markers that appear to consist of multiple paralogous loci.  Even in non-duplicated genomes, the same statistic can be used for filtering non-Mendelian loci, as well as loci with considerable amounts of amplification bias and/or overdispersion in the sequencing data.  This filtering can be performed before genotype calling.
+
 ## Why polyRAD?
 
 If you're like me, you don't want to waste a lot of money sequencing your DNA samples at a higher depth than is necessary.  You would rather spend that money adding more samples to the project, or using a different restriction enzyme to get more markers!  You may have also noticed that some loci get sequenced at a much higher depth than others, which means that if you sequence the same library a second time, you aren't likely to get a lot of reads for the loci that need it most.  So how can we get the maximum amount of information out of sequencing data where many loci are low depth?  And, for example, if we only have five reads, how can we estimate allele dosage in a heterozygous octoploid?
@@ -92,6 +94,8 @@ facilitate installing directly from GitHub.
 ## Tutorial
 
 The tutorial document for the package is available [on Github](https://github.com/lvclark/polyRAD/blob/master/vignettes/polyRADtutorial.md).
+
+A separate tutorial is available for the [variant calling pipeline](https://github.com/lvclark/polyRAD/blob/master/vignettes/isolocus_sorting.md).
 
 ## Citation
 

@@ -1915,6 +1915,17 @@ MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
       allelesToRemove[remIndex] <- thisAl
       remIndex <- remIndex + 1L
     } # end of while loop for merging rare alleles
+    # if an insertion was discarded, get rid of the placeholder
+    thesenuc <- object$alleleNucleotides[thesealleles]
+    splitnuc <- strsplit(thesenuc, split = "")
+    notplaceholder <- sapply(1:nchar(thesenuc[1]), 
+                             function(i) any(sapply(splitnuc,
+                                                    function(x) x[i] != '.')))
+    if(any(!notplaceholder)){
+      splitnuc <- lapply(splitnuc, function(x) x[notplaceholder])
+      thesenuc <- sapply(splitnuc, function(x) paste(x, collapse = ""))
+      object$alleleNucleotides[thesealleles] <- thesenuc
+    }
   } # end of loop through loci
   
   # quit if there is nothing to remove

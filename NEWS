@@ -1,5 +1,18 @@
 ## Changes in v1.2 ##
 
+The functions HindHe and HindHeMapping have been added, to assist with filtering
+loci that are behaving in a non-Mendelian fashion, as well as individuals that
+do not behave like the expected ploidy.  The function InbreedingFromHIndHe has
+been added to facilitate estimating the inbreeding statistic F from the results
+of HindHe.
+
+The Python scripts process_sam_multi.py and process_isoloci.py have been added,
+to serve as a pipeline for variant calling in highly duplicated genomes.  These
+are described in a new vignette, "Variant and Genotype Calling in Highly
+Duplicated Genomes" (isolocus_sorting.Rmd).  The functions readProcessSamMulti
+and readProcessIsoloci have been added for import of data from the Python
+scripts into polyRAD.
+
 A Python script has been added to help identify full tag sequences for alleles
 imported from TASSEL-GBSv2 using VCF2RADdata.
 

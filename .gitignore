@@ -57,3 +57,6 @@ vignettes/.RData
 
 # polyRAD project file
 polyRAD.Rproj
+
+# compiled python code
+inst/python/__pycache__
