@@ -308,7 +308,9 @@ input ploidy).
 
 We can now import the sorted dataset into polyRAD.  Since there is a small
 number of individuals in this dataset, we will lower the filtering thresholds
-for loci we import.
+for loci we import.  The `possiblePloidies` argument is left at the default of
+`2` because although the species is allotetraploid, the sorted loci should now
+behave in a diploid fashion.
 
 ```{r eval = FALSE}
 myRAD <- readProcessIsoloci("Msa_split_1_sorted.csv", min.ind.with.reads = 80,
