@@ -188,13 +188,26 @@ def AdjustHapAssignByAlAssociations(grps, hapAssign, NMmat):
       continue # no rearrangement needed
     # get alignment locations allowable for this group
     allowed = GrpAllowedAligns(grp, NMmat)
-    # go to the isolocus where most of these are, or a random one.
-    maxPerHA = max([numPerHA[i] for i in haInGrp if allowed[i]])
-    matchmax = [i for i in haInGrp if numPerHA[i] == maxPerHA and allowed[i]]
-    if len(matchmax) == 1:
-      targetLoc = matchmax[0]
+    assert any(allowed)
+    if any([allowed[i] for i in haInGrp]):
+      # go to the isolocus where most of these are, or a random one.
+      maxPerHA = max([numPerHA[i] for i in haInGrp if allowed[i]])
+      matchmax = [i for i in haInGrp if numPerHA[i] == maxPerHA and allowed[i]]
+      if len(matchmax) == 1:
+        targetLoc = matchmax[0]
+      else:
+        targetLoc = choice(matchmax, size = 1)[0]
     else:
-      targetLoc = choice(matchmax, size = 1)[0]
+      # go to the allowed isolocus with the best sequence match
+      haOK = [i for i in range(nLoc) if allowed[i]]
+      NMtot = [sum([NMmat[i][h] for h in grp]) for i in haOK]
+      minNM = min(NMtot)
+      matchmin = [haOK[i] for i in range(len(haOK)) if NMtot[i] == minNM]
+      if len(matchmin) == 1:
+        targetLoc = matchmin[0]
+      else:
+        targetLoc = choic(matchmin, size = 1)[0]
+
     # rearrange haplotypes
     [hapAssign[i].remove(h) for i in haInGrp for h in grp if h in hapAssign[i]]
     hapAssign[targetLoc].extend(grp)
