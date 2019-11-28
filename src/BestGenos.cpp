@@ -39,6 +39,69 @@ IntegerMatrix BestGenos(NumericVector probs, int ploidy, int ntaxa, int nalleles
   return bestgenos;
 }
 
+// Internal function for getting 1D index for a matrix from 2D index
+int RCto1D(int nrow, int row, int col) {
+  int out = col * nrow + row;
+  return out;
+}
+
+// Function to determine (roughly) the most probable multiallelic genotype from
+// a set of pseudo-biallelic genotype probabilities.
+// Works on one individual * locus.
+// choose is how many alleles to choose, which starts at ploidy and is reduced
+// to zero by recursion.
+// [[Rcpp::export]]
+List BestMultiGeno(NumericVector probs, int ploidy, int nalleles, int choose) {
+  // initialize at all zeros, which is what will be returned if no alleles can
+  // be picked
+  IntegerVector outgeno(nalleles);
+  double bestprob = 0;
+  double thisprob;
+  int p1 = ploidy + 1;
+  NumericVector probssub;
+  List out;
+  List subres;
+  double subres_bestprob;
+  IntegerVector subres_outgeno;
+  
+  if(nalleles == 1){
+    // if only one allele remains, all remaining copies must be this allele
+    outgeno[0] = choose;
+    bestprob = probs[RCto1D(p1, choose, 0)];
+  } else if(choose == 0){
+    // if none could be chosen, get the prob of zero for everything
+    bestprob = 1;
+    for(int a = 0; a < nalleles; a++){
+      bestprob *= probs[RCto1D(p1, 0, a)];
+    }
+  } else {
+    // remove first allele from probabilities
+    probssub = probs[Range(RCto1D(p1, 0, 1),
+                           RCto1D(p1, ploidy, nalleles - 1))];
+    
+    // loop through possible copy numbers for first allele
+    for(int i = 0; i < choose + 1; i++){
+      thisprob = probs[RCto1D(p1, i, 0)];
+      subres = BestMultiGeno(probssub, ploidy, choose - i, nalleles - 1);
+      subres_bestprob = subres["bestprob"];
+      thisprob *= subres_bestprob;
+      if(thisprob > bestprob){
+        bestprob = thisprob;
+        outgeno[0] = i;
+        subres_outgeno = subres["outgeno"];
+        for(int a = 0; a < nalleles - 1; a++){
+          outgeno[a + 1] = subres_outgeno[a];
+        }
+      }
+    }
+  }
+  
+  out["outgeno"] = outgeno;
+  out["bestprob"] = bestprob;
+  
+  return out;
+}
+
 // Function to find best ploidies from ploidyChiSq slot
 // [[Rcpp::export]]
 IntegerVector BestPloidies(NumericMatrix chisq) {
