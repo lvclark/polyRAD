@@ -68,13 +68,15 @@ List BestMultiGeno(NumericVector probs, int ploidy, int nalleles, int choose) {
     // if only one allele remains, all remaining copies must be this allele
     outgeno[0] = choose;
     bestprob = probs[RCto1D(p1, choose, 0)];
-  } else if(choose == 0){
+  }
+  if(nalleles > 1 && choose == 0){
     // if none could be chosen, get the prob of zero for everything
     bestprob = 1;
     for(int a = 0; a < nalleles; a++){
       bestprob *= probs[RCto1D(p1, 0, a)];
     }
-  } else {
+  }
+  if(nalleles > 1 && choose > 0){
     // remove first allele from probabilities
     probssub = probs[Range(RCto1D(p1, 0, 1),
                            RCto1D(p1, ploidy, nalleles - 1))];
