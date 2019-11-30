@@ -50,7 +50,6 @@ int RCto1D(int nrow, int row, int col) {
 // Works on one individual * locus.
 // choose is how many alleles to choose, which starts at ploidy and is reduced
 // to zero by recursion.
-// [[Rcpp::export]]
 List BestMultiGeno(NumericVector probs, int ploidy, int nalleles, int choose) {
   // initialize at all zeros, which is what will be returned if no alleles can
   // be picked
@@ -102,6 +101,61 @@ List BestMultiGeno(NumericVector probs, int ploidy, int nalleles, int choose) {
   out["bestprob"] = bestprob;
   
   return out;
+}
+
+// Function to determine if multi-allelic genotypes are consistent with ploidy
+// after calling under a pseudo-biallelic model.  Can set inconsistent
+// genotypes either to missing or correct them.
+// [[Rcpp::export]]
+IntegerMatrix CorrectGenos(IntegerMatrix bestgenos, NumericVector probs,
+                           IntegerVector alleles2loc, int ntaxa, int ploidy,
+                           int nalleles, int nloc, bool do_correct) {
+  IntegerVector alleles = seq(0, alleles2loc.size() - 1);
+  IntegerVector thesecol;
+  IntegerVector thisgeno;
+  int thisnal;
+  bool genoOK;
+  NumericVector theseprobs;
+  int p1 = ploidy + 1;
+  List newgeno;
+  
+  for(int L = 1; L < nloc + 1; L ++){
+    thesecol = alleles[alleles2loc == L];
+    thisnal = thesecol.size();
+    thisgeno = IntegerVector(thisnal);
+    theseprobs = NumericVector(p1 * thisnal);
+    for(int t = 0; t < ntaxa; t++){
+      for(int a = 0; a < thisnal; a++){
+        thisgeno[a] = bestgenos(t, thesecol[a]);
+      }
+      genoOK = sum(thisgeno) == ploidy;
+      if(is_true(any(is_na(thisgeno))) || 
+         (!do_correct && !genoOK)){
+        // fill in missing data for this genotype
+        for(int a = 0; a < thisnal; a++){
+          bestgenos(t, thesecol[a]) = NA_INTEGER;
+        }
+      }
+      if(do_correct && !genoOK){
+        // get posterior probabilities at this taxon and locus
+        for(int c = 0; c < p1; c++){
+          for(int a = 0; a < thisnal; a++){
+            theseprobs[RCto1D(p1, c, a)] = 
+              probs[thesecol[a] * ntaxa * p1 + t * p1 + c];
+          }
+        }
+        // find the most probable multiallelic genotype
+        newgeno = BestMultiGeno(theseprobs, ploidy, thisnal, ploidy);
+        thisgeno = newgeno["outgeno"];
+        // fill in new genotypes
+        for(int a = 0; a < thisnal; a++){
+          bestgenos(t, thesecol[a]) = thisgeno[a];
+        }
+      }
+    }
+  }
+  
+  return bestgenos;
 }
 
 // Function to find best ploidies from ploidyChiSq slot
