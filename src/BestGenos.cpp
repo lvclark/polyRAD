@@ -84,7 +84,7 @@ List BestMultiGeno(NumericVector probs, int ploidy, int nalleles, int choose) {
     // loop through possible copy numbers for first allele
     for(int i = 0; i < choose + 1; i++){
       thisprob = probs[RCto1D(p1, i, 0)];
-      subres = BestMultiGeno(probssub, ploidy, choose - i, nalleles - 1);
+      subres = BestMultiGeno(probssub, ploidy, nalleles - 1, choose - i);
       subres_bestprob = subres["bestprob"];
       thisprob *= subres_bestprob;
       if(thisprob > bestprob){
