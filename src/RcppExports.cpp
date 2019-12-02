@@ -32,6 +32,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// CorrectGenos
+IntegerMatrix CorrectGenos(IntegerMatrix bestgenos, NumericVector probs, IntegerVector alleles2loc, int ntaxa, int ploidy, int nalleles, int nloc, bool do_correct);
+RcppExport SEXP _polyRAD_CorrectGenos(SEXP bestgenosSEXP, SEXP probsSEXP, SEXP alleles2locSEXP, SEXP ntaxaSEXP, SEXP ploidySEXP, SEXP nallelesSEXP, SEXP nlocSEXP, SEXP do_correctSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type bestgenos(bestgenosSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type probs(probsSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type alleles2loc(alleles2locSEXP);
+    Rcpp::traits::input_parameter< int >::type ntaxa(ntaxaSEXP);
+    Rcpp::traits::input_parameter< int >::type ploidy(ploidySEXP);
+    Rcpp::traits::input_parameter< int >::type nalleles(nallelesSEXP);
+    Rcpp::traits::input_parameter< int >::type nloc(nlocSEXP);
+    Rcpp::traits::input_parameter< bool >::type do_correct(do_correctSEXP);
+    rcpp_result_gen = Rcpp::wrap(CorrectGenos(bestgenos, probs, alleles2loc, ntaxa, ploidy, nalleles, nloc, do_correct));
+    return rcpp_result_gen;
+END_RCPP
+}
 // BestPloidies
 IntegerVector BestPloidies(NumericMatrix chisq);
 RcppExport SEXP _polyRAD_BestPloidies(SEXP chisqSEXP) {
@@ -126,6 +144,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_polyRAD_AdjustAlleleFreq", (DL_FUNC) &_polyRAD_AdjustAlleleFreq, 3},
     {"_polyRAD_BestGenos", (DL_FUNC) &_polyRAD_BestGenos, 4},
+    {"_polyRAD_CorrectGenos", (DL_FUNC) &_polyRAD_CorrectGenos, 8},
     {"_polyRAD_BestPloidies", (DL_FUNC) &_polyRAD_BestPloidies, 1},
     {"_polyRAD_GiniSimpson", (DL_FUNC) &_polyRAD_GiniSimpson, 1},
     {"_polyRAD_HindHeMat", (DL_FUNC) &_polyRAD_HindHeMat, 5},

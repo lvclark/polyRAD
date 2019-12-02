@@ -9,6 +9,10 @@ BestGenos <- function(probs, ploidy, ntaxa, nalleles) {
     .Call('_polyRAD_BestGenos', PACKAGE = 'polyRAD', probs, ploidy, ntaxa, nalleles)
 }
 
+CorrectGenos <- function(bestgenos, probs, alleles2loc, ntaxa, ploidy, nalleles, nloc, do_correct) {
+    .Call('_polyRAD_CorrectGenos', PACKAGE = 'polyRAD', bestgenos, probs, alleles2loc, ntaxa, ploidy, nalleles, nloc, do_correct)
+}
+
 BestPloidies <- function(chisq) {
     .Call('_polyRAD_BestPloidies', PACKAGE = 'polyRAD', chisq)
 }
