@@ -16,6 +16,11 @@ scripts into polyRAD.
 A Python script has been added to help identify full tag sequences for alleles
 imported from TASSEL-GBSv2 using VCF2RADdata.
 
+The GetProbableGenotypes function has been updated to optionally recognize
+genotypes where copy number does not sum to the ploidy across all alleles for a
+locus.  It can now either set these genotypes to NA or correct them to sum to
+the ploidy.  Some internal Rcpp functions were added for this purpose.
+
 A bug has been fixed in SubsetByPloidy.
 
 MergeTaxaDepth now generates a more useful error if taxa are specified that

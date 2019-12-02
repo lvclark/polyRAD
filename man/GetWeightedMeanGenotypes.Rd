@@ -31,7 +31,8 @@ GetProbableGenotypes(object, ...)
 \method{GetProbableGenotypes}{RADdata}(object, omit1allelePerLocus = TRUE,
                      omitCommonAllele = TRUE,
                      naIfZeroReads = FALSE, 
-                     correctParentalGenos = TRUE, \dots)
+                     correctParentalGenos = TRUE,
+                     multiallelic = "correct", \dots)
 }
 \arguments{
   \item{object}{
@@ -89,6 +90,15 @@ are corrected according to the progeny allele frequencies, using the
 \code{likelyGeno_donor} and \code{likelyGeno_recurrent} slots in \code{object}.
 For the ploidy of the marker, the appropriate ploidy for the parents is 
 selected using the \code{donorPloidies} and \code{recurrentPloidies} slots.
+}
+\item{multiallelic}{
+A string indicating how to handle cases where allele copy number across all
+alleles at a locus does not sum to the ploidy.  To retain the most probable
+copy number for each allele, even if they don't sum to the ploidy across
+all alleles, use \code{"ignore"}.  To be conservative and convert these allele
+copy numbers to \code{NA}, use \code{"na"}.  To adjust allele copy numbers to
+match the ploidy (maximizing the product of posterior probabilities across
+alleles, within the space of possible multiallelic genotypes), use \code{"correct"}.
 }
 }
 
