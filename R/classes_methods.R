@@ -879,13 +879,17 @@ GetProbableGenotypes <- function(object, ...){
 GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
                                          omitCommonAllele = TRUE,
                                          naIfZeroReads = FALSE, 
-                                         correctParentalGenos = TRUE, ...){
+                                         correctParentalGenos = TRUE, 
+                                         multiallelic = "correct", ...){
   if(!CanDoGetWeightedMeanGeno(object)){
     stop("Need posteriorProb and ploidyChiSq.")
   }
+  if(!multiallelic %in% c("ignore", "na", "correct")){
+    stop("multiallelic should equal 'ignore', 'na', or 'correct'.")
+  }
   # determine which alleles should be processed
   allelesToExport <- 1:nAlleles(object)
-  if(omit1allelePerLocus){
+  if(omit1allelePerLocus && multiallelic == "ignore"){
     allelesToExport <- allelesToExport[-OneAllelePerMarker(object,
                                                            commonAllele = omitCommonAllele)]
   }
@@ -911,6 +915,19 @@ GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
     thispld = dim(object$posteriorProb[[p]])[1] - 1L
     outmat[,thesealleles] <- BestGenos(object$posteriorProb[[p]][,,allelesToExport[thesealleles]],
                                        thispld, nTaxa(object), length(thesealleles)) # Rcpp function
+    # correct or delete genotypes that don't sum to ploidy
+    if(multiallelic %in% c("na", "correct")){
+      # fix up alleles2loc and determine number of loci
+      thisA2L <- object$alleles2loc[thesealleles]
+      theseLoci <- unique(thisA2L)
+      thisA2L <- match(thisA2L, theseLoci)
+      # run the Rcpp function do to the correction
+      outmat[,thesealleles] <- 
+        CorrectGenos(outmat[,thesealleles], 
+                     object$posteriorProb[[p]][,,allelesToExport[thesealleles]],
+                     thisA2L, nTaxa(object), thispld, length(thesealleles),
+                     length(theseLoci), multiallelic == "correct")
+    }
     # correct parent genotypes if this is a mapping population
     if(correctParentalGenos && !is.null(object$likelyGeno_donor) &&
        !is.null(object$likelyGeno_recurrent)){
@@ -927,6 +944,14 @@ GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
   if(naIfZeroReads){
     isZero <- (object$locDepth == 0)[,as.character(object$alleles2loc[allelesToExport])]
     outmat[isZero] <- NA_integer_
+  }
+  
+  # subset if desired and if correction was done
+  if(omit1allelePerLocus && multiallelic != "ignore"){
+    allelesToExport <- allelesToExport[-OneAllelePerMarker(object,
+                                                           commonAllele = omitCommonAllele)]
+    outmat <- outmat[,allelesToExport]
+    pldindex <- pldindex[allelesToExport]
   }
   
   return(list(genotypes = outmat, ploidy_index = pldindex))
