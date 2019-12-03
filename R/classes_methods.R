@@ -25,7 +25,10 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
     stop("Each locus number in alleles2loc must correspond to a row in loctable.")
   }
   if(!is.data.frame(locTable)){
-    stop("loctable must be a data frame.")
+    stop("locTable must be a data frame.")
+  }
+  if(!is.null(locTable$Chr) && is.factor(locTable$Chr)){
+    warning("Chromosomes should be coded as character or integer rather than factor in locTable.")
   }
   if(!is.list(possiblePloidies)){
     stop("possiblePloidies must be list")

@@ -1055,7 +1055,8 @@ readStacks <- function(allelesFile, matchesFolder, version = 2,
       locTable <- data.frame(row.names = as.character(uniqueLocNames),
                              Chr = tf[[tchrcol]][keeprows],
                              Pos = tf[[tposcol]][keeprows],
-                             Strand = tf[[tstrcol]][keeprows])
+                             Strand = tf[[tstrcol]][keeprows],
+                             stringsAsFactors = FALSE)
     }
     if(version == 2){
       sf <- scan(sumstatsFile, what = sfcols,
@@ -1063,7 +1064,8 @@ readStacks <- function(allelesFile, matchesFolder, version = 2,
       keeprows <- fastmatch::fmatch(uniqueLocNames, sf[[sloccol]])
       locTable <- data.frame(row.names = as.character(uniqueLocNames),
                              Chr = sf[[schrcol]][keeprows],
-                             Pos = sf[[sposcol]][keeprows])
+                             Pos = sf[[sposcol]][keeprows],
+                             stringsAsFactors = FALSE)
     }
   } else {
     # no alignment data
@@ -1454,7 +1456,8 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
     loci <- paste(chrom, pos, sep = "-")
   }
   locTable <- data.frame(row.names = loci,
-                         Chr = chrom, Pos = pos)
+                         Chr = chrom, Pos = pos,
+                         stringsAsFactors = FALSE)
   
   # build RADdata object
   message("Building RADdata object...")
