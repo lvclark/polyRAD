@@ -1442,6 +1442,8 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   alleleDepth <- alleleDepth[,keepal, drop = FALSE]
   alleles2loc <- as.integer(alleles2loc_factor)
   alleleNucleotides <- mydata[[3]][keepal]
+  colnames(alleleDepth) <- paste(alleles2loc_factor, alleleNucleotides,
+                                 sep = "_")
   
   # sort by locus name (i.e. position and chromosome)
   alorder <- order(alleles2loc)
