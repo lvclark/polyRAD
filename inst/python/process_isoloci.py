@@ -29,6 +29,8 @@ parser.add_argument("--logfile", "-l", nargs = '?', default = "",
                     help = "Optional path to file where log should be written.")
 parser.add_argument("--samples", "-s", nargs = '?', default = "",
                     help = "File listing names of samples to analyze and retain (one name per line).")
+parser.add_argument("--maxalleles", "-a", nargs = '?', type = int, default = 500,
+                    help = "Maximum number of alleles per locus.  Loci with more alleles are discarded.")
 
 args = parser.parse_args()
 alignfile = args.alignfile
@@ -38,6 +40,7 @@ ploidy = args.ploidy
 inbreeding = args.inbreeding
 logfile = args.logfile
 samples_file = args.samples
+max_alleles = args.maxalleles
 
 # generate output file name if not provided
 if outfile == "":
@@ -63,6 +66,10 @@ def ProcessRowGroup(alignrows, depthrows, nisoloci, thresh, expHindHe,
   if len(packed) < 2:
     if logcon != None:
       logcon.write("Insufficient read depth.\n")
+    return None
+  if len(packed) > max_alleles:
+    if logcon != None:
+      logcon.write("Too many alleles.\n")
     return None
   depths, alignrows = zip(*packed)
 
