@@ -1592,6 +1592,10 @@ SubsetByLocus.RADdata <- function(object, loci, ...){
   if(!is.numeric(loci)){
     stop("loci must be a numeric or character vector")
   }
+  if(anyDuplicated(loci)){
+    loci <- unique(loci)
+    warning("Duplicate loci ignored.")
+  }
   
   # set up object and transfer attributes (including class)
   thesealleles <- object$alleles2loc %fin% loci

@@ -26,6 +26,9 @@ A bug has been fixed in SubsetByPloidy.
 MergeTaxaDepth now generates a more useful error if taxa are specified that
 do not exist in the object.
 
+If duplicate locus names are passed to SubsetByLocus, it now generates a
+warning and deals with the duplicated loci more appropriately.
+
 The AddDepthSamplingPermutations function has been added.  Permutations for
 estimating genotype likelihoods are no longer calculated at the time of data
 import, but instead are calculated the first time that genotype likelihoods
