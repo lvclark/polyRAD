@@ -168,12 +168,14 @@ with open(mysam, mode = "r") as samcon:
       strand = "top"
     mname = "{}-{:0>{width}}-{}".format(chrom, pos, strand, width=9)
     if row[17].startswith("NM:i:"):
+      assert row[18].startswith("MD:Z:")
       NM = int(row[17][5:])
+      MD = row[18][5:]
     else:
       assert row[16].startswith("NM:i:")
+      assert row[17].startswith("MD:Z:")
       NM = int(row[16][5:])
-    assert row[-1].startswith("MD:Z:")
-    MD = row[-1][5:].strip()
+      MD = row[17][5:]
 
     secondary = flag & 256 == 256
     if secondary: # add alignments to the list
