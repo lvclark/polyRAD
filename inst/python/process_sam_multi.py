@@ -117,7 +117,7 @@ def update_aligndict(these_mnames, these_NM, these_CIGAR, these_MD, lasttagseq):
           for m in allalign:
             locsfound[m] = None
           for mset in existing_mnames:
-            del aligndict[mset] 
+            del aligndict[mset]
           doupdate = False
         else: # merge alignment groups
           new_mnames = tuple(sorted(allalign))
@@ -134,7 +134,7 @@ def update_aligndict(these_mnames, these_NM, these_CIGAR, these_MD, lasttagseq):
           these_CIGAR = these_updated[0][2]
           these_MD = these_updated[0][3]
           for m in these_mnames:
-            locsfound[m] = these_mnames 
+            locsfound[m] = these_mnames
     else:
       aligndict[these_mnames] = [] # new marker
       for m in these_mnames:
