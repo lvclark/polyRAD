@@ -75,14 +75,17 @@ def pad_marker(old_mnames, new_mnames, alignlist):
   new_alignlist = []
   for aligninfo in alignlist:
     new_NM = [dummy_NM for i in range(nalign)]
-    new_CIGAR = ['' for i in range(nalign)] ### Add stuff for MD
+    new_CIGAR = ['' for i in range(nalign)]
+    new_MD = ['' for i in range(nalign)]
     for i in range(len(m_index)):
       mi = m_index[i]
       new_NM[mi] = aligninfo[1][i]
       new_CIGAR[mi] = aligninfo[2][i]
+      new_MD[mi] = aligninfo[3][i]
     new_NM = tuple(new_NM)
     new_CIGAR = tuple(new_CIGAR)
-    new_alignlist.append((aligninfo[0], new_NM, new_CIGAR))
+    new_MD = tuple(new_MD)
+    new_alignlist.append((aligninfo[0], new_NM, new_CIGAR, new_MD))
   return new_alignlist
 
 # subroutine for updating the alignment dictionary
@@ -297,10 +300,11 @@ for chnk in range(nchunks):
     m_tags = [tup[0] for tup in aligndict[m]]
     m_NM = [list(tup[1]) + ['' for i in range(npad)] for tup in aligndict[m]]
     m_CIGAR = [list(tup[2]) + ['' for i in range(npad)] for tup in aligndict[m]]
+    m_MD = [list(tup[3]) + ['' for i in range(npad)] for tup in aligndict[m]]
     nt = len(m_tags) # number of tags for this marker
     assert len(m_NM) == nt
     # add to table
-    tag_table.extend([m_exp + [m_tags[i]] + m_NM[i] + m_CIGAR[i] for i in range(nt)])
+    tag_table.extend([m_exp + [m_tags[i]] + m_NM[i] + m_CIGAR[i] + m_MD[i] for i in range(nt)])
     table_row_per_marker[mi] = range(curr_row, curr_row + nt)
     curr_row += nt
   # extract all tag sequences
@@ -322,7 +326,8 @@ for chnk in range(nchunks):
     mywriter = csv.writer(outcon)
     alignheader = ["Alignment {}".format(i + 1) for i in range(maxalign)] + \
     ["Tag sequence"] + ["NM {}".format(i + 1) for i in range(maxalign)] + \
-    ["CIGAR {}".format(i + 1) for i in range(maxalign)]
+    ["CIGAR {}".format(i + 1) for i in range(maxalign)] + \
+    ["MD {}".format(i + 1) for i in range(maxalign)]
     mywriter.writerow(alignheader)
     [mywriter.writerow(tt) for tt in tag_table]
   with open(ttdout, mode = 'w', newline = '') as outcon:
