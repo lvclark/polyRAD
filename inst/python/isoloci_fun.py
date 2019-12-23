@@ -329,6 +329,13 @@ def SplitCigar(cigar):
   '''Split a CIGAR string into its components to process one at a time.'''
   return re.findall("\d+[MIDNSHP=X]", cigar)
 
+def SplitMD(MD):
+  '''Split an MD string into its components to process one at a time.
+  Goal: get numbers, letters, or ^ plus letters.'''
+  out = re.findall("(\d+|[ACGTN]+|\^[ACGTN]+)", MD)
+  out = [sub if re.match("\d+", sub) == None else int(sub) for sub in out]
+  return out
+
 def CigarsToNucPos(tags, cigars, pos, strand):
   '''Take a set of CIGAR strings, along with the position of the leftmost
   nucleotide of a tag and to what strand that tag aligned, and get the genomic
@@ -401,7 +408,19 @@ def RecreateReference(tags, cigars, MDs):
         thistag = thistag + tags[0][currpos:(currpos + n_nuc)]
       currpos += n_nuc
   # Use MD string to fix any mismatches and deletions
-  pass
+  MDsplit = SplitMD(MDs[0])
+  reftag = ""
+  currpos = 0
+  for md in MDsplit:
+    if isinstance(md, int):  # add matching part of tag
+      reftag = reftag + thistag[currpos:(currpos + md)]
+      currpos += md
+    elif md.startswith("^"): # add deletion from reference
+      reftag = reftag + md[1:]
+    else:                    # add reference nucleotide from mismatch
+      reftag = reftag + md
+      currpos += len(md)
+  return reftag
 
 def MakeAlleleStrings(tags, cigars, MDs, pos, strand):
   '''Taking tag sequences, CIGAR strings, a position for the alignment
