@@ -325,6 +325,10 @@ reps = 25, maxTabu = 5, corrstartP = 0.01, logcon = None):
 
   return hapAssign_best
 
+def SplitCigar(cigar):
+  '''Split a CIGAR string into its components to process one at a time.'''
+  return re.findall("\d+[MIDNSHP=X]", cigar)
+
 def CigarsToNucPos(tags, cigars, pos, strand):
   '''Take a set of CIGAR strings, along with the position of the leftmost
   nucleotide of a tag and to what strand that tag aligned, and get the genomic
@@ -332,7 +336,7 @@ def CigarsToNucPos(tags, cigars, pos, strand):
   nucpos = [[0 for p in range(len(t))] for t in tags]
   for ti in range(len(tags)):
     # split cigar string into values of interest
-    cigsplit = re.findall("\d+[MIDNSHP=X]", cigars[ti])
+    cigsplit = SplitCigar(cigars[ti])
     currpos = 0
     currnuc = 0
     for cs in cigsplit:
@@ -370,19 +374,50 @@ def PadPosition(tagnucs):
     tagnucs = ['.' * (maxlen - nuclens[ti]) + tagnucs[ti] for ti in range(len(tagnucs))]
   return tagnucs
 
-def MakeAlleleStrings(tags, cigars, pos, strand):
+def RecreateReference(tags, cigars, MDs):
+  '''Recreate the reference tag from CIGAR and MD information from the SAM
+  file.'''
+  # First, see if there are any tags that are already known to be the reference
+  refs = [i for i in range(len(tags)) if re.match("\d+M$", cigars[i]) != None and \
+  re.match("\d$", MDs[i]) != None]
+
+  if len(refs) > 1:
+    raise Exception("Multiple tags seem to be the reference.")
+  if len(refs) == 1:
+    i = refs[0]
+    if MDs[i] != cigars[i][:-1]:
+      raise Exception("MD and CIGAR don't match.")
+    return (tags[i], cigars[i], MDs[i])
+
+  # Otherwise, use the first tag to recreate the reference.
+  # Use CIGAR string to remove any insertions.
+  cigsplit = SplitCigar(cigars[0])
+  thistag = ""
+  currpos = 0
+  for cig in cigsplit:
+    n_nuc = int(cig[:-1])
+    if cig[-1] in {'M', '=', 'X', 'I', 'S'}:
+      if cig[-1] in {'M', '=', 'X'}:
+        thistag = thistag + tags[0][currpos:(currpos + n_nuc)]
+      currpos += n_nuc
+  # Use MD string to fix any mismatches and deletions
+  pass
+
+def MakeAlleleStrings(tags, cigars, MDs, pos, strand):
   '''Taking tag sequences, CIGAR strings, a position for the alignment
   starting at the cut site, and a strand (top or bot), make a set of
   strings just showing the variable portion of the tags, and also return a
   position for the beginning of those strings in the reference genome.'''
   # Note: if ALL tags have an insertion with respect to the reference, it
-  # won't be obvious from the output of this function.
+  # won't be obvious from the output of this function. ### Fixing
 
   assert strand == 'top' or strand == 'bot'
   if strand == 'bot':
     # Get reverse complement for bottom strand
     trans = {ord('A'): 'T', ord('C'): 'G', ord('G'): 'C', ord('T'): 'A'}
     tags = [t.translate(trans)[::-1] for t in tags]
+
+  # insert call to RecreateReference here
 
   # Get position for each nucleotide
   nucpos = CigarsToNucPos(tags, cigars, pos, strand)
