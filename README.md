@@ -104,6 +104,10 @@ If you use polyRAD, please cite this manuscript:
 Clark LV, Lipka AE, and Sacks EJ (2019) polyRAD: Genotype calling with uncertainty from sequencing data in
 polyploids and diploids.  *G3* 9(3) 663--673. doi:[10.1534/g3.118.200913](https://doi.org/10.1534/g3.118.200913)
 
+The Hind/He statistic and paralog sorting pipeline are described in the following manuscript:
+
+Clark LV, Mays W, Lipka AE, and Sacks EJ (2020) A population-level statistic for assessing Mendelian behavior of genotyping-by-sequencing data from highly duplicated genomes.  *bioRxiv* doi:[10.1101/2020.01.11.902890 ](https://doi.org/10.1101/2020.01.11.902890)
+
 ### Additional citations
 
 Citable Zenodo DOI for the software:

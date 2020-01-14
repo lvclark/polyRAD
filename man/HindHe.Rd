@@ -109,8 +109,12 @@ loci are omitted if consistent parental genotypes could not be determined across
 alleles.
 }
 \references{
-A preprint is in the works.  In the meantime, see a seminar describing
-\eqn{H_{ind}/H_E}{Hind/He} at \url{https://youtu.be/Z2xwLQYc8OA?t=1678}.
+Clark, L. V., Mays, W., Lipka, A. E. and Sacks, E. J. (2020) A population-level
+statistic for assessing Mendelian behavior of genotyping-by-sequencing data
+from highly duplicated genomes. \emph{bioRxiv} doi:10.1101/2020.01.11.902890.
+
+A seminar describing
+\eqn{H_{ind}/H_E}{Hind/He} is available at \url{https://youtu.be/Z2xwLQYc8OA?t=1678}.
 }
 \author{
 Lindsay V. Clark
