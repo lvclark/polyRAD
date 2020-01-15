@@ -22,7 +22,7 @@ This pipeline is currently only designed for natural populations, diversity pane
 
 If you use this pipeline, please cite:
 
-Clark LV, Mays W, Lipka AE, and Sacks EJ (2020) A population-level statistic for assessing Mendelian behavior of genotyping-by-sequencing data from highly duplicated genomes. *bioRxiv* <doi:%5B10.1101/2020.01.11.902890> \](<https://doi.org/10.1101/2020.01.11.902890>)
+Clark LV, Mays W, Lipka AE, and Sacks EJ (2020) A population-level statistic for assessing Mendelian behavior of genotyping-by-sequencing data from highly duplicated genomes. *bioRxiv* <doi:10.1101/2020.01.11.902890>
 
 Pipeline overview
 -----------------
