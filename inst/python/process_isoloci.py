@@ -98,10 +98,11 @@ def ProcessRowGroup(alignrows, depthrows, nisoloci, thresh, expHindHe,
     # index the alignment position for this set of tags
     locind = alignrows[0][:nisoloci].index(aligns[i])
     cigars = [alignrows[j][nisoloci * 2 + 1 + locind] for j in hapAssign[i]]
+    MDs = [alignrows[j][nisoloci * 3 + 1 + locind] for j in hapAssign[i]]
     tags = [alignrows[j][nisoloci] for j in hapAssign[i]]
     pos = int(aligns[i].split('-')[1])
     strand = aligns[i].split('-')[2]
-    alNucs[i], varpos[i] = isoloci_fun.MakeAlleleStrings(tags, cigars, pos, strand)
+    alNucs[i], varpos[i] = isoloci_fun.MakeAlleleStrings(tags, cigars, MDs, pos, strand)
 
   # write to file
   for i in range(len(aligns)):
