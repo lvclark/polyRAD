@@ -431,7 +431,9 @@ def RecreateReference(tags, cigars, MDs):
     else:                    # add reference nucleotide from mismatch
       reftag = reftag + md
       currpos += len(md)
-  return reftag
+  cigout = "{}M".format(len(reftag))
+  mdout = "{}".format(len(reftag))
+  return (reftag, cigout, mdout)
 
 def MakeAlleleStrings(tags, cigars, MDs, pos, strand):
   '''Taking tag sequences, CIGAR strings, a position for the alignment
