@@ -107,7 +107,8 @@ def ProcessRowGroup(alignrows, depthrows, nisoloci, thresh, expHindHe,
   for i in range(len(aligns)):
     depthsOut = [depths[j] for j in hapAssign[i]]
     tagsOut = [alignrows[j][nisoloci] for j in hapAssign[i]]
-    [outwriter.writerow([aligns[i], varpos[i], alNucs[i][j], tagsOut[j]] + depthsOut[j]) \
+    refNucs = alNucs[i].pop()
+    [outwriter.writerow([aligns[i], varpos[i], alNucs[i][j], refNucs, tagsOut[j]] + depthsOut[j]) \
      for j in range(len(hapAssign[i]))]
 
   return None
@@ -148,8 +149,8 @@ try:
     sample_index = [ttd_samples.index(s) for s in samples]
   
   # write header to output
-  outwriter.writerow(["Marker", "Variable site", "Allele string"] + [depthheader[0]] +\
-  samples)
+  outwriter.writerow(["Marker", "Variable site", "Allele string", "Reference"] + \
+  [depthheader[0]] + samples)
 
   newdepthrow = next(depthreader)
   newdepthrow = [newdepthrow[0]] + [newdepthrow[si + 1] for si in sample_index]

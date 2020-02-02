@@ -449,7 +449,11 @@ def MakeAlleleStrings(tags, cigars, MDs, pos, strand):
     trans = {ord('A'): 'T', ord('C'): 'G', ord('G'): 'C', ord('T'): 'A'}
     tags = [t.translate(trans)[::-1] for t in tags]
 
-  # insert call to RecreateReference here
+  # Add the reference tag to the list
+  ref = RecreateReference(tags, cigars, MDs)
+  tags.append(ref[0])
+  cigars.append(ref[1])
+  MDs.append(ref[2])
 
   # Get position for each nucleotide
   nucpos = CigarsToNucPos(tags, cigars, pos, strand)
