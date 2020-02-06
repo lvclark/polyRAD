@@ -439,9 +439,9 @@ def MakeAlleleStrings(tags, cigars, MDs, pos, strand):
   '''Taking tag sequences, CIGAR strings, a position for the alignment
   starting at the cut site, and a strand (top or bot), make a set of
   strings just showing the variable portion of the tags, and also return a
-  position for the beginning of those strings in the reference genome.'''
-  # Note: if ALL tags have an insertion with respect to the reference, it
-  # won't be obvious from the output of this function. ### Fixing
+  position for the beginning of those strings in the reference genome.
+  The last string in the list is always the reference (which will often be a
+  duplicate of another string in the list).'''
 
   assert strand == 'top' or strand == 'bot'
   if strand == 'bot':
@@ -479,8 +479,17 @@ def MakeAlleleStrings(tags, cigars, MDs, pos, strand):
     elif len(set(tagnucs)) > 1: # found first variable site
       foundvar = True
       tagnucs = PadPosition(tagnucs)
+      if nucind[-1][0] != 0 and \
+      (any([nuc.startswith("-") for nuc in tagnucs]) or tagnucs[-1].startswith(".")):
+        # starts with an insertion or deletion
+        # (and is not the first position in reference)
+        # add the preceeding nucleotide for VCF export
+        outpos = p - 1
+        lastref = tags[-1][nucind[-1][0] - 1]
+        tagnucs = [lastref + t for t in tagnucs]
+      else:
+        outpos = p
       alstrings = tagnucs
-      outpos = p
       endvar = len(alstrings[0])
   alstrings = [st[:endvar] for st in alstrings]
 
