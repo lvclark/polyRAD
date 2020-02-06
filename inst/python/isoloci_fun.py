@@ -390,11 +390,11 @@ def RecreateReference(tags, cigars, MDs):
   align_lengths = [sum([int(s[:-1]) for s in cs]) for cs in cigsplits] # get total
   longest = max(align_lengths)
   keep = [i for i in range(len(tags)) if align_lengths[i] == longest]
-  
+
   tags = [tags[i] for i in keep]
   cigars = [cigars[i] for i in keep]
   MDs = [MDs[i] for i in keep]
-  
+
   # See if there are any tags that are already known to be the reference
   refs = [i for i in range(len(tags)) if re.match("\d+M$", cigars[i]) != None and \
   re.match("\d$", MDs[i]) != None]
