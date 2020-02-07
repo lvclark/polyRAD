@@ -1411,12 +1411,12 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   nAl <- length(mydata[[1]])
   
   # get depth matrix
-  alleleDepth <- matrix(unlist(mydata[(1:nSam) + 4]), nrow = nSam, ncol = nAl,
+  alleleDepth <- matrix(unlist(mydata[(1:nSam) + 4]), nrow = nSam, ncol = nAl, ## update
                          byrow = TRUE, dimnames = list(samples, NULL))
   if(any(is.na(alleleDepth))){
     stop("Missing data in depth matrix.")
   }
-  mydata <- mydata[1:3] # free up space
+  mydata <- mydata[1:3] # free up space ## update
   # factor by locus, sorting locus names
   alleles2loc_factor <- as.factor(mydata[[1]])
   loci <- levels(alleles2loc_factor)
@@ -1431,7 +1431,7 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
     depthperind <- rowSums(submat)
     if(sum(depthperind > 0) >= min.ind.with.reads &&
        sum(colSums(submat > 0) >= min.ind.with.minor.allele) > 1 &&
-       median(depthperind) >= min.median.read.depth){
+       median(depthperind) >= min.median.read.depth){ ## filter here by groups of unique alNuc?
       keeploc <- c(keeploc, L)
     }
   }
@@ -1444,6 +1444,7 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   alleleNucleotides <- mydata[[3]][keepal]
   colnames(alleleDepth) <- paste(alleles2loc_factor, alleleNucleotides,
                                  sep = "_")
+  ## Need to handle cases where not all alleleNucleotides are unique, due to short tags
   
   # sort by locus name (i.e. position and chromosome)
   alorder <- order(alleles2loc)
@@ -1459,6 +1460,7 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   }
   locTable <- data.frame(row.names = loci,
                          Chr = chrom, Pos = pos,
+                         ## Add column for reference sequence
                          stringsAsFactors = FALSE)
   
   # build RADdata object

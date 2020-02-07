@@ -460,8 +460,8 @@ def MakeAlleleStrings(tags, cigars, MDs, pos, strand):
   # set up allele strings
   alstrings = ['' for t in tags]
   # get starting and stopping position to examine
-  start = min([min(np) for np in nucpos])
-  end = max([max(np) for np in nucpos])
+  start = max([min(np) for np in nucpos])
+  end = min([max(np) for np in nucpos])
   # starting and stopping positions of the variable region (to update)
   foundvar = False
   endvar = 0
