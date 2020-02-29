@@ -1427,7 +1427,7 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   message("Filtering and sorting loci...")
   keeploc <- integer(0)
   for(L in 1:nLoc){
-    submat <- alleleDepth[,alleles2loc == L]
+    submat <- alleleDepth[,alleles2loc == L, drop = FALSE]
     depthperind <- rowSums(submat)
     if(sum(depthperind > 0) >= min.ind.with.reads &&
        sum(colSums(submat > 0) >= min.ind.with.minor.allele) > 1 &&
