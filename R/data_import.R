@@ -1400,10 +1400,10 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   incon <- file(sortedfile, open = "r")
   # read header
   header <- scan(incon, sep = ",", nlines = 1, what = character(), quiet = TRUE)
-  samples <- header[-(1:4)]
+  samples <- header[-(1:5)]
   nSam <- length(samples)
-  scanwhat <- list(character(), integer(), character(), NULL, integer())
-  scanwhat <- scanwhat[c(1:4, rep(5, nSam))]
+  scanwhat <- list(character(), integer(), character(), character(), NULL, integer())
+  scanwhat <- scanwhat[c(1:5, rep(6, nSam))]
   
   # read file
   mydata <- scan(incon, sep = ",", what = scanwhat, quiet = TRUE)
@@ -1411,12 +1411,12 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   nAl <- length(mydata[[1]])
   
   # get depth matrix
-  alleleDepth <- matrix(unlist(mydata[(1:nSam) + 4]), nrow = nSam, ncol = nAl, ## update
+  alleleDepth <- matrix(unlist(mydata[(1:nSam) + 5]), nrow = nSam, ncol = nAl,
                          byrow = TRUE, dimnames = list(samples, NULL))
   if(any(is.na(alleleDepth))){
     stop("Missing data in depth matrix.")
   }
-  mydata <- mydata[1:3] # free up space ## update
+  mydata <- mydata[1:4] # free up space
   # factor by locus, sorting locus names
   alleles2loc_factor <- as.factor(mydata[[1]])
   loci <- levels(alleles2loc_factor)
@@ -1442,6 +1442,7 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   alleleDepth <- alleleDepth[,keepal, drop = FALSE]
   alleles2loc <- as.integer(alleles2loc_factor)
   alleleNucleotides <- mydata[[3]][keepal]
+  refNucleotides <- mydata[[4]][keepal]
   colnames(alleleDepth) <- paste(alleles2loc_factor, alleleNucleotides,
                                  sep = "_")
   ## Need to handle cases where not all alleleNucleotides are unique, due to short tags
@@ -1454,13 +1455,15 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   
   # build locTable
   chrom <- sub("\\-.*$", "", loci)
-  pos <- mydata[[2]][fastmatch::fmatch(loci, mydata[[1]])]
+  loc2al <- fastmatch::fmatch(loci, mydata[[1]])
+  pos <- mydata[[2]][loc2al]
+  ref <- mydata[[4]][loc2al]
   if(!nameFromTagStart){
     loci <- paste(chrom, pos, sep = "-")
   }
   locTable <- data.frame(row.names = loci,
                          Chr = chrom, Pos = pos,
-                         ## Add column for reference sequence
+                         Ref = ref,
                          stringsAsFactors = FALSE)
   
   # build RADdata object
