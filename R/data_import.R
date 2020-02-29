@@ -1,4 +1,4 @@
-# functions for import of data into RADgen object
+# functions for import of data into RADdata object
 
 # Function to import read counts from UNEAK output (HapMap.hmc.txt).
 # includeloci should be a character vector of loci names to keep in output.
