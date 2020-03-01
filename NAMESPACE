@@ -16,8 +16,8 @@ GetLocDepth, GetLoci, GetProbableGenotypes, GetRecurrentParent,
 GetTaxa, GetWeightedMeanGenotypes, HindHe, HindHeMapping,
 InbreedingFromHindHe, IterateHWE, IterateHWE_LD,
 IteratePopStruct, IteratePopStructLD, LocusInfo, MakeTasselVcfFilter,
-MergeRareHaplotypes, MergeTaxaDepth, nTaxa, nAlleles, nLoci,
-OneAllelePerMarker, 
+MergeIdenticalHaplotypes, MergeRareHaplotypes, MergeTaxaDepth, nTaxa, nAlleles,
+nLoci, OneAllelePerMarker, 
 PipelineMapping2Parents, RADdata, readHMC, readProcessSamMulti,
 readProcessIsoloci,readStacks, readTagDigger, readTASSELGBSv2,
 RemoveHighDepthLoci, RemoveMonomorphicLoci, RemoveUngenotypedLoci,
@@ -68,6 +68,7 @@ S3method(GetWeightedMeanGenotypes, RADdata)
 S3method(HindHe, RADdata)
 S3method(HindHeMapping, RADdata)
 S3method(LocusInfo, RADdata)
+S3method(MergeIdenticalHaplotypes, RADdata)
 S3method(MergeRareHaplotypes, RADdata)
 S3method(MergeTaxaDepth, RADdata)
 S3method(nAlleles, RADdata)
