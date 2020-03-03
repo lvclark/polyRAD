@@ -42,6 +42,8 @@ impact anything frin the user's perspective, but makes the code slightly
 less unweildy and allows parental genotype estimations to be used for other
 purposes.
 
+The MergeIdenticalHaplotypes function has been added.
+
 Internal functions for simulating gametes and calculating their frequencies have
 been corrected so that they still work when only one allele is being simulated.
 
