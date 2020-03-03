@@ -1431,7 +1431,7 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
     depthperind <- rowSums(submat)
     if(sum(depthperind > 0) >= min.ind.with.reads &&
        sum(colSums(submat > 0) >= min.ind.with.minor.allele) > 1 &&
-       median(depthperind) >= min.median.read.depth){ ## filter here by groups of unique alNuc?
+       median(depthperind) >= min.median.read.depth){
       keeploc <- c(keeploc, L)
     }
   }
@@ -1445,7 +1445,6 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   refNucleotides <- mydata[[4]][keepal]
   colnames(alleleDepth) <- paste(alleles2loc_factor, alleleNucleotides,
                                  sep = "_")
-  ## Need to handle cases where not all alleleNucleotides are unique, due to short tags
   
   # sort by locus name (i.e. position and chromosome)
   alorder <- order(alleles2loc)
@@ -1471,6 +1470,7 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   attr(alleleNucleotides, "Variable_sites_only") <- FALSE
   radout <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
                     contamRate, alleleNucleotides)
+  radout <- MergeIdenticalHaplotypes(radout)
   if(mergeRareHap){
     radout <- MergeRareHaplotypes(radout, 
                                   min.ind.with.haplotype = min.ind.with.minor.allele)
