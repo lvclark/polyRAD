@@ -594,7 +594,8 @@ fashion due to misalignments, amplification bias, presence-absence variation,
 or other issues.  In addition to filtering out problematic markers, you may also
 want to confirm that all individuals in the dataset are well-behaved.
 
-The $H_{ind}/H_E$ statistic, to be described in an upcoming preprint, helps to
+The $H_{ind}/H_E$ statistic
+([Clark et al. 2020](https://doi.org/10.1101/2020.01.11.902890)) helps to
 filter such markers and individuals.  In a mapping population it can be run
 using the `HindHeMapping` function, which requires a single ploidy to be input,
 along with the mapping population design.  In a natural population or diversity
