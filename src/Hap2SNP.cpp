@@ -9,6 +9,7 @@ List Hap2SNP(std::vector< std::string > haps, std::string refhap, int pos) {
   int npos = haps[0].size();
   std::vector< std::string > thesenuc;
   std::string thisnuc;
+  bool isvar;
   
   // Need to deal with insertions making alleleNucleotides shorter than
   // the reference haplotype.  Possibly will have to deal with that before
@@ -28,8 +29,16 @@ List Hap2SNP(std::vector< std::string > haps, std::string refhap, int pos) {
   // loop to search for variable sites
   for(int j = 0; j < npos; j++){
     thesenuc = (refhap[j]);
+    isvar = false;
     for(int i = 0; i < nhap; i++){
       thisnuc = haps[i][j];
+      thesenuc.emplace_back(thisnuc);
+      if(thisnuc != refhap[j]){
+        isvar = true;
+      }
+    }
+    if(isvar){
+      
     }
   }
 }
