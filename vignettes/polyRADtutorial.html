@@ -13,7 +13,7 @@
 
 <meta name="author" content="Lindsay V. Clark, University of Illinois, Urbana-Champaign" />
 
-<meta name="date" content="2020-01-14" />
+<meta name="date" content="2020-03-10" />
 
 <title>polyRAD Tutorial</title>
 
@@ -96,7 +96,7 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">polyRAD Tutorial</h1>
 <h4 class="author">Lindsay V. Clark, University of Illinois, Urbana-Champaign</h4>
-<h4 class="date">14 January 2020</h4>
+<h4 class="date">10 March 2020</h4>
 
 
 <div id="TOC">
@@ -526,7 +526,7 @@ wmgenoPopStruct[<span class="dv">1</span><span class="op">:</span><span class="d
 <div id="h_indh_e-for-filtering-markers-and-individuals" class="section level2">
 <h2><span class="math inline">\(H_{ind}/H_E\)</span> for filtering markers and individuals <a name="hindhe"></a></h2>
 <p>GBS/RAD data are inherently messy. Some markers may behave in a non-Mendelian fashion due to misalignments, amplification bias, presence-absence variation, or other issues. In addition to filtering out problematic markers, you may also want to confirm that all individuals in the dataset are well-behaved.</p>
-<p>The <span class="math inline">\(H_{ind}/H_E\)</span> statistic, to be described in an upcoming preprint, helps to filter such markers and individuals. In a mapping population it can be run using the <code>HindHeMapping</code> function, which requires a single ploidy to be input, along with the mapping population design. In a natural population or diversity panel, the <code>HindHe</code> function can be used. <code>HindHe</code> should also be used for mapping populations in which the most recent generation was created by random intermating among all progeny. In all cases, I recommend running <code>HindHe</code> or <code>HindHeMapping</code> before running <code>TestOverdispersion</code> or any of the genotype calling functions, as demonstrated in the previous sections.</p>
+<p>The <span class="math inline">\(H_{ind}/H_E\)</span> statistic (<a href="https://doi.org/10.1101/2020.01.11.902890">Clark et al. 2020</a>) helps to filter such markers and individuals. In a mapping population it can be run using the <code>HindHeMapping</code> function, which requires a single ploidy to be input, along with the mapping population design. In a natural population or diversity panel, the <code>HindHe</code> function can be used. <code>HindHe</code> should also be used for mapping populations in which the most recent generation was created by random intermating among all progeny. In all cases, I recommend running <code>HindHe</code> or <code>HindHeMapping</code> before running <code>TestOverdispersion</code> or any of the genotype calling functions, as demonstrated in the previous sections.</p>
 <p>Below we’ll work with a dataset from <em>Miscanthus sacchariflorus</em>, including 635 individuals and 5182 loci (<a href="https://doi.org/10.1093/aob/mcy161">Clark et al. 2018</a>). The <code>RADdata</code> object is not provided here due to size, but the following objects were created from it:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">myHindHe &lt;-<span class="st"> </span><span class="kw">HindHe</span>(mydata)
 TotDepthT &lt;-<span class="st"> </span><span class="kw">rowSums</span>(mydata<span class="op">$</span>locDepth)</code></pre></div>

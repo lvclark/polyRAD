@@ -1,7 +1,7 @@
 polyRAD Tutorial
 ================
 Lindsay V. Clark, University of Illinois, Urbana-Champaign
-14 January 2020
+10 March 2020
 
 -   [Introduction <a name="introduction"></a>](#introduction)
 -   [Summary of available functions <a name="functions"></a>](#summary-of-available-functions)
@@ -699,7 +699,7 @@ If you expect that your species has high linkage disequilibrium, the functions `
 
 GBS/RAD data are inherently messy. Some markers may behave in a non-Mendelian fashion due to misalignments, amplification bias, presence-absence variation, or other issues. In addition to filtering out problematic markers, you may also want to confirm that all individuals in the dataset are well-behaved.
 
-The *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> statistic, to be described in an upcoming preprint, helps to filter such markers and individuals. In a mapping population it can be run using the `HindHeMapping` function, which requires a single ploidy to be input, along with the mapping population design. In a natural population or diversity panel, the `HindHe` function can be used. `HindHe` should also be used for mapping populations in which the most recent generation was created by random intermating among all progeny. In all cases, I recommend running `HindHe` or `HindHeMapping` before running `TestOverdispersion` or any of the genotype calling functions, as demonstrated in the previous sections.
+The *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> statistic ([Clark et al. 2020](https://doi.org/10.1101/2020.01.11.902890)) helps to filter such markers and individuals. In a mapping population it can be run using the `HindHeMapping` function, which requires a single ploidy to be input, along with the mapping population design. In a natural population or diversity panel, the `HindHe` function can be used. `HindHe` should also be used for mapping populations in which the most recent generation was created by random intermating among all progeny. In all cases, I recommend running `HindHe` or `HindHeMapping` before running `TestOverdispersion` or any of the genotype calling functions, as demonstrated in the previous sections.
 
 Below we'll work with a dataset from *Miscanthus sacchariflorus*, including 635 individuals and 5182 loci ([Clark et al. 2018](https://doi.org/10.1093/aob/mcy161)). The `RADdata` object is not provided here due to size, but the following objects were created from it:
 
