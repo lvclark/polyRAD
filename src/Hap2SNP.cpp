@@ -4,20 +4,15 @@ using namespace Rcpp;
 // Convert a set of haplotypes to a set of SNPs, with a position for each SNP
 // and a matrix to indicate conversion of haplotypes to SNP alleles.
 // [[Rcpp::export]]
-List Hap2SNP(std::vector< std::string > haps, std::string refhap, int pos) {
+List Hap2SNP(StringVector haps, std::string refhap, int pos) {
   int nhap = haps.size();
-  int npos = haps[0].size();
-  std::vector< std::string > thesenuc;
+  unsigned int npos = haps[0].size();
+  StringVector thesenuc(nhap);
+  std::string thishap;
   std::string thisnuc;
+  std::string thisref;
   bool isvar;
-  
-  // Need to deal with insertions making alleleNucleotides shorter than
-  // the reference haplotype.  Possibly will have to deal with that before
-  // this function, in order to get the right size for the reference haplotype.
-  // Search for * to locate insertion points.  Then there is the issue I knew
-  // I would run into, with all haplotypes having the same insertion with
-  // respect to the reference.  Maybe something in locTable could indicate these.
-  // Should MakeAlleleStrings in isoloci_fun.py also return the reference?
+  List out(3);
   
   // check that all haplotypes are same length
   for(int i = 1; i < nhap; i++){
@@ -27,18 +22,28 @@ List Hap2SNP(std::vector< std::string > haps, std::string refhap, int pos) {
   }
   
   // loop to search for variable sites
-  for(int j = 0; j < npos; j++){
-    thesenuc = (refhap[j]);
+  for(unsigned int j = 0; j < npos; j++){
     isvar = false;
     for(int i = 0; i < nhap; i++){
-      thisnuc = haps[i][j];
-      thesenuc.emplace_back(thisnuc);
-      if(thisnuc != refhap[j]){
+      thishap = haps[i];
+      thisnuc = thishap[j];
+      thisref = refhap[j];
+      thesenuc[i] = thisnuc;
+      if(thisnuc != thisref){
         isvar = true;
       }
     }
     if(isvar){
-      
+      for(int i = 0; i < nhap; i++){
+        Rcout << thesenuc[i]; //testing
+      }
+      // will need padding for insertions and deletions
+    }
+    if(refhap[j] != '.'){
+      pos += 1;
+      // possibly adjust for indels bigger than 1 nt
     }
   }
+  
+  return out;
 }
