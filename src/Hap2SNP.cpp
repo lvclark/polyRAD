@@ -11,7 +11,7 @@ List Hap2SNP(StringVector haps, std::string refhap, int pos) {
   std::string thishap;
   std::string thisnuc;
   std::string thisref;
-  bool isvar;
+  LogicalVector isvar(npos);
   
   int nvar = 0; // number of variable sites found
   IntegerVector outpos(npos);
@@ -35,13 +35,13 @@ List Hap2SNP(StringVector haps, std::string refhap, int pos) {
       thisref = refhap[j];
       thesenuc[i] = thisnuc;
       if(thisnuc != thisref){
-        isvar = true;
+        isvar[j] = true;
       }
     }
-    if(isvar){
+    if(isvar[j]){
       outpos[nvar] = pos;
       // pad insertions or deletions
-      if(any(thesenuc == "." | thesenuc == "-") && !any(outpos == pos - 1)){
+      if(any(thesenuc == "." | thesenuc == "-") && !isvar[j-1]){
         outpos[nvar] -= 1;
         thisref = refhap[j-1] + thisref;
         for(int i = 0; i < nhap; i++){
