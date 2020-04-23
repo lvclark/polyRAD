@@ -12,8 +12,9 @@ List Hap2SNP(StringVector haps, std::string refhap, int pos) {
   std::string thisnuc;
   std::string thisref;
   LogicalVector isvar(npos);
+  LogicalVector isindel(npos);
+  IntegerVector allpos(npos);
   
-  int nvar = 0; // number of variable sites found
   IntegerVector outpos(npos);
   List outnuc(npos);
   List outmat(npos);
@@ -28,36 +29,32 @@ List Hap2SNP(StringVector haps, std::string refhap, int pos) {
   
   // loop to search for variable sites
   for(unsigned int j = 0; j < npos; j++){
-    isvar = false;
+    thisref = refhap[j];
+    if(thisref == "."){
+      isindel[j] = true;
+    }
     for(int i = 0; i < nhap; i++){
       thishap = haps[i];
       thisnuc = thishap[j];
-      thisref = refhap[j];
-      thesenuc[i] = thisnuc;
       if(thisnuc != thisref){
         isvar[j] = true;
       }
-    }
-    if(isvar[j]){
-      outpos[nvar] = pos;
-      // pad insertions or deletions
-      if(any(thesenuc == "." | thesenuc == "-") && !isvar[j-1]){
-        outpos[nvar] -= 1;
-        thisref = refhap[j-1] + thisref;
-        for(int i = 0; i < nhap; i++){
-          thesenuc[i] = refhap[j-1] + thesenuc[i]
-        }
-        // add something here to add downstream sites for longer indels
+      if(thisnuc == "." || thisnuc == "-"){
+        isindel[j] = true;
       }
-      
-      nvar += 1;
     }
-    if(refhap[j] != '.'){
-      pos += 1;
-      // possibly adjust for indels bigger than 1 nt
+    if(j == 0){
+      allpos[j] = pos;
+    } else {
+      if(refhap[j] != '.'){
+        allpos[j] = allpos[j - 1] + 1;
+      } else {
+        allpos[j] = allpos[j - 1];
+      }
     }
   }
   
-  List out = List::create(outpos, outnuc, outmat);
+  //List out = List::create(outpos, outnuc, outmat);
+  List out = List::create(allpos, isvar, isindel);
   return out;
 }
