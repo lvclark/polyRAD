@@ -58,7 +58,8 @@ List Hap2SNP(StringVector haps, std::string refhap, int pos) {
     }
   }
   
-  // loop to determine sites to report
+  // loop to determine sites to report.
+  // Use VCF format for indels (includes previous nucleotide)
   unsigned int j = 0;
   while(j < npos){
     if(isvar[j]){
@@ -85,6 +86,7 @@ List Hap2SNP(StringVector haps, std::string refhap, int pos) {
   StringVector uniquenuc;
   bool nucfound;
   int nal;
+  String thisal;
   
   // loop to determine which haplotypes have which alleles
   for(int n = 0; n < nsites; n++){
@@ -121,6 +123,14 @@ List Hap2SNP(StringVector haps, std::string refhap, int pos) {
           break;
         }
       }
+    }
+    
+    // Remove insertion and deletion characters
+    for(int u = 0; u < nal; u++){
+      thisal = uniquenuc[u];
+      thisal.replace_all(".", "");
+      thisal.replace_all("-", "");
+      uniquenuc[u] = thisal;
     }
 
     outnuc[n] = uniquenuc;
