@@ -1,4 +1,5 @@
 #include <Rcpp.h>
+#include <string>
 using namespace Rcpp;
 
 // Convert a set of haplotypes to a set of SNPs, with a position for each SNP
@@ -81,16 +82,41 @@ List Hap2SNP(StringVector haps, std::string refhap, int pos) {
   List outmat(nsites);
   IntegerMatrix thismat;
   int start;
-  int end;
+  int vlen;
+  StringVector uniquenuc;
+  bool nucfound;
+  int nal;
   
   // loop to determine which haplotypes have which alleles
   for(int n = 0; n < nsites; n++){
     start = starts[n];
-    end = ends[n];
+    vlen = ends[n] - start + 1;
+    outpos[n] = allpos[start];
+    thisref = refhap.substr(start, vlen);
+    uniquenuc = StringVector::create(thisref);
+    for(int i = 0; i < nhap; i++){
+      thishap = haps[i];
+      thisnuc = thishap.substr(start, vlen);
+      thesenuc[i] = thisnuc;
+      // See if this allele has been found already.
+      // Add to unique list, maintaining order, esp. reference first.
+      nucfound = false;
+      for(unsigned int u = 0; u < uniquenuc.size(); u++){
+        if(uniquenuc[u] == thisnuc){
+          nucfound = true;
+          break;
+        }
+      }
+      if(!nucfound){
+        uniquenuc.push_back(thisnuc);
+      }
+    }
+    nal = uniquenuc.size();
+    outnuc[n] = uniquenuc;
   }
   
   //List out = List::create(outpos, outnuc, outmat);
-  List out = List::create(allpos, isvar, isindel, starts, ends);
+  List out = List::create(allpos, isvar, isindel, starts, ends, outpos, outnuc);
   return out;
 }
 
