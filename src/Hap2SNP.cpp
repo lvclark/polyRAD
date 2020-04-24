@@ -64,7 +64,7 @@ List Hap2SNP(StringVector haps, std::string refhap, int pos) {
   while(j < npos){
     if(isvar[j]){
       if(isindel[j]){
-        // add assert that j > 0?
+        // add assert that j > 0? (does give error on its own)
         starts[nsites] = j - 1;
       } else {
         starts[nsites] = j;
