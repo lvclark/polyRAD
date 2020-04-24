@@ -80,7 +80,6 @@ List Hap2SNP(StringVector haps, std::string refhap, int pos) {
   IntegerVector outpos(nsites);
   List outnuc(nsites);
   List outmat(nsites);
-  IntegerMatrix thismat;
   int start;
   int vlen;
   StringVector uniquenuc;
@@ -111,12 +110,25 @@ List Hap2SNP(StringVector haps, std::string refhap, int pos) {
         uniquenuc.push_back(thisnuc);
       }
     }
+    
+    // Conversion matrix
     nal = uniquenuc.size();
+    IntegerMatrix thismat(nhap, nal);
+    for(int i = 0; i < nhap; i++){
+      for(int u = 0; u < nal; u++){
+        if(thesenuc[i] == uniquenuc[u]){
+          thismat(i, u) = 1;
+          break;
+        }
+      }
+    }
+
     outnuc[n] = uniquenuc;
+    outmat[n] = thismat;
   }
   
-  //List out = List::create(outpos, outnuc, outmat);
-  List out = List::create(allpos, isvar, isindel, starts, ends, outpos, outnuc);
+  List out = List::create(outpos, outnuc, outmat);
+  //List out = List::create(allpos, isvar, isindel, starts, ends, outpos, outnuc);
   return out;
 }
 
