@@ -35,7 +35,11 @@ List Hap2SNP(StringVector haps, std::string refhap, int pos) {
     for(int i = 0; i < nhap; i++){
       thishap = haps[i];
       thisnuc = thishap[j];
-      if(thisnuc != thisref){
+      if(thisnuc != thisref && 
+         (thisnuc == "A" || thisnuc == "C" || thisnuc == "G" || thisnuc == "T" ||
+         thisnuc == "." || thisnuc == "-")){
+        // Nucleotide differs from reference AND
+        // is not ambiguous due to haplotype merging.
         isvar[j] = true;
       }
       if(thisnuc == "." || thisnuc == "-"){
@@ -94,6 +98,6 @@ List Hap2SNP(StringVector haps, std::string refhap, int pos) {
 /*** R
 myref <- "ACGT.AAGCGCTT.AC"
 myhaps <- c("ACGTTAAGCGCTT.AA", "ACGTTCAGCGCTT.AC", "ACGTTCAGCGCTG.AC",
-            "ACGTTA--CGCTT.AC", "ACGTTAAGCGCTTCAC", "TCGTTAAGCGCTTCAC")
+            "ACGTTA--CGCYT.AC", "ACGTTAAGCGCTTCAC", "TCGTTAAGCGCTTCAC")
 Hap2SNP(myhaps, myref, 201)
 */
