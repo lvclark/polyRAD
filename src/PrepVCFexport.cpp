@@ -146,5 +146,19 @@ List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
   return out;
 }
 
-
+// Testing
+/*** R
+alleles2loc <- c(1,1,1,2,2)
+genotypes <- matrix(c(2,0,2,0,4,
+                      0,4,0,1,3,
+                      1,1,2,2,2), nrow = 3, ncol = 5, byrow = TRUE)
+depth <- matrix(sample(100, 15), nrow = 3, ncol = 5)
+depth[genotypes == 0] <- 0
+alnuc <- c("AA", "AG", "CA", "G", "T")
+locTable <- data.frame(Chr = c("Chr01", "Chr03"),
+                       Pos = c(101, 501),
+                       Ref = c("AG", "G"),
+                       stringsAsFactors = FALSE)
+PrepVCFexport(genotypes, alleles2loc, depth, alnuc, locTable, 4, TRUE)
+*/
 
