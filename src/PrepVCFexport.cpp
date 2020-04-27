@@ -53,6 +53,20 @@ List AlleleIndex(IntegerVector alleles2loc, int nloc){
   return out;
 }
 
+// Subset a matrix using a vector of column indices
+IntegerMatrix SubsetMatrixCol(IntegerMatrix mat, IntegerVector cols){
+  int nr = mat.nrow();
+  int co = cols.size();
+  IntegerMatrix out(nr, co);
+  
+  for(int r = 0; r < nr; r++){
+    for(int c = 0; c < co; c++){
+      out(r, c) = mat(r, cols[c]);
+    }
+  }
+  return out;
+}
+
 // Function to take genotype calls and slots from a RADdata object and prepare
 // data for export to VCF.
 
@@ -68,6 +82,8 @@ List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
   StringVector thesehap;
   IntegerVector posvect = locTable["Pos"];
   StringVector refvect = locTable["Ref"];
+  IntegerMatrix thesegeno;
+  IntegerMatrix thesedepths;
   int pos;
   std::string ref;
   List hapconv;
@@ -80,16 +96,10 @@ List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
     // Subset data for this locus
     thesecol = alleleLookup[L];
     thisnal = thesecol.size();
-    IntegerMatrix thesegeno(nsam, thisnal);
-    IntegerMatrix thesedepths(nsam, thisnal);
     thesehap = alleleNucleotides[thesecol];
     
-    for(int a = 0; a < thisnal; a++){
-      for(int s = 0; s < nsam; s++){
-        thesegeno(s, a) = genotypes(s, thesecol[a]);
-        thesedepths(s, a) = alleleDepth(s, thesecol[a]);
-      }
-    }
+    thesegeno = SubsetMatrixCol(genotypes, thesecol);
+    thesedepths = SubsetMatrixCol(alleleDepth, thesecol);
     
     pos = posvect[L];
     ref = refvect[L];
