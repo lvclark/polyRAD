@@ -66,6 +66,28 @@ IntegerMatrix SubsetMatrixCol(IntegerMatrix mat, IntegerVector cols){
   return out;
 }
 
+// Do the matrix multiplication with the conversion matrices, to avoid needing
+// RcppArmadillo.  Assumes all values in the conversion matrix are 0 and 1, and
+// the sum of each row is 1.
+IntegerMatrix ConvMatMult(IntegerMatrix origmat, IntegerMatrix convmat){
+  int nsam = origmat.nrow();
+  int nhap = origmat.ncol();
+  int nal = convmat.ncol();
+  IntegerMatrix out(nsam, nal);
+  
+  for(int i = 0; i < nhap; i++){
+    for(int j = 0; j < nal; j++){
+      if(convmat(i, j) == 1){
+        for(int s = 0; s < nsam; s++){
+          out(s, j) += origmat(s, i);
+        }
+        break;
+      }
+    }
+  }
+  return out;
+}
+
 // Function to take genotype calls and slots from a RADdata object and prepare
 // data for export to VCF.
 
