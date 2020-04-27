@@ -2,6 +2,19 @@
 #include <string>
 using namespace Rcpp;
 
+// Remove indel characters from allele strings
+StringVector RemoveIndelChar(StringVector uniquenuc, int nal){
+  String thisal;
+  
+  for(int u = 0; u < nal; u++){
+    thisal = uniquenuc[u];
+    thisal.replace_all(".", "");
+    thisal.replace_all("-", "");
+    uniquenuc[u] = thisal;
+  }
+  return uniquenuc;
+}
+
 // Convert a set of haplotypes to a set of SNPs, with a position for each SNP
 // and a matrix to indicate conversion of haplotypes to SNP alleles.
 // [[Rcpp::export]]
@@ -86,7 +99,6 @@ List Hap2SNP(StringVector haps, std::string refhap, int pos) {
   StringVector uniquenuc;
   bool nucfound;
   int nal;
-  String thisal;
   
   // loop to determine which haplotypes have which alleles
   for(int n = 0; n < nsites; n++){
@@ -126,12 +138,7 @@ List Hap2SNP(StringVector haps, std::string refhap, int pos) {
     }
     
     // Remove insertion and deletion characters
-    for(int u = 0; u < nal; u++){
-      thisal = uniquenuc[u];
-      thisal.replace_all(".", "");
-      thisal.replace_all("-", "");
-      uniquenuc[u] = thisal;
-    }
+    uniquenuc = RemoveIndelChar(uniquenuc, nal);
 
     outnuc[n] = uniquenuc;
     outmat[n] = thismat;
@@ -142,10 +149,57 @@ List Hap2SNP(StringVector haps, std::string refhap, int pos) {
   return out;
 }
 
+// Dummy fn for Hap2SNP that returns the same info but for haplotypes
+// [[Rcpp::export]]
+List Hap2Hap(StringVector haps, std::string refhap, int pos){
+  int nhap = haps.size();
+  int nhapOut = nhap;
+  IntegerVector outpos = IntegerVector::create(pos);
+  List outnuc(1);
+  List outmat(1);
+  List out;
+  int refind = -1;
+  
+  // Is the reference among the alleles?
+  for(int h = 0; h < nhap; h++){
+    if(haps[h] == refhap){
+      refind = h;
+      break;
+    }
+  }
+  
+  // Arrange the sequences and conversion matrix, putting reference first
+  int outind = 1;
+  if(refind == -1){
+    nhapOut++;
+  }
+  StringVector uniquenuc(nhapOut);
+  uniquenuc[0] = refhap;
+  IntegerMatrix thismat(nhap, nhapOut);
+  for(int h = 0; h < nhap; h++){
+    if(h == refind){
+      thismat(h, 0) = 1;
+    } else {
+      thismat(h, outind) = 1;
+      uniquenuc[outind] = haps[h];
+      outind++;
+    }
+  }
+  
+  // Remove insertion and deletion characters
+  uniquenuc = RemoveIndelChar(uniquenuc, nhapOut);
+  
+  outnuc[0] = uniquenuc;
+  outmat[0] = thismat;
+  out = List::create(outpos, outnuc, outmat);
+  return out;
+}
+
 // Testing
 /*** R
 myref <- "ACGT.AAGCGCTT.AC"
 myhaps <- c("ACGTTAAGCGCTT.AA", "ACGTTCAGCGCTT.AC", "ACGTTCAGCGCTG.AC",
             "ACGTTA--CGCYT.AC", "ACGTTAAGCGCTTCAC", "TCGTTAAGCGCTTCAC")
 Hap2SNP(myhaps, myref, 201)
+Hap2Hap(myhaps, myref, 201)
 */

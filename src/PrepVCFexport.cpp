@@ -40,7 +40,6 @@ StringVector MakeGTstrings(IntegerMatrix genotypes, int ploidy) {
 // Make a faster lookup for allele indices, for when loci will be looped through
 // multiple times.  For internal use; indices start at zero in output.
 // alleles2loc is assumed to be from RADdata and have indices starting at one.
-// [[Rcpp::export]]
 List AlleleIndex(IntegerVector alleles2loc, int nloc){
   IntegerVector alleles = seq(0, alleles2loc.size() - 1);
   IntegerVector thesecol;
@@ -107,15 +106,18 @@ List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
     // Convert haplotypes to SNPs
     if(asSNPs){
       hapconv = Hap2SNP(thesehap, ref, pos);
-      outpos[L] = hapconv[0];
-      outal[L] = hapconv[1];
+      
       // Insert code to convert genotypes and depths
       // Make separate function to put depths in to AD format for VariantAnnotation
     } else {
-      outpos[L] = IntegerVector::create(pos);
-      outal[L] = List::create(alleleNucleotides);
+      hapconv = Hap2Hap(thesehap, ref, pos);
+
       // Insert code to add genotypes and depths
+
     }
+    
+    outpos[L] = hapconv[0];
+    outal[L] = hapconv[1];
     
   }
   List out;

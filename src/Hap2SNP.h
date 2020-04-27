@@ -3,5 +3,6 @@
 
 #include <Rcpp.h>
 Rcpp::List Hap2SNP(Rcpp::StringVector haps, std::string refhap, int pos);
+Rcpp::List Hap2Hap(Rcpp::StringVector haps, std::string refhap, int pos);
 
 #endif
