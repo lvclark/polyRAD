@@ -88,6 +88,19 @@ IntegerMatrix ConvMatMult(IntegerMatrix origmat, IntegerMatrix convmat){
   return out;
 }
 
+// Format allelic read depth for the AD slot in a VCF object.
+List FormatAD(IntegerMatrix depthmat){
+  int nsam = depthmat.nrow();
+  IntegerVector thisdep;
+  List out(nsam);
+  
+  for(int i = 0; i < nsam; i++){
+    thisdep = depthmat(i, _ );
+    out[i] = clone(thisdep);
+  }
+  return out;
+}
+
 // Function to take genotype calls and slots from a RADdata object and prepare
 // data for export to VCF.
 
@@ -96,27 +109,31 @@ List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
                    IntegerMatrix alleleDepth, StringVector alleleNucleotides,
                    DataFrame locTable, int ploidy, bool asSNPs) {
   int nloc = locTable.nrows();
-  int nsam = genotypes.nrow();
+  //int nsam = genotypes.nrow();
   List alleleLookup = AlleleIndex(alleles2loc, nloc);
   IntegerVector thesecol;
-  int thisnal;
   StringVector thesehap;
   IntegerVector posvect = locTable["Pos"];
   StringVector refvect = locTable["Ref"];
   IntegerMatrix thesegeno;
   IntegerMatrix thesedepths;
+  IntegerMatrix thesegeno1;
+  IntegerMatrix thesedepths1;
+  StringVector theseGT;
+  List theseAD;
   int pos;
+  int nsubloc;
   std::string ref;
   List hapconv;
   List outpos(nloc);
   List outal(nloc);
   List outgen(nloc);
   List outdepth(nloc);
+  List thesemats;
   
   for(int L = 0; L < nloc; L++){
     // Subset data for this locus
     thesecol = alleleLookup[L];
-    thisnal = thesecol.size();
     thesehap = alleleNucleotides[thesecol];
     
     thesegeno = SubsetMatrixCol(genotypes, thesecol);
@@ -128,21 +145,27 @@ List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
     // Convert haplotypes to SNPs
     if(asSNPs){
       hapconv = Hap2SNP(thesehap, ref, pos);
-      
-      // Insert code to convert genotypes and depths
-      // Make separate function to put depths in to AD format for VariantAnnotation
     } else {
       hapconv = Hap2Hap(thesehap, ref, pos);
-
-      // Insert code to add genotypes and depths
-
     }
-    
     outpos[L] = hapconv[0];
     outal[L] = hapconv[1];
+    // Consider separating alleles into reference and alts.
+    thesemats = hapconv[2];
+    
+    // Format genotypes and depths
+    nsubloc = thesemats.size();
+    for(int i = 0; i < nsubloc; i++){
+      IntegerMatrix thismat = thesemats(i);
+      thesegeno1 = ConvMatMult(thesegeno, thismat);
+      thesedepths1 = ConvMatMult(thesedepths, thismat);
+      theseGT = MakeGTstrings(thesegeno1, ploidy);
+      theseAD = FormatAD(thesedepths1);
+      // Need to fill these into a matrix or list.
+    }
     
   }
-  List out;
+  List out = List::create(outpos, outal, theseGT, theseAD);
   return out;
 }
 
