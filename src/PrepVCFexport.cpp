@@ -109,7 +109,7 @@ List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
                    IntegerMatrix alleleDepth, StringVector alleleNucleotides,
                    DataFrame locTable, int ploidy, bool asSNPs) {
   int nloc = locTable.nrows();
-  //int nsam = genotypes.nrow();
+  int nsam = genotypes.nrow();
   List alleleLookup = AlleleIndex(alleles2loc, nloc);
   IntegerVector thesecol;
   StringVector thesehap;
@@ -124,48 +124,78 @@ List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
   int pos;
   int nsubloc;
   std::string ref;
-  List hapconv;
-  List outpos(nloc);
-  List outal(nloc);
-  List outgen(nloc);
-  List outdepth(nloc);
+  List hapconv(nloc);
+  List thishapconv;
+  IntegerVector sitesperloc(nloc);
   List thesemats;
+  IntegerVector thesepos;
+  List theseal;
+  
+  // Convert haplotypes to SNPs and tally variants
+  for(int L = 0; L < nloc; L++){
+    thesecol = alleleLookup[L];
+    thesehap = alleleNucleotides[thesecol];
+    pos = posvect[L];
+    ref = refvect[L];
+    
+    if(asSNPs){
+      thishapconv = Hap2SNP(thesehap, ref, pos);
+    } else {
+      thishapconv = Hap2Hap(thesehap, ref, pos);
+    }
+    hapconv[L] = clone(thishapconv);
+    thesepos = thishapconv[0];
+    sitesperloc[L] = thesepos.size();
+  }
+  
+  // Convert data for each SNP/indel/haplotype
+  int nsites = sum(sitesperloc);
+  int currsite = 0;
+  StringVector outREF(nsites);
+  List outALT(nsites);
+  IntegerVector outPos(nsites);
+  StringMatrix outGT(nsam, nsites);
+  List outAD(nsam * nsites);
+  outAD.attr("dim") = Dimension(nsites, nsam);
+  IntegerVector outLookup(nsites);
   
   for(int L = 0; L < nloc; L++){
     // Subset data for this locus
     thesecol = alleleLookup[L];
-    thesehap = alleleNucleotides[thesecol];
-    
     thesegeno = SubsetMatrixCol(genotypes, thesecol);
     thesedepths = SubsetMatrixCol(alleleDepth, thesecol);
+    thishapconv = hapconv[L];
+    thesemats = thishapconv[2];
+    thesepos = thishapconv[0];
+    theseal = thishapconv[1];
     
-    pos = posvect[L];
-    ref = refvect[L];
-    
-    // Convert haplotypes to SNPs
-    if(asSNPs){
-      hapconv = Hap2SNP(thesehap, ref, pos);
-    } else {
-      hapconv = Hap2Hap(thesehap, ref, pos);
-    }
-    outpos[L] = hapconv[0];
-    outal[L] = hapconv[1];
-    // Consider separating alleles into reference and alts.
-    thesemats = hapconv[2];
-    
-    // Format genotypes and depths
-    nsubloc = thesemats.size();
+    nsubloc = sitesperloc[L];
     for(int i = 0; i < nsubloc; i++){
+      // Format genotypes and depths
       IntegerMatrix thismat = thesemats(i);
       thesegeno1 = ConvMatMult(thesegeno, thismat);
       thesedepths1 = ConvMatMult(thesedepths, thismat);
       theseGT = MakeGTstrings(thesegeno1, ploidy);
       theseAD = FormatAD(thesedepths1);
-      // Need to fill these into a matrix or list.
+      outGT( _ , currsite) = theseGT;
+      for(int s = 0; s < nsam; s++){
+        IntegerVector theseAD1 = theseAD[s];
+        outAD(currsite, s) = clone(theseAD1);
+      }
+      
+      // Fill other data
+      outPos[currsite] = thesepos[i];
+      StringVector theseSNPal = theseal(i);
+      outREF[currsite] = theseSNPal[0];
+      theseSNPal.erase(0);
+      outALT[currsite] = theseSNPal;
+      outLookup[currsite] = L + 1;
+      
+      currsite++;
     }
-    
   }
-  List out = List::create(outpos, outal, theseGT, theseAD);
+  List out = List::create(outPos, outREF, outALT, transpose(outGT), 
+                          outAD, outLookup);
   return out;
 }
 
@@ -182,6 +212,7 @@ locTable <- data.frame(Chr = c("Chr01", "Chr03"),
                        Pos = c(101, 501),
                        Ref = c("AG", "G"),
                        stringsAsFactors = FALSE)
-PrepVCFexport(genotypes, alleles2loc, depth, alnuc, locTable, 4, TRUE)
+out <- PrepVCFexport(genotypes, alleles2loc, depth, alnuc, locTable, 4, TRUE)
+out
 */
 
