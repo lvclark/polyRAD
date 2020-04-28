@@ -130,6 +130,7 @@ List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
   List thesemats;
   IntegerVector thesepos;
   List theseal;
+  CharacterVector samplenames = rownames(genotypes);
   
   // Convert haplotypes to SNPs and tally variants
   for(int L = 0; L < nloc; L++){
@@ -155,8 +156,10 @@ List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
   List outALT(nsites);
   IntegerVector outPos(nsites);
   StringMatrix outGT(nsam, nsites);
+  rownames(outGT) = samplenames;
   List outAD(nsam * nsites);
   outAD.attr("dim") = Dimension(nsites, nsam);
+  colnames(outAD) = samplenames;
   IntegerVector outLookup(nsites);
   
   for(int L = 0; L < nloc; L++){
@@ -194,8 +197,9 @@ List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
       currsite++;
     }
   }
-  List out = List::create(outPos, outREF, outALT, transpose(outGT), 
-                          outAD, outLookup);
+  List out = List::create(_["POS"] = outPos, _["REF"] = outREF, _["ALT"] = outALT,
+                          _["GT"] = transpose(outGT), _["AD"] = outAD,
+                          _["Lookup"] = outLookup);
   return out;
 }
 
@@ -204,10 +208,14 @@ List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
 alleles2loc <- c(1,1,1,2,2)
 genotypes <- matrix(c(2,0,2,0,4,
                       0,4,0,1,3,
-                      1,1,2,2,2), nrow = 3, ncol = 5, byrow = TRUE)
-depth <- matrix(sample(100, 15), nrow = 3, ncol = 5)
+                      1,1,2,2,2,
+                      4,0,0,4,0), nrow = 4, ncol = 5, byrow = TRUE)
+depth <- matrix(sample(100, 20), nrow = 4, ncol = 5)
 depth[genotypes == 0] <- 0
 alnuc <- c("AA", "AG", "CA", "G", "T")
+rownames(depth) <- rownames(genotypes) <- paste0("Sam", 1:4)
+colnames(depth) <- colnames(genotypes) <- 
+  paste(c("Loc1", "Loc1", "Loc1", "Loc2", "Loc2"), alnuc, sep = "_")
 locTable <- data.frame(Chr = c("Chr01", "Chr03"),
                        Pos = c(101, 501),
                        Ref = c("AG", "G"),
