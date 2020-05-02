@@ -107,7 +107,7 @@ List FormatAD(IntegerMatrix depthmat){
 // [[Rcpp::export]]
 List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
                    IntegerMatrix alleleDepth, StringVector alleleNucleotides,
-                   DataFrame locTable, int ploidy, bool asSNPs) {
+                   DataFrame locTable, IntegerVector ploidy, bool asSNPs) {
   int nloc = locTable.nrows();
   int nsam = genotypes.nrow();
   List alleleLookup = AlleleIndex(alleles2loc, nloc);
@@ -131,6 +131,7 @@ List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
   IntegerVector thesepos;
   List theseal;
   CharacterVector samplenames = rownames(genotypes);
+  int pld;
   
   // Convert haplotypes to SNPs and tally variants
   for(int L = 0; L < nloc; L++){
@@ -171,6 +172,7 @@ List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
     thesemats = thishapconv[2];
     thesepos = thishapconv[0];
     theseal = thishapconv[1];
+    pld = ploidy[L];
     
     nsubloc = sitesperloc[L];
     for(int i = 0; i < nsubloc; i++){
@@ -178,7 +180,7 @@ List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
       IntegerMatrix thismat = thesemats(i);
       thesegeno1 = ConvMatMult(thesegeno, thismat);
       thesedepths1 = ConvMatMult(thesedepths, thismat);
-      theseGT = MakeGTstrings(thesegeno1, ploidy);
+      theseGT = MakeGTstrings(thesegeno1, pld);
       theseAD = FormatAD(thesedepths1);
       outGT( _ , currsite) = theseGT;
       for(int s = 0; s < nsam; s++){
@@ -220,7 +222,7 @@ locTable <- data.frame(Chr = c("Chr01", "Chr03"),
                        Pos = c(101, 501),
                        Ref = c("AG", "G"),
                        stringsAsFactors = FALSE)
-out <- PrepVCFexport(genotypes, alleles2loc, depth, alnuc, locTable, 4, TRUE)
+out <- PrepVCFexport(genotypes, alleles2loc, depth, alnuc, locTable, c(4, 4), TRUE)
 out
 */
 
