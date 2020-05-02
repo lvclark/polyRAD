@@ -315,3 +315,40 @@ Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE){
   # export
   write.csv(outdata, file = file, row.names = FALSE, quote = FALSE)
 }
+
+RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE){
+  
+  # Determine most probable genotypes, and their ploidies
+  temp <- GetProbableGenotypes(object, omit1allelePerLocus = FALSE)
+  geno <- temp$genotypes
+  pld_index <- temp$ploidy_index
+  pld_ind_per_loc <- 
+    tapply(pld_index, object$alleles2loc,
+           function(x){
+             u <- unique(x)
+             if(length(u) == 1){
+               return(u)
+             } else {
+               return(as.integer(names(which.max(table(x)))))
+             }
+           })
+  pld_per_loc <- sapply(object$priorProbPloidies, sum)[pld_ind_per_loc]
+  
+  # Process data with internal RCpp function
+  temp <- PrepVCFexport(genotypes, object$alleles2loc, object$alleleDepth,
+                        object$alleleNucleotides, object$locTable, pld_per_loc,
+                        asSNPs)
+  REF <- Biostrings::DNAStringSet(temp$REF)
+  ALT <- Biostrings::DNAStringSetList(temp$ALT)
+  CHROM <- object$locTable$Chr[temmp$Lookup]
+  rr <- GenomicRanges::GRanges(CHROM,
+                IRanges::IRanges(start = temp$POS, width = nchar(REF)))
+  fixed <- S4Vectors::DataFrame(REF = REF, ALT = ALT)
+  cd <- S4Vectors::DataFrame(row.names = GetTaxa(object))
+  
+  vcf <- VariantAnnotation::VCF(rowRanges = rr, fixed = fixed, colData = cd,
+                                collapsed = TRUE) ## need to add header
+  VariantAnnotation::geno(vcf)$GT <- temp$GT
+  VariantAnnotation::geno(vcf)$AD <- temp$AD
+  
+}
