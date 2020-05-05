@@ -317,6 +317,10 @@ Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE){
 }
 
 RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE){
+  varok <- attr(object$alleleNucleotides, "Variable_sites_only")
+  if(is.null(varok) || varok){
+    stop("Complete haplotype information not provided; unable to determine SNP positions.  Use refgenome argument in VCF2RADdata.")
+  }
   
   # Determine most probable genotypes, and their ploidies
   temp <- GetProbableGenotypes(object, omit1allelePerLocus = FALSE)
