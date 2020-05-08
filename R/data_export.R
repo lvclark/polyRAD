@@ -324,6 +324,13 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE){
   if(is.null(varok) || varok){
     stop("Complete haplotype information not provided; unable to determine SNP positions.  Use refgenome argument in VCF2RADdata.")
   }
+  if(is.null(object$locTable$Chr) || is.null(object$locTable$Pos)){
+    stop("Need chromosome and position information (Chr and Pos in locTable).")
+  }
+  if(is.null(object$locTable$Ref)){
+    warning("Reference allele not indicated.  Using the major allele for each locus.")
+    object$locTable$Ref <- object$alleleNucleotides[OneAllelePerMarker(object, commonAllele = TRUE)]
+  }
   
   # Determine most probable genotypes, and their ploidies
   temp <- GetProbableGenotypes(object, omit1allelePerLocus = FALSE)
@@ -342,22 +349,23 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE){
   pld_per_loc <- sapply(object$priorProbPloidies, sum)[pld_ind_per_loc]
   
   # Process data with internal RCpp function
-  temp <- PrepVCFexport(genotypes, object$alleles2loc, object$alleleDepth,
+  temp <- PrepVCFexport(geno, object$alleles2loc, object$alleleDepth,
                         object$alleleNucleotides, object$locTable, pld_per_loc,
                         asSNPs)
   REF <- Biostrings::DNAStringSet(temp$REF)
   ALT <- Biostrings::DNAStringSetList(temp$ALT)
-  CHROM <- object$locTable$Chr[temp$Lookup]
+  CHROM <- as.character(object$locTable$Chr)[temp$Lookup]
   rr <- GenomicRanges::GRanges(CHROM,
-                IRanges::IRanges(start = temp$POS, width = nchar(REF)))
+                IRanges::IRanges(start = temp$POS, 
+                                 width = BiocGenerics::width(REF)))
   fixed <- DataFrame(REF = REF, ALT = ALT)
   cd <- DataFrame(row.names = GetTaxa(object))
   DP <- t(object$locDepth[,as.character(temp$Lookup)])
   rownames(DP) <- NULL
-  info <- DataFrame(NS = rowSums(DP > 0), DP = rowSums(DP))
+  info <- DataFrame(NS = rowSums(DP > 0), DP = rowSums(DP)) ## add lookup, Hind/He
   
   # Build VCF object
-  hdr <- VariantAnnotation::VCFHeader(reference = unique(object$locTable$Chr),
+  hdr <- VariantAnnotation::VCFHeader(reference = unique(CHROM),
     samples = GetTaxa(object),
     IRanges::DataFrameList(fileformat = DataFrame(row.names = "fileformat", Value = "VCFv4.3"),
                            fileDate = DataFrame(row.names = "fileDate", Value = gsub("-", "", Sys.Date())),
@@ -374,7 +382,7 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE){
   
   # output
   if(!is.null(file)){
-    writeVcf(vcf, file)
+    VariantAnnotation::writeVcf(vcf, file)
   }
   return(vcf)
 }
