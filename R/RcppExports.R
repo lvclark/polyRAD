@@ -33,8 +33,24 @@ HoTwoParents <- function(genotypes1, genotypes2, alleles2loc, keeploc, ploidy) {
     .Call('_polyRAD_HoTwoParents', PACKAGE = 'polyRAD', genotypes1, genotypes2, alleles2loc, keeploc, ploidy)
 }
 
+Hap2SNP <- function(haps, refhap, pos) {
+    .Call('_polyRAD_Hap2SNP', PACKAGE = 'polyRAD', haps, refhap, pos)
+}
+
+Hap2Hap <- function(haps, refhap, pos) {
+    .Call('_polyRAD_Hap2Hap', PACKAGE = 'polyRAD', haps, refhap, pos)
+}
+
 InitHapAssign <- function(NMmat) {
     .Call('_polyRAD_InitHapAssign', PACKAGE = 'polyRAD', NMmat)
+}
+
+MakeGTstrings <- function(genotypes, ploidy) {
+    .Call('_polyRAD_MakeGTstrings', PACKAGE = 'polyRAD', genotypes, ploidy)
+}
+
+PrepVCFexport <- function(genotypes, alleles2loc, alleleDepth, alleleNucleotides, locTable, ploidy, asSNPs) {
+    .Call('_polyRAD_PrepVCFexport', PACKAGE = 'polyRAD', genotypes, alleles2loc, alleleDepth, alleleNucleotides, locTable, ploidy, asSNPs)
 }
 
 ThirdDimProd <- function(probs, ngen, ntaxa) {
