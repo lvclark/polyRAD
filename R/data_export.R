@@ -317,6 +317,9 @@ Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE){
 }
 
 RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE){
+  # shortcuts to functions to use
+  DataFrame <- S4Vectors::DataFrame
+  
   varok <- attr(object$alleleNucleotides, "Variable_sites_only")
   if(is.null(varok) || varok){
     stop("Complete haplotype information not provided; unable to determine SNP positions.  Use refgenome argument in VCF2RADdata.")
@@ -344,15 +347,34 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE){
                         asSNPs)
   REF <- Biostrings::DNAStringSet(temp$REF)
   ALT <- Biostrings::DNAStringSetList(temp$ALT)
-  CHROM <- object$locTable$Chr[temmp$Lookup]
+  CHROM <- object$locTable$Chr[temp$Lookup]
   rr <- GenomicRanges::GRanges(CHROM,
                 IRanges::IRanges(start = temp$POS, width = nchar(REF)))
-  fixed <- S4Vectors::DataFrame(REF = REF, ALT = ALT)
-  cd <- S4Vectors::DataFrame(row.names = GetTaxa(object))
+  fixed <- DataFrame(REF = REF, ALT = ALT)
+  cd <- DataFrame(row.names = GetTaxa(object))
+  DP <- t(object$locDepth[,as.character(temp$Lookup)])
+  rownames(DP) <- NULL
+  info <- DataFrame(NS = rowSums(DP > 0), DP = rowSums(DP))
   
-  vcf <- VariantAnnotation::VCF(rowRanges = rr, fixed = fixed, colData = cd,
-                                collapsed = TRUE) ## need to add header
-  VariantAnnotation::geno(vcf)$GT <- temp$GT
-  VariantAnnotation::geno(vcf)$AD <- temp$AD
+  # Build VCF object
+  hdr <- VariantAnnotation::VCFHeader(reference = unique(object$locTable$Chr),
+    samples = GetTaxa(object),
+    IRanges::DataFrameList(fileformat = DataFrame(row.names = "fileformat", Value = "VCFv4.3"),
+                           fileDate = DataFrame(row.names = "fileDate", Value = gsub("-", "", Sys.Date())),
+                           source = DataFrame(row.names = "source", Value = paste0("polyRADv", packageVersion("polyRAD"))),
+                           FORMAT = DataFrame(row.names = c("GT", "AD", "DP"),
+                                              Number = c("1", "R", "1"), Type = c("String", "Integer", "Integer"),
+                                              Description = c("Genotype", "Read depth for each allele", "Read depth")),
+                           INFO = DataFrame(row.names = c("NS", "DP"), Number = c("1", "1"),
+                                            Type = c("Integer", "Integer"),
+                                            Description = c("Number of samples with data", "Combined depth across samples"))))
+  vcf <- VariantAnnotation::VCF(rowRanges = rr, fixed = fixed, info = info, colData = cd,
+                                geno = S4Vectors::SimpleList(GT = temp$GT, AD = temp$AD, DP = DP),
+                                exptData = list(header = hdr), collapsed = TRUE)
   
+  # output
+  if(!is.null(file)){
+    writeVcf(vcf, file)
+  }
+  return(vcf)
 }
