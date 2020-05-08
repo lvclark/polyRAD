@@ -33,16 +33,16 @@ HoTwoParents <- function(genotypes1, genotypes2, alleles2loc, keeploc, ploidy) {
     .Call('_polyRAD_HoTwoParents', PACKAGE = 'polyRAD', genotypes1, genotypes2, alleles2loc, keeploc, ploidy)
 }
 
+InitHapAssign <- function(NMmat) {
+    .Call('_polyRAD_InitHapAssign', PACKAGE = 'polyRAD', NMmat)
+}
+
 Hap2SNP <- function(haps, refhap, pos) {
     .Call('_polyRAD_Hap2SNP', PACKAGE = 'polyRAD', haps, refhap, pos)
 }
 
 Hap2Hap <- function(haps, refhap, pos) {
     .Call('_polyRAD_Hap2Hap', PACKAGE = 'polyRAD', haps, refhap, pos)
-}
-
-InitHapAssign <- function(NMmat) {
-    .Call('_polyRAD_InitHapAssign', PACKAGE = 'polyRAD', NMmat)
 }
 
 MakeGTstrings <- function(genotypes, ploidy) {

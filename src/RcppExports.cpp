@@ -116,6 +116,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// InitHapAssign
+IntegerVector InitHapAssign(IntegerMatrix NMmat);
+RcppExport SEXP _polyRAD_InitHapAssign(SEXP NMmatSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type NMmat(NMmatSEXP);
+    rcpp_result_gen = Rcpp::wrap(InitHapAssign(NMmat));
+    return rcpp_result_gen;
+END_RCPP
+}
 // Hap2SNP
 List Hap2SNP(StringVector haps, std::string refhap, int pos);
 RcppExport SEXP _polyRAD_Hap2SNP(SEXP hapsSEXP, SEXP refhapSEXP, SEXP posSEXP) {
@@ -139,17 +150,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::string >::type refhap(refhapSEXP);
     Rcpp::traits::input_parameter< int >::type pos(posSEXP);
     rcpp_result_gen = Rcpp::wrap(Hap2Hap(haps, refhap, pos));
-    return rcpp_result_gen;
-END_RCPP
-}
-// InitHapAssign
-IntegerVector InitHapAssign(IntegerMatrix NMmat);
-RcppExport SEXP _polyRAD_InitHapAssign(SEXP NMmatSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerMatrix >::type NMmat(NMmatSEXP);
-    rcpp_result_gen = Rcpp::wrap(InitHapAssign(NMmat));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -205,9 +205,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_polyRAD_HindHeMat", (DL_FUNC) &_polyRAD_HindHeMat, 5},
     {"_polyRAD_HoOneParent", (DL_FUNC) &_polyRAD_HoOneParent, 4},
     {"_polyRAD_HoTwoParents", (DL_FUNC) &_polyRAD_HoTwoParents, 5},
+    {"_polyRAD_InitHapAssign", (DL_FUNC) &_polyRAD_InitHapAssign, 1},
     {"_polyRAD_Hap2SNP", (DL_FUNC) &_polyRAD_Hap2SNP, 3},
     {"_polyRAD_Hap2Hap", (DL_FUNC) &_polyRAD_Hap2Hap, 3},
-    {"_polyRAD_InitHapAssign", (DL_FUNC) &_polyRAD_InitHapAssign, 1},
     {"_polyRAD_MakeGTstrings", (DL_FUNC) &_polyRAD_MakeGTstrings, 2},
     {"_polyRAD_PrepVCFexport", (DL_FUNC) &_polyRAD_PrepVCFexport, 7},
     {"_polyRAD_ThirdDimProd", (DL_FUNC) &_polyRAD_ThirdDimProd, 3},
