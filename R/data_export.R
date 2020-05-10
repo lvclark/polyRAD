@@ -389,7 +389,7 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE,
     infohdr <- rbind(infohdr,
                      DataFrame(row.names = "HH", Number = "1", Type = "Float",
                                Description = "Hind/He for the locus in the RADdata object"))
-    metahdr <- DataFrame(row.names = "HH", Number = "1", Type = "Integer",
+    metahdr <- DataFrame(row.names = "HH", Number = "1", Type = "Float",
                          Description = "Hind/He for the sample, averaged across loci in the RADdata object")
     hh <- HindHe(object)
     info$HH <- colMeans(hh, na.rm = TRUE)[temp$Lookup]
