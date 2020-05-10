@@ -22,7 +22,7 @@ Description: Read depth data from genotyping-by-sequencing (GBS) or restriction
   probabilities, posterior mean genotypes, or most probable genotypes can then
   be exported for downstream analysis.  'polyRAD' is described by Clark et al.
   (2019) <doi:10.1534/g3.118.200913>.  A variant calling pipeline for highly
-  duplicated genomes is also included and will be described in an upcoming
-  preprint.
+  duplicated genomes is also included and is described by Clark et al. (2020)
+  <doi:10.1101/2020.01.11.902890>.
 License: GPL (>= 2)
 URL: https://github.com/lvclark/polyRAD
