@@ -317,7 +317,8 @@ Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE){
 }
 
 RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE,
-                        sampleinfo = data.frame(row.names = GetTaxa(object))){
+                        sampleinfo = data.frame(row.names = GetTaxa(object)),
+                        contigs = data.frame(row.names = unique(object$locTable$Chr))){
   # shortcuts to functions to use
   DataFrame <- S4Vectors::DataFrame
   
@@ -376,6 +377,12 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE,
                        Description = c("Number of samples with data", "Combined depth across samples",
                                        "Lookup index of marker in RADdata object"))
   metahdr <- DataFrame()
+  if(ncol(contigs) > 0){
+    ctg <- DataFrame(row.names = rownames(contigs), contigs)
+    colnames(ctg) <- colnames(contigs)
+  } else {
+    ctg <- DataFrame(row.names = rownames(contigs))
+  }
   
   # Add Hind/He if desired
   if(hindhe){
@@ -390,7 +397,7 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE,
   }
   
   # Build VCF object
-  hdr <- VariantAnnotation::VCFHeader(reference = unique(CHROM),
+  hdr <- VariantAnnotation::VCFHeader(reference = rownames(ctg),
     samples = GetTaxa(object),
     IRanges::DataFrameList(fileformat = DataFrame(row.names = "fileformat", Value = "VCFv4.3"),
                            fileDate = DataFrame(row.names = "fileDate", Value = gsub("-", "", Sys.Date())),
@@ -398,7 +405,7 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE,
                            FORMAT = DataFrame(row.names = c("GT", "AD", "DP"),
                                               Number = c("1", "R", "1"), Type = c("String", "Integer", "Integer"),
                                               Description = c("Genotype", "Read depth for each allele", "Read depth")),
-                           INFO = infohdr, META = metahdr))
+                           INFO = infohdr, META = metahdr, contig = ctg))
   if(ncol(cd) > 0){
     meta(hdr)$SAMPLE <- cd
   }
