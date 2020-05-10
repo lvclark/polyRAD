@@ -316,7 +316,8 @@ Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE){
   write.csv(outdata, file = file, row.names = FALSE, quote = FALSE)
 }
 
-RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE){
+RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE,
+                        sampleinfo = data.frame(row.names = GetTaxa(object))){
   # shortcuts to functions to use
   DataFrame <- S4Vectors::DataFrame
   
@@ -330,6 +331,9 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE){
   if(is.null(object$locTable$Ref)){
     warning("Reference allele not indicated.  Using the major allele for each locus.")
     object$locTable$Ref <- object$alleleNucleotides[OneAllelePerMarker(object, commonAllele = TRUE)]
+  }
+  if(nrow(sampleinfo) != nTaxa(object) || !all(rownames(sampleinfo) %in% GetTaxa(object))){
+    "sampleinfo doesn't match taxa in RADdata object."
   }
   
   # Determine most probable genotypes, and their ploidies
@@ -360,6 +364,10 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE){
                                  width = BiocGenerics::width(REF)))
   fixed <- DataFrame(REF = REF, ALT = ALT)
   cd <- DataFrame(row.names = GetTaxa(object))
+  if(ncol(sampleinfo) > 0){
+    cd <- cbind(cd, sampleinfo[GetTaxa(object),])
+    colnames(cd) <- colnames(sampleinfo)
+  }
   DP <- t(object$locDepth[,as.character(temp$Lookup)])
   rownames(DP) <- NULL
   info <- DataFrame(NS = rowSums(DP > 0), DP = rowSums(DP), LU = temp$Lookup)
