@@ -362,7 +362,7 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE){
   cd <- DataFrame(row.names = GetTaxa(object))
   DP <- t(object$locDepth[,as.character(temp$Lookup)])
   rownames(DP) <- NULL
-  info <- DataFrame(NS = rowSums(DP > 0), DP = rowSums(DP)) ## add lookup, Hind/He
+  info <- DataFrame(NS = rowSums(DP > 0), DP = rowSums(DP), LU = temp$Lookup) ## add Hind/He
   
   # Build VCF object
   hdr <- VariantAnnotation::VCFHeader(reference = unique(CHROM),
@@ -373,9 +373,10 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE){
                            FORMAT = DataFrame(row.names = c("GT", "AD", "DP"),
                                               Number = c("1", "R", "1"), Type = c("String", "Integer", "Integer"),
                                               Description = c("Genotype", "Read depth for each allele", "Read depth")),
-                           INFO = DataFrame(row.names = c("NS", "DP"), Number = c("1", "1"),
-                                            Type = c("Integer", "Integer"),
-                                            Description = c("Number of samples with data", "Combined depth across samples"))))
+                           INFO = DataFrame(row.names = c("NS", "DP", "LU"), Number = c("1", "1", "1"),
+                                            Type = c("Integer", "Integer", "Integer"),
+                                            Description = c("Number of samples with data", "Combined depth across samples",
+                                                            "Lookup index of marker in RADdata object"))))
   vcf <- VariantAnnotation::VCF(rowRanges = rr, fixed = fixed, info = info, colData = cd,
                                 geno = S4Vectors::SimpleList(GT = temp$GT, AD = temp$AD, DP = DP),
                                 exptData = list(header = hdr), collapsed = TRUE)
