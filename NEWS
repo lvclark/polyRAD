@@ -13,6 +13,8 @@ Duplicated Genomes" (isolocus_sorting.Rmd).  The functions readProcessSamMulti
 and readProcessIsoloci have been added for import of data from the Python
 scripts into polyRAD.
 
+The function RADdata2VCF has been added for export to VCF.
+
 A Python script has been added to help identify full tag sequences for alleles
 imported from TASSEL-GBSv2 using VCF2RADdata.
 
