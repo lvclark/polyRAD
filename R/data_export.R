@@ -316,7 +316,7 @@ Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE){
   write.csv(outdata, file = file, row.names = FALSE, quote = FALSE)
 }
 
-RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE){
+RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE){
   # shortcuts to functions to use
   DataFrame <- S4Vectors::DataFrame
   
@@ -362,7 +362,24 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE){
   cd <- DataFrame(row.names = GetTaxa(object))
   DP <- t(object$locDepth[,as.character(temp$Lookup)])
   rownames(DP) <- NULL
-  info <- DataFrame(NS = rowSums(DP > 0), DP = rowSums(DP), LU = temp$Lookup) ## add Hind/He
+  info <- DataFrame(NS = rowSums(DP > 0), DP = rowSums(DP), LU = temp$Lookup)
+  infohdr <- DataFrame(row.names = c("NS", "DP", "LU"), Number = c("1", "1", "1"),
+                       Type = c("Integer", "Integer", "Integer"),
+                       Description = c("Number of samples with data", "Combined depth across samples",
+                                       "Lookup index of marker in RADdata object"))
+  metahdr <- DataFrame()
+  
+  # Add Hind/He if desired
+  if(hindhe){
+    infohdr <- rbind(infohdr,
+                     DataFrame(row.names = "HH", Number = "1", Type = "Float",
+                               Description = "Hind/He for the locus in the RADdata object"))
+    metahdr <- DataFrame(row.names = "HH", Number = "1", Type = "Integer",
+                         Description = "Hind/He for the sample, averaged across loci in the RADdata object")
+    hh <- HindHe(object)
+    info$HH <- colMeans(hh, na.rm = TRUE)[temp$Lookup]
+    cd$HH <- rowMeans(hh, na.rm = TRUE)
+  }
   
   # Build VCF object
   hdr <- VariantAnnotation::VCFHeader(reference = unique(CHROM),
@@ -373,10 +390,7 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE){
                            FORMAT = DataFrame(row.names = c("GT", "AD", "DP"),
                                               Number = c("1", "R", "1"), Type = c("String", "Integer", "Integer"),
                                               Description = c("Genotype", "Read depth for each allele", "Read depth")),
-                           INFO = DataFrame(row.names = c("NS", "DP", "LU"), Number = c("1", "1", "1"),
-                                            Type = c("Integer", "Integer", "Integer"),
-                                            Description = c("Number of samples with data", "Combined depth across samples",
-                                                            "Lookup index of marker in RADdata object"))))
+                           INFO = infohdr, META = metahdr))
   vcf <- VariantAnnotation::VCF(rowRanges = rr, fixed = fixed, info = info, colData = cd,
                                 geno = S4Vectors::SimpleList(GT = temp$GT, AD = temp$AD, DP = DP),
                                 exptData = list(header = hdr), collapsed = TRUE)
