@@ -1237,12 +1237,12 @@ readTASSELGBSv2 <- function(tagtaxadistFile, samFile, min.ind.with.reads = 200,
   
   # build RADdata object
   message("Building RADdata object...")
-  attr(samseq, "Variable_sites_only") <- FALSE
   radout <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
                     contamRate, samseq)
   radout <- MergeRareHaplotypes(radout, 
                                 min.ind.with.haplotype = min.ind.with.minor.allele)
   radout <- RemoveMonomorphicLoci(radout)
+  attr(radout$alleleNucleotides, "Variable_sites_only") <- FALSE
   return(radout)
 }
 
