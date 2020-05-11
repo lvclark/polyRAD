@@ -907,8 +907,6 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   alleles2loc <- alleles2loc[1:currAl]
   alleleNucleotides <- alleleNucleotides[1:currAl]
   locTable <- locTable[1:currLoc, ]
-  # indicate whether non-variable sites included in alleleNucleotides
-  attr(alleleNucleotides, "Variable_sites_only") <- is.null(refgenome)
 
   # build RADdata object
   message("Building RADdata object...")
@@ -918,6 +916,9 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   radout <- MergeRareHaplotypes(radout, 
                                 min.ind.with.haplotype = min.ind.with.minor.allele)
   radout <- RemoveMonomorphicLoci(radout)
+  
+  # indicate whether non-variable sites included in alleleNucleotides
+  attr(radout$alleleNucleotides, "Variable_sites_only") <- is.null(refgenome)
   
   return(radout)
 }

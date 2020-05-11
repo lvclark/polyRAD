@@ -407,7 +407,7 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE,
                                               Description = c("Genotype", "Read depth for each allele", "Read depth")),
                            INFO = infohdr, META = metahdr, contig = ctg))
   if(ncol(cd) > 0){
-    meta(hdr)$SAMPLE <- cd
+    VariantAnnotation::meta(hdr)$SAMPLE <- cd
   }
   vcf <- VariantAnnotation::VCF(rowRanges = rr, fixed = fixed, info = info, colData = cd,
                                 geno = S4Vectors::SimpleList(GT = temp$GT, AD = temp$AD, DP = DP),
