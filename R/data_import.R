@@ -200,6 +200,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
   locTableOut <- data.frame(row.names = as.character(1:nLoc),
                             Chr = character(nLoc),
                             Pos = integer(nLoc),
+                            Ref = character(nLoc),
                             stringsAsFactors = FALSE)
   
   # variables to keep track of which allele and locus we are on
@@ -456,6 +457,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
     lastName <- row.names(locTable)[chrset[1]]
     lastPos <- locTable$Pos[chrset[1]]
     lastSeq <- alleleNucleotides[alleles2loc == chrset[1]]
+    lastRef <- locTable$Ref[chrset[1]]
     
     # loop through loci on this chromosome
     for(currLocIn in 2:(length(chrset)+1)){
@@ -465,6 +467,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         thisName <- row.names(locTable)[chrset[currLocIn]]
         thisPos <- locTable$Pos[chrset[currLocIn]]
         thisSeq <- alleleNucleotides[alleles2loc == chrset[currLocIn]]
+        thisRef <- locTable$Ref[chrset[currLocIn]]
         
         # get proportion difference in depth between these two loci
         diff <- sum(abs(rowSums(thisDepth) - rowSums(lastDepth))) / 
@@ -487,6 +490,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         row.names(locTableOut)[currLocOut] <- lastName
         locTableOut$Chr[currLocOut] <- thisChrom
         locTableOut$Pos[currLocOut] <- lastPos
+        locTableOut$Ref[currLocOut] <- lastRef
         
         if(length(chrset) > 1){
           # shift "this" locus to "last" locus
@@ -494,6 +498,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
           lastName <- thisName
           lastPos <- thisPos
           lastSeq <- thisSeq
+          lastRef <- thisRef
         }
         
         # increment current allele and locus
@@ -529,8 +534,10 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
                                                  endPosFromReference),
                                         strand = "+"))[[1]]
           lastSeq <- paste(lastSeq, nonvarSeq, sep = "")
+          lastRef <- paste(lastRef, nonvarSeq, sep = "")
         }
         lastSeq <- paste(lastSeq[alMatch[,1]], thisSeq[alMatch[,2]], sep = "")
+        lastRef <- paste(lastRef, thisRef, sep = "")
         
         # make new depth matrix
 #        print(c(lastName, thisName)) # debug
@@ -669,6 +676,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   locTable <- data.frame(row.names = as.character(1:expectedLoci),
                          Chr = character(expectedLoci), 
                          Pos = integer(expectedLoci),
+                         Ref = character(expectedLoci),
                          matrix(nrow = expectedLoci, ncol = length(extracols),
                                 dimnames = list(NULL, extracols)),
                          stringsAsFactors = FALSE)
@@ -732,6 +740,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
     thisLocTable <- data.frame(row.names = make.unique(row.names(vcf)),
                                Chr = as.character(SummarizedExperiment::seqnames(vcf)),
                                Pos = Biostrings::start(vcf),
+                               Ref = thisRef,
                                S4Vectors::mcols(vcf)[,extracols],
                                stringsAsFactors = FALSE)
     # set up depth matrix
