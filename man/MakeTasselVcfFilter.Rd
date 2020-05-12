@@ -63,8 +63,12 @@ if(!file.exists(exampleBGZ)){
   indexTabix(exampleBGZ, format = "vcf")
 }
 
+# make a temporary file
+# (for package checks; you don't need to do this in your own code)
+outfile <- tempfile(fileext = ".vcf")
+
 # filter to a new file
-filterVcf(exampleBGZ, destination = "Msi01genes_filtered.vcf", 
+filterVcf(exampleBGZ, destination = outfile, 
           prefilters = FilterRules(list(filterfun)))
 }
 }
