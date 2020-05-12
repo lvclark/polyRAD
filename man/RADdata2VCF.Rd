@@ -94,9 +94,11 @@ mycontigs <- data.frame(row.names = c("1", "4", "6", "9"), length = sample(1e8, 
 # (It is not necessary to use tempfile with your own data)
 outfile <- tempfile(fileext = ".vcf")
 
+\donttest{
 # Export VCF
 testvcf <- RADdata2VCF(exampleRAD, file = outfile, sampleinfo = sampleinfo,
                        contigs = mycontigs)
+}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):
