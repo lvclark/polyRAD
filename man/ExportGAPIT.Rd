@@ -196,7 +196,7 @@ a kinship matrix using separate software such as \pkg{rrBLUP}.
 }
 
 \seealso{
-\code{\link{GetWeightedMeanGenotypes}}
+\code{\link{GetWeightedMeanGenotypes}}, \code{\link{RADdata2VCF}}
 }
 \examples{
 # load example dataset

@@ -55,6 +55,10 @@ INFO fields exported include the standard fields NS (number of samples with more
 than zero reads) and DP (total depth across samples) as well as the custom fields
 LU (index of the marker in the original RADdata object) and HH (Hind/He statistic
 for the marker).
+
+This function requires the BioConductor package \pkg{VariantAnnotation}.
+See \url{https://bioconductor.org/packages/release/bioc/html/VariantAnnotation.html}
+for installation instructions.
 }
 \value{
 A \code{\link[VariantAnnotation:VCF-class]{CollapsedVCF}} object.
@@ -67,7 +71,7 @@ Lindsay V. Clark
 }
 
 \seealso{
-\code{\link{VCF2RADdata}}
+\code{\link{VCF2RADdata}}, \code{\link{ExportGAPIT}}
 }
 \examples{
 # Set up example dataset for export.

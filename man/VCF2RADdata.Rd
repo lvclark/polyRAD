@@ -43,6 +43,8 @@ reference genome is used to insert non-variable nucleotides between the variable
 nucleotides in the \code{alleleNucleotides} slot of the \code{RADdata} output.
 Ignored if \code{phaseSNPs = FALSE}.  Useful if exact SNP positions need to be
 retained for downstream analysis after genotype calling in \pkg{polyRAD}.
+In particular this argument is necessary if you plan to export genotype calls
+back to VCF.
 }
   \item{tol}{
 The proportion by which two SNPs can differ in read depth and still be merged
@@ -152,8 +154,11 @@ Lindsay V. Clark
 \code{\link{MakeTasselVcfFilter}} for filtering to a smaller VCF file before
 reading with \code{VCF2RADdata}.
 
+To export to VCF: \code{\link{RADdata2VCF}}
+
 Other data import functions:  \code{\link{readStacks}}, \code{\link{readHMC}},
-\code{\link{readTagDigger}}, \code{\link{readTASSELGBSv2}}
+\code{\link{readTagDigger}}, \code{\link{readTASSELGBSv2}},
+\code{\link{readProcessIsoloci}}
 }
 \examples{
 # get the example VCF installed with polyRAD
