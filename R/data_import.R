@@ -1,4 +1,4 @@
-# functions for import of data into RADgen object
+# functions for import of data into RADdata object
 
 # Function to import read counts from UNEAK output (HapMap.hmc.txt).
 # includeloci should be a character vector of loci names to keep in output.
@@ -200,6 +200,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
   locTableOut <- data.frame(row.names = as.character(1:nLoc),
                             Chr = character(nLoc),
                             Pos = integer(nLoc),
+                            Ref = character(nLoc),
                             stringsAsFactors = FALSE)
   
   # variables to keep track of which allele and locus we are on
@@ -456,6 +457,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
     lastName <- row.names(locTable)[chrset[1]]
     lastPos <- locTable$Pos[chrset[1]]
     lastSeq <- alleleNucleotides[alleles2loc == chrset[1]]
+    lastRef <- locTable$Ref[chrset[1]]
     
     # loop through loci on this chromosome
     for(currLocIn in 2:(length(chrset)+1)){
@@ -465,6 +467,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         thisName <- row.names(locTable)[chrset[currLocIn]]
         thisPos <- locTable$Pos[chrset[currLocIn]]
         thisSeq <- alleleNucleotides[alleles2loc == chrset[currLocIn]]
+        thisRef <- locTable$Ref[chrset[currLocIn]]
         
         # get proportion difference in depth between these two loci
         diff <- sum(abs(rowSums(thisDepth) - rowSums(lastDepth))) / 
@@ -487,6 +490,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
         row.names(locTableOut)[currLocOut] <- lastName
         locTableOut$Chr[currLocOut] <- thisChrom
         locTableOut$Pos[currLocOut] <- lastPos
+        locTableOut$Ref[currLocOut] <- lastRef
         
         if(length(chrset) > 1){
           # shift "this" locus to "last" locus
@@ -494,6 +498,7 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
           lastName <- thisName
           lastPos <- thisPos
           lastSeq <- thisSeq
+          lastRef <- thisRef
         }
         
         # increment current allele and locus
@@ -529,8 +534,10 @@ consolidateSNPs <- function(alleleDepth, alleles2loc, locTable, alleleNucleotide
                                                  endPosFromReference),
                                         strand = "+"))[[1]]
           lastSeq <- paste(lastSeq, nonvarSeq, sep = "")
+          lastRef <- paste(lastRef, nonvarSeq, sep = "")
         }
         lastSeq <- paste(lastSeq[alMatch[,1]], thisSeq[alMatch[,2]], sep = "")
+        lastRef <- paste(lastRef, thisRef, sep = "")
         
         # make new depth matrix
 #        print(c(lastName, thisName)) # debug
@@ -669,6 +676,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   locTable <- data.frame(row.names = as.character(1:expectedLoci),
                          Chr = character(expectedLoci), 
                          Pos = integer(expectedLoci),
+                         Ref = character(expectedLoci),
                          matrix(nrow = expectedLoci, ncol = length(extracols),
                                 dimnames = list(NULL, extracols)),
                          stringsAsFactors = FALSE)
@@ -732,6 +740,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
     thisLocTable <- data.frame(row.names = make.unique(row.names(vcf)),
                                Chr = as.character(SummarizedExperiment::seqnames(vcf)),
                                Pos = Biostrings::start(vcf),
+                               Ref = thisRef,
                                S4Vectors::mcols(vcf)[,extracols],
                                stringsAsFactors = FALSE)
     # set up depth matrix
@@ -898,8 +907,6 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   alleles2loc <- alleles2loc[1:currAl]
   alleleNucleotides <- alleleNucleotides[1:currAl]
   locTable <- locTable[1:currLoc, ]
-  # indicate whether non-variable sites included in alleleNucleotides
-  attr(alleleNucleotides, "Variable_sites_only") <- is.null(refgenome)
 
   # build RADdata object
   message("Building RADdata object...")
@@ -909,6 +916,9 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   radout <- MergeRareHaplotypes(radout, 
                                 min.ind.with.haplotype = min.ind.with.minor.allele)
   radout <- RemoveMonomorphicLoci(radout)
+  
+  # indicate whether non-variable sites included in alleleNucleotides
+  attr(radout$alleleNucleotides, "Variable_sites_only") <- is.null(refgenome)
   
   return(radout)
 }
@@ -1227,12 +1237,12 @@ readTASSELGBSv2 <- function(tagtaxadistFile, samFile, min.ind.with.reads = 200,
   
   # build RADdata object
   message("Building RADdata object...")
-  attr(samseq, "Variable_sites_only") <- FALSE
   radout <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
                     contamRate, samseq)
   radout <- MergeRareHaplotypes(radout, 
                                 min.ind.with.haplotype = min.ind.with.minor.allele)
   radout <- RemoveMonomorphicLoci(radout)
+  attr(radout$alleleNucleotides, "Variable_sites_only") <- FALSE
   return(radout)
 }
 
@@ -1273,7 +1283,7 @@ readProcessSamMulti <- function(alignfile, depthfile = sub("align", "depth", ali
   # read the files
   nscan <- 1e4 # number of lines to read at once
   whatlistalign <- list(character(), integer(), NULL)
-  whatlistalign <- whatlistalign[c(rep(1, nalign + 1), rep(2, nalign), rep(3, nalign))]
+  whatlistalign <- whatlistalign[c(rep(1, nalign + 1), rep(2, nalign), rep(3, 2 * nalign))]
   whatlistdepth <- list(character(), integer())
   whatlistdepth <- whatlistdepth[c(1, rep(2, nsam))]
   # dummy objects; will hold the last partial marker read
@@ -1400,10 +1410,10 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   incon <- file(sortedfile, open = "r")
   # read header
   header <- scan(incon, sep = ",", nlines = 1, what = character(), quiet = TRUE)
-  samples <- header[-(1:4)]
+  samples <- header[-(1:5)]
   nSam <- length(samples)
-  scanwhat <- list(character(), integer(), character(), NULL, integer())
-  scanwhat <- scanwhat[c(1:4, rep(5, nSam))]
+  scanwhat <- list(character(), integer(), character(), character(), NULL, integer())
+  scanwhat <- scanwhat[c(1:5, rep(6, nSam))]
   
   # read file
   mydata <- scan(incon, sep = ",", what = scanwhat, quiet = TRUE)
@@ -1411,12 +1421,12 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   nAl <- length(mydata[[1]])
   
   # get depth matrix
-  alleleDepth <- matrix(unlist(mydata[(1:nSam) + 4]), nrow = nSam, ncol = nAl,
+  alleleDepth <- matrix(unlist(mydata[(1:nSam) + 5]), nrow = nSam, ncol = nAl,
                          byrow = TRUE, dimnames = list(samples, NULL))
   if(any(is.na(alleleDepth))){
     stop("Missing data in depth matrix.")
   }
-  mydata <- mydata[1:3] # free up space
+  mydata <- mydata[1:4] # free up space
   # factor by locus, sorting locus names
   alleles2loc_factor <- as.factor(mydata[[1]])
   loci <- levels(alleles2loc_factor)
@@ -1427,7 +1437,7 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   message("Filtering and sorting loci...")
   keeploc <- integer(0)
   for(L in 1:nLoc){
-    submat <- alleleDepth[,alleles2loc == L]
+    submat <- alleleDepth[,alleles2loc == L, drop = FALSE]
     depthperind <- rowSums(submat)
     if(sum(depthperind > 0) >= min.ind.with.reads &&
        sum(colSums(submat > 0) >= min.ind.with.minor.allele) > 1 &&
@@ -1442,6 +1452,7 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   alleleDepth <- alleleDepth[,keepal, drop = FALSE]
   alleles2loc <- as.integer(alleles2loc_factor)
   alleleNucleotides <- mydata[[3]][keepal]
+  refNucleotides <- mydata[[4]][keepal]
   colnames(alleleDepth) <- paste(alleles2loc_factor, alleleNucleotides,
                                  sep = "_")
   
@@ -1453,12 +1464,15 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   
   # build locTable
   chrom <- sub("\\-.*$", "", loci)
-  pos <- mydata[[2]][fastmatch::fmatch(loci, mydata[[1]])]
+  loc2al <- fastmatch::fmatch(loci, mydata[[1]])
+  pos <- mydata[[2]][loc2al]
+  ref <- mydata[[4]][loc2al]
   if(!nameFromTagStart){
     loci <- paste(chrom, pos, sep = "-")
   }
   locTable <- data.frame(row.names = loci,
                          Chr = chrom, Pos = pos,
+                         Ref = ref,
                          stringsAsFactors = FALSE)
   
   # build RADdata object
@@ -1466,6 +1480,7 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   attr(alleleNucleotides, "Variable_sites_only") <- FALSE
   radout <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
                     contamRate, alleleNucleotides)
+  radout <- MergeIdenticalHaplotypes(radout)
   if(mergeRareHap){
     radout <- MergeRareHaplotypes(radout, 
                                   min.ind.with.haplotype = min.ind.with.minor.allele)

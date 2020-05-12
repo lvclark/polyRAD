@@ -33,8 +33,9 @@ A data frame, where locus names are row names.  There must be at least as
 many rows as the highest value of \code{alleles2loc}; each number in 
 \code{alleles2loc} corresponds to a row index in \code{locTable}.  No columns
 are required, although if provided a column named \dQuote{Chr} will be used for
-indicating chromosome identities and a column named \dQuote{Pos} will be used
-for indicating physical position.
+indicating chromosome identities, a column named \dQuote{Pos} will be used
+for indicating physical position, and a column named \dQuote{Ref} will be used
+to indicate the reference sequence.
 }
   \item{possiblePloidies}{
 A list, where each item in the list is an integer vector (or a numeric vector
@@ -60,6 +61,23 @@ A \dQuote{RADdata} object.
 Additional arguments to pass to \code{plot}, for example \code{col} or 
 \code{pch}.
 }
+}
+
+\details{
+For a single locus, ideally the string provided in \code{locTable$Ref} and all
+strings in \code{alleleNucleotides} are the same length, so that SNPs and indels
+may be matched by position.  The character \dQuote{-} indicates a deletion with
+respect to the reference, and can be used within \code{alleleNucleotides}.  The
+character \dQuote{.} is a placeholder where other alleles have an insertion with
+respect to the reference, and may be used in \code{locTable$Ref} and
+\code{alleleNucleotides}.  Note that it is possible for the sequence in
+\code{locTable$Ref} to be absent from \code{alleleNucleotides} if the reference
+haplotype is absent from the dataset, as may occur if the reference genome is that
+of a related species and not the actual study species.  For the
+\code{alleleNucleotides} vector, the attribute \code{"Variable_sites_only"}
+indicates whether non-variable sequence in between variants is included; this
+needs to be \code{FALSE} for other functions to determine the position of each
+variant within the set of tags.
 }
 
 \value{

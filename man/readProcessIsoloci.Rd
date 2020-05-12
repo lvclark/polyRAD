@@ -49,9 +49,11 @@ Boolean indicating whether to run \code{\link{MergeRareHaplotypes}} after
 building the \code{"RADdata"} object.
 }
 }
-%%\details{
-%%  ~~ If necessary, more details than the description above ~~
-%%}
+\details{
+\code{\link{MergeIdenticalHaplotypes}} is used internally by this function to
+merge alleles with identical sequence for the region shared by all tags, in
+cases where tags vary in length within a locus.
+}
 \value{
 A \code{"RADdata"} object containing read depth and alignment positions
 from \code{sortedfile}.

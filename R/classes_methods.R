@@ -2274,3 +2274,41 @@ RemoveUngenotypedLoci.RADdata <- function(object, removeNonvariant = TRUE,
   
   return(object)
 }
+
+# Function to merge alleles with identical nucleotides, generally because
+# one tag was truncated with respect to the variable region.
+MergeIdenticalHaplotypes <- function(object, ...){
+  UseMethod("MergeIdenticalHaplotypes", object)
+}
+MergeIdenticalHaplotypes.RADdata <- function(object, ...){
+  if(!is.null(object$alleleFreq) || !is.null(object$depthSamplingPermutations)){
+    stop("Run MergeIdenticalHaplotypes before running any pipeline functions.")
+  }
+  
+  remal <- integer(0) # indices of alleles to remove
+  for(L in 1:nLoci(object)){
+    thesecol <- which(object$alleles2loc == L)
+    dup <- duplicated(object$alleleNucleotides[thesecol])
+    for(al in thesecol[dup]){
+      # find allele to merge this one into
+      alM <- min(thesecol[object$alleleNucleotides[thesecol] == 
+                            object$alleleNucleotides[al]])
+      stopifnot(al != alM)
+      # consolidate read depth
+      object$alleleDepth[,alM] <- object$alleleDepth[,alM] +
+        object$alleleDepth[,al]
+      object$antiAlleleDepth[,alM] <- object$antiAlleleDepth[,alM] -
+        object$alleleDepth[,al]
+    }
+    remal <- c(remal, thesecol[dup])
+  }
+  
+  # remove duplicated alleles from all slots
+  object$alleleDepth <- object$alleleDepth[,-remal]
+  object$antiAlleleDepth <- object$antiAlleleDepth[,-remal]
+  object$alleles2loc <- object$alleles2loc[-remal]
+  object$alleleNucleotides <- object$alleleNucleotides[-remal]
+  object$depthRatio <- object$depthRatio[,-remal]
+  
+  return(object)
+}

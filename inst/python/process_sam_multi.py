@@ -76,18 +76,22 @@ def pad_marker(old_mnames, new_mnames, alignlist):
   for aligninfo in alignlist:
     new_NM = [dummy_NM for i in range(nalign)]
     new_CIGAR = ['' for i in range(nalign)]
+    new_MD = ['' for i in range(nalign)]
     for i in range(len(m_index)):
       mi = m_index[i]
       new_NM[mi] = aligninfo[1][i]
       new_CIGAR[mi] = aligninfo[2][i]
+      new_MD[mi] = aligninfo[3][i]
     new_NM = tuple(new_NM)
     new_CIGAR = tuple(new_CIGAR)
-    new_alignlist.append((aligninfo[0], new_NM, new_CIGAR))
+    new_MD = tuple(new_MD)
+    new_alignlist.append((aligninfo[0], new_NM, new_CIGAR, new_MD))
   return new_alignlist
 
 # subroutine for updating the alignment dictionary
-def update_aligndict(these_mnames, these_NM, these_CIGAR, lasttagseq):
-  these_mnames, these_NM, these_CIGAR = zip(*sorted(zip(these_mnames, these_NM, these_CIGAR)))
+def update_aligndict(these_mnames, these_NM, these_CIGAR, these_MD, lasttagseq):
+  these_mnames, these_NM, these_CIGAR, these_MD = \
+  zip(*sorted(zip(these_mnames, these_NM, these_CIGAR, these_MD)))
   doupdate = True
   if these_mnames not in aligndict.keys():
     # see if any of these alignment locations have been found before
@@ -116,7 +120,7 @@ def update_aligndict(these_mnames, these_NM, these_CIGAR, lasttagseq):
           for m in allalign:
             locsfound[m] = None
           for mset in existing_mnames:
-            del aligndict[mset] 
+            del aligndict[mset]
           doupdate = False
         else: # merge alignment groups
           new_mnames = tuple(sorted(allalign))
@@ -127,18 +131,19 @@ def update_aligndict(these_mnames, these_NM, these_CIGAR, lasttagseq):
             aligndict[new_mnames].extend(pad_marker(old_mnames, new_mnames, aligndict_old[old_mnames]))
             if old_mnames != new_mnames:
               del aligndict[old_mnames]
-          these_updated = pad_marker(these_mnames, new_mnames, [(lasttagseq, these_NM, these_CIGAR)])
+          these_updated = pad_marker(these_mnames, new_mnames, [(lasttagseq, these_NM, these_CIGAR, these_MD)])
           these_mnames = new_mnames
           these_NM = these_updated[0][1]
           these_CIGAR = these_updated[0][2]
+          these_MD = these_updated[0][3]
           for m in these_mnames:
-            locsfound[m] = these_mnames 
+            locsfound[m] = these_mnames
     else:
       aligndict[these_mnames] = [] # new marker
       for m in these_mnames:
         locsfound[m] = these_mnames
   if doupdate:
-    aligndict[these_mnames].append((lasttagseq, these_NM, these_CIGAR))
+    aligndict[these_mnames].append((lasttagseq, these_NM, these_CIGAR, these_MD))
 
 # read the sam file and process to aligndict
 print("Processing SAM...")
@@ -166,20 +171,25 @@ with open(mysam, mode = "r") as samcon:
       strand = "top"
     mname = "{}-{:0>{width}}-{}".format(chrom, pos, strand, width=9)
     if row[17].startswith("NM:i:"):
+      assert row[18].startswith("MD:Z:")
       NM = int(row[17][5:])
+      MD = row[18][5:]
     else:
       assert row[16].startswith("NM:i:")
+      assert row[17].startswith("MD:Z:")
       NM = int(row[16][5:])
+      MD = row[17][5:]
 
     secondary = flag & 256 == 256
     if secondary: # add alignments to the list
       these_mnames.append(mname)
       these_NM.append(NM)
       these_CIGAR.append(cigar)
+      these_MD.append(MD)
     else: # start a new tag
       # put the last tag into alignment dict if applicable
       if(len(these_mnames) <= maxalign and lasttagseq != ""):
-        update_aligndict(these_mnames, these_NM, these_CIGAR, lasttagseq)
+        update_aligndict(these_mnames, these_NM, these_CIGAR, these_MD, lasttagseq)
         count += 1
         if count % 10000 == 0:
           print("{} tags aligning".format(count))
@@ -188,10 +198,11 @@ with open(mysam, mode = "r") as samcon:
       these_mnames = [mname]
       these_NM = [NM]
       these_CIGAR = [cigar]
+      these_MD = [MD]
 
 # write the last marker to dict if necessary
 if(len(these_mnames) <= maxalign):
-  update_aligndict(these_mnames, these_NM, these_CIGAR, lasttagseq)
+  update_aligndict(these_mnames, these_NM, these_CIGAR, these_MD, lasttagseq)
   count += 1
 print("{} tags aligning".format(count))
 
@@ -289,10 +300,11 @@ for chnk in range(nchunks):
     m_tags = [tup[0] for tup in aligndict[m]]
     m_NM = [list(tup[1]) + ['' for i in range(npad)] for tup in aligndict[m]]
     m_CIGAR = [list(tup[2]) + ['' for i in range(npad)] for tup in aligndict[m]]
+    m_MD = [list(tup[3]) + ['' for i in range(npad)] for tup in aligndict[m]]
     nt = len(m_tags) # number of tags for this marker
     assert len(m_NM) == nt
     # add to table
-    tag_table.extend([m_exp + [m_tags[i]] + m_NM[i] + m_CIGAR[i] for i in range(nt)])
+    tag_table.extend([m_exp + [m_tags[i]] + m_NM[i] + m_CIGAR[i] + m_MD[i] for i in range(nt)])
     table_row_per_marker[mi] = range(curr_row, curr_row + nt)
     curr_row += nt
   # extract all tag sequences
@@ -314,7 +326,8 @@ for chnk in range(nchunks):
     mywriter = csv.writer(outcon)
     alignheader = ["Alignment {}".format(i + 1) for i in range(maxalign)] + \
     ["Tag sequence"] + ["NM {}".format(i + 1) for i in range(maxalign)] + \
-    ["CIGAR {}".format(i + 1) for i in range(maxalign)]
+    ["CIGAR {}".format(i + 1) for i in range(maxalign)] + \
+    ["MD {}".format(i + 1) for i in range(maxalign)]
     mywriter.writerow(alignheader)
     [mywriter.writerow(tt) for tt in tag_table]
   with open(ttdout, mode = 'w', newline = '') as outcon:

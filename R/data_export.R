@@ -315,3 +315,107 @@ Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE){
   # export
   write.csv(outdata, file = file, row.names = FALSE, quote = FALSE)
 }
+
+RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE,
+                        sampleinfo = data.frame(row.names = GetTaxa(object)),
+                        contigs = data.frame(row.names = unique(object$locTable$Chr))){
+  # shortcuts to functions to use
+  DataFrame <- S4Vectors::DataFrame
+  
+  varok <- attr(object$alleleNucleotides, "Variable_sites_only")
+  if(is.null(varok) || varok){
+    stop("Complete haplotype information not provided; unable to determine SNP positions.  Use refgenome argument in VCF2RADdata.")
+  }
+  if(is.null(object$locTable$Chr) || is.null(object$locTable$Pos)){
+    stop("Need chromosome and position information (Chr and Pos in locTable).")
+  }
+  if(is.null(object$locTable$Ref)){
+    warning("Reference allele not indicated.  Using the major allele for each locus.")
+    object$locTable$Ref <- object$alleleNucleotides[OneAllelePerMarker(object, commonAllele = TRUE)]
+  }
+  if(nrow(sampleinfo) != nTaxa(object) || !all(rownames(sampleinfo) %in% GetTaxa(object))){
+    "sampleinfo doesn't match taxa in RADdata object."
+  }
+  
+  # Determine most probable genotypes, and their ploidies
+  temp <- GetProbableGenotypes(object, omit1allelePerLocus = FALSE)
+  geno <- temp$genotypes
+  pld_index <- temp$ploidy_index
+  pld_ind_per_loc <- 
+    tapply(pld_index, object$alleles2loc,
+           function(x){
+             u <- unique(x)
+             if(length(u) == 1){
+               return(u)
+             } else {
+               return(as.integer(names(which.max(table(x)))))
+             }
+           })
+  pld_per_loc <- sapply(object$priorProbPloidies, sum)[pld_ind_per_loc]
+  
+  # Process data with internal RCpp function
+  temp <- PrepVCFexport(geno, object$alleles2loc, object$alleleDepth,
+                        object$alleleNucleotides, object$locTable, pld_per_loc,
+                        asSNPs)
+  REF <- Biostrings::DNAStringSet(temp$REF)
+  ALT <- Biostrings::DNAStringSetList(temp$ALT)
+  CHROM <- as.character(object$locTable$Chr)[temp$Lookup]
+  rr <- GenomicRanges::GRanges(CHROM,
+                IRanges::IRanges(start = temp$POS, 
+                                 width = BiocGenerics::width(REF)))
+  fixed <- DataFrame(REF = REF, ALT = ALT)
+  cd <- DataFrame(row.names = GetTaxa(object))
+  if(ncol(sampleinfo) > 0){
+    cd <- cbind(cd, sampleinfo[GetTaxa(object),])
+    colnames(cd) <- colnames(sampleinfo)
+  }
+  DP <- t(object$locDepth[,as.character(temp$Lookup)])
+  rownames(DP) <- NULL
+  info <- DataFrame(NS = rowSums(DP > 0), DP = rowSums(DP), LU = temp$Lookup)
+  infohdr <- DataFrame(row.names = c("NS", "DP", "LU"), Number = c("1", "1", "1"),
+                       Type = c("Integer", "Integer", "Integer"),
+                       Description = c("Number of samples with data", "Combined depth across samples",
+                                       "Lookup index of marker in RADdata object"))
+  metahdr <- DataFrame()
+  if(ncol(contigs) > 0){
+    ctg <- DataFrame(row.names = rownames(contigs), contigs)
+    colnames(ctg) <- colnames(contigs)
+  } else {
+    ctg <- DataFrame(row.names = rownames(contigs))
+  }
+  
+  # Add Hind/He if desired
+  if(hindhe){
+    infohdr <- rbind(infohdr,
+                     DataFrame(row.names = "HH", Number = "1", Type = "Float",
+                               Description = "Hind/He for the locus in the RADdata object"))
+    metahdr <- DataFrame(row.names = "HH", Number = "1", Type = "Float",
+                         Description = "Hind/He for the sample, averaged across loci in the RADdata object")
+    hh <- HindHe(object)
+    info$HH <- colMeans(hh, na.rm = TRUE)[temp$Lookup]
+    cd$HH <- rowMeans(hh, na.rm = TRUE)
+  }
+  
+  # Build VCF object
+  hdr <- VariantAnnotation::VCFHeader(reference = rownames(ctg),
+    samples = GetTaxa(object),
+    IRanges::DataFrameList(fileformat = DataFrame(row.names = "fileformat", Value = "VCFv4.3"),
+                           fileDate = DataFrame(row.names = "fileDate", Value = gsub("-", "", Sys.Date())),
+                           source = DataFrame(row.names = "source", Value = paste0("polyRADv", packageVersion("polyRAD"))),
+                           FORMAT = DataFrame(row.names = c("GT", "AD", "DP"),
+                                              Number = c("1", "R", "1"), Type = c("String", "Integer", "Integer"),
+                                              Description = c("Genotype", "Read depth for each allele", "Read depth")),
+                           INFO = infohdr, META = metahdr, contig = ctg))
+  if(ncol(cd) > 0){
+    VariantAnnotation::meta(hdr)$SAMPLE <- cd
+  }
+  vcf <- VariantAnnotation::VCF(rowRanges = rr, fixed = fixed, info = info, colData = cd,
+                                geno = S4Vectors::SimpleList(GT = temp$GT, AD = temp$AD, DP = DP),
+                                exptData = list(header = hdr), collapsed = TRUE)
+  
+  # output
+  if(!is.null(file)){
+    VariantAnnotation::writeVcf(vcf, file)
+  }
+  return(vcf)
+}

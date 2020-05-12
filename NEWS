@@ -13,6 +13,8 @@ Duplicated Genomes" (isolocus_sorting.Rmd).  The functions readProcessSamMulti
 and readProcessIsoloci have been added for import of data from the Python
 scripts into polyRAD.
 
+The function RADdata2VCF has been added for export to VCF.
+
 A Python script has been added to help identify full tag sequences for alleles
 imported from TASSEL-GBSv2 using VCF2RADdata.
 
@@ -41,6 +43,8 @@ previously in the AddGenotypePriorProb_Mapping2Parents.  This does not
 impact anything frin the user's perspective, but makes the code slightly
 less unweildy and allows parental genotype estimations to be used for other
 purposes.
+
+The MergeIdenticalHaplotypes function has been added.
 
 Internal functions for simulating gametes and calculating their frequencies have
 been corrected so that they still work when only one allele is being simulated.

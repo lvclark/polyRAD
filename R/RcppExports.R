@@ -37,6 +37,22 @@ InitHapAssign <- function(NMmat) {
     .Call('_polyRAD_InitHapAssign', PACKAGE = 'polyRAD', NMmat)
 }
 
+Hap2SNP <- function(haps, refhap, pos) {
+    .Call('_polyRAD_Hap2SNP', PACKAGE = 'polyRAD', haps, refhap, pos)
+}
+
+Hap2Hap <- function(haps, refhap, pos) {
+    .Call('_polyRAD_Hap2Hap', PACKAGE = 'polyRAD', haps, refhap, pos)
+}
+
+MakeGTstrings <- function(genotypes, ploidy) {
+    .Call('_polyRAD_MakeGTstrings', PACKAGE = 'polyRAD', genotypes, ploidy)
+}
+
+PrepVCFexport <- function(genotypes, alleles2loc, alleleDepth, alleleNucleotides, locTable, ploidy, asSNPs) {
+    .Call('_polyRAD_PrepVCFexport', PACKAGE = 'polyRAD', genotypes, alleles2loc, alleleDepth, alleleNucleotides, locTable, ploidy, asSNPs)
+}
+
 ThirdDimProd <- function(probs, ngen, ntaxa) {
     .Call('_polyRAD_ThirdDimProd', PACKAGE = 'polyRAD', probs, ngen, ntaxa)
 }
