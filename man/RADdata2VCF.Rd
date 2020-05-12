@@ -6,7 +6,7 @@ Export RADdata Genotypes to VCF
 \description{
 Converts genotype calls from \pkg{polyRAD} into VCF format. The user may send
 the results directly to a file, or to a
-\code{\link[=VariantAnnotation:VCF-class]{CollapsedVCF}} for further manipulation.
+\code{\link[VariantAnnotation:VCF-class]{CollapsedVCF}} for further manipulation.
 }
 \usage{
 RADdata2VCF(object, file = NULL, asSNPs = TRUE, hindhe = TRUE,
@@ -57,7 +57,7 @@ LU (index of the marker in the original RADdata object) and HH (Hind/He statisti
 for the marker).
 }
 \value{
-A \code{\link[=VariantAnnotation:VCF-class]{CollapsedVCF}} object.
+A \code{\link[VariantAnnotation:VCF-class]{CollapsedVCF}} object.
 }
 \references{
 \url{https://samtools.github.io/hts-specs/VCFv4.3.pdf}

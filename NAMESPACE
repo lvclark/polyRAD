@@ -28,7 +28,7 @@ TestOverdispersion, VCF2RADdata)
 importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom",
            "hclust", "cutree", "as.dist", "cor", "residuals", "lm.fit", "sd",
            "median")
-importFrom("utils", "read.csv", "write.table", "write.csv")
+importFrom("utils", "read.csv", "write.table", "write.csv", "packageVersion")
 importFrom("fastmatch", "%fin%")
 importFrom("methods", "is")
 importFrom("Rcpp", "evalCpp")
