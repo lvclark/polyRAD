@@ -76,7 +76,7 @@ if (!requireNamespace("BiocManager", quietly = TRUE)){
 BiocManager::install("pcaMethods")
 ```
 
-If you plan to import from VCF, also run
+If you plan to import from or export to VCF, also run
 
 ```
 BiocManager::install("VariantAnnotation")
