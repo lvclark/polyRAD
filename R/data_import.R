@@ -870,7 +870,11 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
       thisAlCol <- (1:thisNallele) + currAl
       if(currAl + thisNallele > ncol(alleleDepth)){
         message("Exceeded expected number of alleles; processing may slow.")
-        alleleDepth <- cbind(alleleDepth[,1:currAl], thisAlDepth)
+        if(currAl == 0){
+          alleleDepth <- thisAlDepth
+        } else {
+          alleleDepth <- cbind(alleleDepth[,1:currAl], thisAlDepth)
+        }
       } else {
         alleleDepth[,thisAlCol] <- thisAlDepth
       }
@@ -879,7 +883,11 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
       alleleNucleotides[thisAlCol] <- thisAlleleNucleotides
       if(currLoc + thisNloc > nrow(locTable)){
         message("Exceeded expected number of loci; processing may slow.")
-        locTable <- rbind(locTable[1:currLoc,], thisLocTable)
+        if(currLoc == 0){
+          locTable <- thisLocTable
+        } else {
+          locTable <- rbind(locTable[1:currLoc,], thisLocTable)
+        }
       } else {
         locTable[(1:thisNloc) + currLoc, ] <- thisLocTable
       }

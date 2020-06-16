@@ -1,3 +1,8 @@
+## Changes in v1.2.1 ##
+
+Fixed a bug in VCF2RADdata that would occur if expectedAlleles or expectedLoci
+were set too low.
+
 ## Changes in v1.2 ##
 
 The functions HindHe and HindHeMapping have been added, to assist with filtering
