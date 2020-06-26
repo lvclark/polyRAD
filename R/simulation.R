@@ -37,3 +37,52 @@ sampleReads <- function(geno, nreads, overdispersion = 20){
 # 
 # median(apply(test1, 1, dmultinom, prob = testprob))
 # median(apply(test2, 1, dmultinom, prob = testprob))
+
+# Wrapper function to simulate an allele depth matrix, given locus depth and genotypes
+simAlleleDepth <- function(locDepth, genotypes, alleles2loc, overdispersion = 20){
+  nsam <- nrow(genotypes)
+  if(nrow(locDepth) != nsam) stop("genotypes and locDepth should have the same number of rows")
+  if(length(alleles2loc) !=  ncol(genotypes)) stop("length of alleles2loc should match number of columns in genotypes.")
+  
+  alleleDepth <- matrix(0L, nrow = nsam, ncol = ncol(genotypes),
+                        dimnames = dimnames(genotypes))
+  for(L in unique(alleles2loc)){
+    thesecol <- which(alleles2loc == L)
+    thisLocDepth <- locDepth[, as.character(L)]
+    for(s in 1:nsam){
+      alleleDepth[s, thesecol] <-
+        sampleReads(genotypes[s, thesecol], thisLocDepth[s], overdispersion)
+    }
+  }
+  
+  return(alleleDepth)
+}
+
+# data(exampleRAD)
+# exampleRAD <- IterateHWE(exampleRAD)
+# mygeno <- GetProbableGenotypes(exampleRAD, omit1allelePerLocus = FALSE)[[1]]
+# 
+# testdepth <- simAlleleDepth(exampleRAD$locDepth, mygeno, exampleRAD$alleles2loc)
+
+# Wrapper function to simulate genotype matrix
+simGenotypes <- function(alleleFreq, alleles2loc, nsam, inbreeding, ploidy){
+  if(length(alleleFreq) != length(alleles2loc)) stop("Need same number of alleles in alleleFreq and alleles2loc.")
+  
+  geno <- matrix(0L, nrow = nsam, ncol = length(alleleFreq),
+                 dimnames = list(NULL, names(alleleFreq)))
+  
+  for(L in unique(alleles2loc)){
+    thesecol <- which(alleles2loc == L)
+    thesefreq <- alleleFreq[thesecol]
+    for(s in 1:nsam){
+      geno[s, thesecol] <- sampleGenotype(thesefreq, inbreeding, ploidy)
+    }
+  }
+  
+  return(geno)
+}
+
+# testgeno <- simGenotypes(exampleRAD$alleleFreq, exampleRAD$alleles2loc, 100, 0.2, 2)
+# mean(testgeno[,1] == 1) # HO of 0.26
+# 1 - sum(exampleRAD$alleleFreq[1:2]^2) # HE of 0.316
+# 1 - (0.26/0.316) # 0.18, about right with sampling error
