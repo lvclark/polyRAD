@@ -15,3 +15,29 @@ sampleGenotype <- function(freq, inbreeding, ploidy){
   
   return(geno)
 }
+
+# Randomly generate reads based on a genotype and overdispersion
+sampleReads <- function(geno, nreads, overdispersion = 9){
+  initprobs <- geno / sum(geno)
+  alpha <- initprobs * overdispersion
+  beta <- overdispersion - alpha
+  newprobs <- rgamma(length(geno), alpha, beta)
+  
+  reads <- sample.int(length(geno), size = nreads, replace = TRUE, prob = newprobs)
+  out <- sapply(1:length(geno), function(x) sum(reads == x))
+  return(out)
+}
+
+# testing
+# sampleReads(c(1, 2, 1), 30, overdispersion = 100)
+# 
+# testprob <- c(0.5, 0.25, 0.25)
+# overdispersion <- 9
+# a <- testprob * overdispersion
+# b <- overdispersion * (1 - testprob)
+# 
+# test1 <- t(sapply(1:1000, function(x) sampleReads(testprob * 4, 30, overdispersion = 100)))
+# test2 <- MultiRNG::draw.multinomial(1000, 3, testprob, 30)
+# 
+# median(apply(test1, 1, dmultinom, prob = testprob))
+# median(apply(test2, 1, dmultinom, prob = testprob))
