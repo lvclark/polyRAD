@@ -1,11 +1,10 @@
 # polyRAD: Genotype Calling with Uncertainty from Sequencing Data in Polyploids and Diploids
 
-This R package is ready for use, although new features are still being developed.  See the [list of future features](https://github.com/lvclark/polyRAD/wiki/todo) to see where it is headed.
+The ultimate goal of polyRAD is to enable research that strives to end world hunger and conserve biodiversity.  On that note, I actively welcome input and contributions from diverse and underrepresented sources to help improve the software, and have adopted the [Contributor Covenant Code of Conduct](https://github.com/lvclark/polyRAD/code_of_conduct.md).  If there is something I can do or add to make polyRAD more useful and approachable to you, [post an issue](https://github.com/lvclark/polyRAD/issues) or send me an [email](mailto:lvclark@illinois.edu)!  If you would like to create a new function yourself of propose edits to the code or documentation, feel free to make a pull request!  All levels of experience are welcome and you can contact me if you aren't sure how to get started with GitHub.  I am also open to collaborations, i.e. improving polyRAD as a component of a grant.
 
-polyRAD is part of an upcoming suite of interoperable software called the
-[ploidyverse](https://github.com/ploidyverse).
+See the [list of future features](https://github.com/lvclark/polyRAD/wiki/todo) for some of the things that I'm already thinking of adding to polyRAD.
 
-I'm always interested in new collaboration!  If you have new feature requests I would love to hear them, especially if you have datasets that you would be willing to share that could be used for testing these new features.  I expect that there will be more publications as polyRAD is developed further, and I am open to adding new coauthors.  Contact: Lindsay Clark, University of Illinois, Urbana-Champaign.
+polyRAD is available on CRAN or can be installed from this repository.
 
 ## Purpose
 

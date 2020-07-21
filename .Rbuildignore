@@ -2,6 +2,7 @@
 ^.gitignore$
 ^.gitattributes$
 ^README.md$
+^code_of_conduct.md$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.Rhistory$
