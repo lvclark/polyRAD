@@ -1,8 +1,9 @@
 ^.git$
 ^.gitignore$
 ^.gitattributes$
-^README.md$
-^code_of_conduct.md$
+^README\.md$
+^code_of_conduct\.md$
+^pull_request_template\.md$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^\.Rhistory$
