@@ -1,6 +1,6 @@
 # polyRAD: Genotype Calling with Uncertainty from Sequencing Data in Polyploids and Diploids
 
-The ultimate goal of polyRAD is to enable research that strives to end world hunger and conserve biodiversity.  On that note, I actively welcome input and contributions from diverse and underrepresented sources to help improve the software, and have adopted the [Contributor Covenant Code of Conduct](https://github.com/lvclark/polyRAD/blob/master/code_of_conduct.md).  If there is something I can do or add to make polyRAD more useful and approachable to you, [post an issue](https://github.com/lvclark/polyRAD/issues) or send me an [email](mailto:lvclark@illinois.edu)!  If you would like to create a new function yourself or propose edits to the code or documentation, feel free to make a pull request!  All levels of experience are welcome and you can contact me if you aren't sure how to get started with GitHub.  I am also open to collaborations, i.e. improving polyRAD as a component of a grant.
+The ultimate goal of polyRAD is to enable research that strives to end world hunger and conserve biodiversity.  On that note, I actively welcome input and contributions from diverse and underrepresented sources to help improve the software, and have adopted the [Contributor Covenant Code of Conduct](https://github.com/lvclark/polyRAD/blob/main/code_of_conduct.md).  If there is something I can do or add to make polyRAD more useful and approachable to you, [post an issue](https://github.com/lvclark/polyRAD/issues) or send me an [email](mailto:lvclark@illinois.edu)!  If you would like to create a new function yourself or propose edits to the code or documentation, feel free to make a pull request!  All levels of experience are welcome and you can contact me if you aren't sure how to get started with GitHub.  I am also open to collaborations, i.e. improving polyRAD as a component of a grant.
 
 See the [list of future features](https://github.com/lvclark/polyRAD/wiki/todo) for some of the things that I'm already thinking of adding to polyRAD.
 
@@ -94,9 +94,9 @@ facilitate installing directly from GitHub.
 
 ## Tutorial
 
-The tutorial document for the package is available [on Github](https://github.com/lvclark/polyRAD/blob/master/vignettes/polyRADtutorial.md).
+The tutorial document for the package is available [on Github](https://github.com/lvclark/polyRAD/blob/main/vignettes/polyRADtutorial.md).
 
-A separate tutorial is available for the [variant calling pipeline](https://github.com/lvclark/polyRAD/blob/master/vignettes/isolocus_sorting.md).
+A separate tutorial is available for the [variant calling pipeline](https://github.com/lvclark/polyRAD/blob/main/vignettes/isolocus_sorting.md).
 
 ## Citation
 
