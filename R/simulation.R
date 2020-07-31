@@ -86,3 +86,49 @@ simGenotypes <- function(alleleFreq, alleles2loc, nsam, inbreeding, ploidy){
 # mean(testgeno[,1] == 1) # HO of 0.26
 # 1 - sum(exampleRAD$alleleFreq[1:2]^2) # HE of 0.316
 # 1 - (0.26/0.316) # 0.18, about right with sampling error
+
+# Get expected Hind/He distribution based on depths and allele freqs in a RADdata object
+expectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
+                           inbreeding = 0, overdispersion = 20, reps = 10,
+                           quiet = FALSE, plot = TRUE){
+  if(length(ploidy) != 1){
+    stop("Please give a single value for ploidy; function assumes diploid or autopolyploid inheritance")
+  }
+  if(is.null(object$alleleFreq)){
+    object <- AddAlleleFreqHWE(object)
+  }
+  ### Add something here to filter based on allele frequency or preliminary Hind/He
+  
+  # matrix of hind/he values for simulated loci
+  out <- matrix(0, nrow = nLoci(object), ncol = reps,
+                dimnames = list(GetLoci(object), NULL))
+  
+  for(i in seq_len(reps)){
+    if(!quiet) message(paste("Simulating rep", i))
+    geno <- simGenotypes(object$alleleFreq, object$alleles2loc, nTaxa(object),
+                         inbreeding, ploidy)
+    depths <- simAlleleDepth(object$locDepth, geno, object$alleles2loc,
+                             overdispersion)
+    rownames(depths) <- GetTaxa(object)
+    simrad <- RADdata(depths, object$alleles2loc, object$locTable,
+                      object$possiblePloidies, GetContamRate(object),
+                      object$alleleNucleotides)
+    out[,i] <- colMeans(HindHe(simrad), na.rm = TRUE)
+  }
+  
+  if(!quiet){
+    cat(c(paste("Mean Hind/He:", mean(out)),
+          paste("Standard deviation:", sd(out))),
+        sep = "\n")
+  }
+  
+  if(plot){
+    hist(out, xlab = "Hind/He", main = "Expected distribution of Hind/He",
+         breaks = 30)
+  }
+  
+  invisible(out)
+}
+
+# data(exampleRAD)
+# expectedHindHe(exampleRAD)

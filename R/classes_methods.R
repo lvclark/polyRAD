@@ -12,6 +12,9 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   if(any(is.na(alleleDepth))){
     stop("There should be no missing data in alleleDepth; put 0 for zero depth.")
   }
+  if(is.null(rownames(alleleDepth))){
+    stop("alleleDepth must have taxa names as row names.")
+  }
   if(length(alleles2loc) != dim(alleleDepth)[[2]]){
     stop("There must be one value of alleles2loc for each column of alleleDepth.")
   }
