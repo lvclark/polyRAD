@@ -6,9 +6,9 @@ sampleGenotype <- function(freq, inbreeding, ploidy){
     # get probability that this allele is the same as a previous one
     repprob <- 1 - (1 - inbreeding) ^ (k - 1)
     if(sample(c(TRUE, FALSE), size = 1, prob = c(repprob, 1 - repprob))){
-      a <- sample(1:nal, size = 1, prob = geno)
+      a <- sample.int(nal, size = 1, prob = geno)
     } else {
-      a <- sample(1:nal, size = 1, prob = freq)
+      a <- sample.int(nal, size = 1, prob = freq)
     }
     geno[a] <- geno[a] + 1L
   }
@@ -20,10 +20,9 @@ sampleGenotype <- function(freq, inbreeding, ploidy){
 sampleReads <- function(geno, nreads, overdispersion = 20){
   initprobs <- geno / sum(geno)
   alpha <- initprobs * overdispersion
-  newprobs <- rgamma(length(geno), alpha, 1)
+  newprobs <- stats::rgamma(length(geno), alpha, 1)
   
-  reads <- sample.int(length(geno), size = nreads, replace = TRUE, prob = newprobs)
-  out <- sapply(1:length(geno), function(x) sum(reads == x))
+  out <- stats::rmultinom(1, size = nreads, prob = newprobs)
   return(out)
 }
 
@@ -132,3 +131,4 @@ expectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
 
 # data(exampleRAD)
 # expectedHindHe(exampleRAD)
+# expectedHindHe(mydata) # get from VCF in tutorial
