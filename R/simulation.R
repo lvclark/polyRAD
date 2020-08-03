@@ -52,7 +52,8 @@ simGenotypes <- function(alleleFreq, alleles2loc, nsam, inbreeding, ploidy){
 
 # Get expected Hind/He distribution based on depths and allele freqs in a RADdata object
 expectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
-                           inbreeding = 0, overdispersion = 20, reps = 10,
+                           inbreeding = 0, overdispersion = 20,
+                           reps = ceiling(5000 / nLoci(object)),
                            quiet = FALSE, plot = TRUE){
   if(length(ploidy) != 1){
     stop("Please give a single value for ploidy; function assumes diploid or autopolyploid inheritance")
@@ -67,7 +68,7 @@ expectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
                 dimnames = list(GetLoci(object), NULL))
   
   for(i in seq_len(reps)){
-    if(!quiet) message(paste("Simulating rep", i))
+    if(!quiet && i %% 10 == 1) message(paste("Simulating rep", i))
     geno <- simGenotypes(object$alleleFreq, object$alleles2loc, nTaxa(object),
                          inbreeding, ploidy)
     depths <- simAlleleDepth(object$locDepth, geno, object$alleles2loc,
@@ -80,6 +81,7 @@ expectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
   }
   
   if(!quiet){
+    message(paste("Completed", reps, "simulation reps."))
     q <- quantile(out, probs = c(0.025, 0.975))
     cat(c(paste("Mean Hind/He:", formatC(mean(out), digits = 3)),
           paste("Standard deviation:", formatC(sd(out), digits = 3)),
@@ -98,4 +100,4 @@ expectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
 
 # data(exampleRAD)
 # expectedHindHe(exampleRAD)
-# expectedHindHe(mydata) # get from VCF in tutorial
+# expectedHindHe(mydata, reps = 10) # get from VCF in tutorial
