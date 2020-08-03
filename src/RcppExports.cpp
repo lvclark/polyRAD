@@ -182,6 +182,35 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// simGeno
+NumericMatrix simGeno(NumericVector alleleFreq, IntegerVector alleles2loc, int nsam, double inbreeding, int ploidy);
+RcppExport SEXP _polyRAD_simGeno(SEXP alleleFreqSEXP, SEXP alleles2locSEXP, SEXP nsamSEXP, SEXP inbreedingSEXP, SEXP ploidySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type alleleFreq(alleleFreqSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type alleles2loc(alleles2locSEXP);
+    Rcpp::traits::input_parameter< int >::type nsam(nsamSEXP);
+    Rcpp::traits::input_parameter< double >::type inbreeding(inbreedingSEXP);
+    Rcpp::traits::input_parameter< int >::type ploidy(ploidySEXP);
+    rcpp_result_gen = Rcpp::wrap(simGeno(alleleFreq, alleles2loc, nsam, inbreeding, ploidy));
+    return rcpp_result_gen;
+END_RCPP
+}
+// simAD
+IntegerMatrix simAD(IntegerMatrix locDepth, NumericMatrix genotypes, IntegerVector alleles2loc, double overdispersion);
+RcppExport SEXP _polyRAD_simAD(SEXP locDepthSEXP, SEXP genotypesSEXP, SEXP alleles2locSEXP, SEXP overdispersionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type locDepth(locDepthSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type genotypes(genotypesSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type alleles2loc(alleles2locSEXP);
+    Rcpp::traits::input_parameter< double >::type overdispersion(overdispersionSEXP);
+    rcpp_result_gen = Rcpp::wrap(simAD(locDepth, genotypes, alleles2loc, overdispersion));
+    return rcpp_result_gen;
+END_RCPP
+}
 // ThirdDimProd
 NumericMatrix ThirdDimProd(NumericVector probs, int ngen, int ntaxa);
 RcppExport SEXP _polyRAD_ThirdDimProd(SEXP probsSEXP, SEXP ngenSEXP, SEXP ntaxaSEXP) {
@@ -210,6 +239,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_polyRAD_Hap2Hap", (DL_FUNC) &_polyRAD_Hap2Hap, 3},
     {"_polyRAD_MakeGTstrings", (DL_FUNC) &_polyRAD_MakeGTstrings, 2},
     {"_polyRAD_PrepVCFexport", (DL_FUNC) &_polyRAD_PrepVCFexport, 7},
+    {"_polyRAD_simGeno", (DL_FUNC) &_polyRAD_simGeno, 5},
+    {"_polyRAD_simAD", (DL_FUNC) &_polyRAD_simAD, 4},
     {"_polyRAD_ThirdDimProd", (DL_FUNC) &_polyRAD_ThirdDimProd, 3},
     {NULL, NULL, 0}
 };

@@ -53,6 +53,14 @@ PrepVCFexport <- function(genotypes, alleles2loc, alleleDepth, alleleNucleotides
     .Call('_polyRAD_PrepVCFexport', PACKAGE = 'polyRAD', genotypes, alleles2loc, alleleDepth, alleleNucleotides, locTable, ploidy, asSNPs)
 }
 
+simGeno <- function(alleleFreq, alleles2loc, nsam, inbreeding, ploidy) {
+    .Call('_polyRAD_simGeno', PACKAGE = 'polyRAD', alleleFreq, alleles2loc, nsam, inbreeding, ploidy)
+}
+
+simAD <- function(locDepth, genotypes, alleles2loc, overdispersion) {
+    .Call('_polyRAD_simAD', PACKAGE = 'polyRAD', locDepth, genotypes, alleles2loc, overdispersion)
+}
+
 ThirdDimProd <- function(probs, ngen, ntaxa) {
     .Call('_polyRAD_ThirdDimProd', PACKAGE = 'polyRAD', probs, ngen, ntaxa)
 }
