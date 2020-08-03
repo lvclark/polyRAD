@@ -50,6 +50,8 @@ have added yourself as a contributor with the "ctb" role in `Author` and
 - [ ] The date in `DESCRIPTION` has been updated.
 - [ ] `README.md` has been updated if necessary, particularly if any new input
 or output formats are supported.
+- [ ] If any Rcpp functions have been added or their arguments modified,
+`Rcpp::compileAttributes` has been run on the package.
 - [ ] After running `R CMD build polyRAD` with the current version of R, the package
 passes `R CMD check polyRAD_x.x.x.tar.gz` (both of these commands are run from the
 terminal, one directory up from the polyRAD directory).  If there are any errors,
