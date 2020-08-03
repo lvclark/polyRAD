@@ -2,7 +2,6 @@
 using namespace Rcpp;
 
 // Randomly genearte a genotype, given allele frequencies and inbreeding
-// [[Rcpp::export]]
 NumericVector sampleGenotype(NumericVector freq, double inbreeding, int ploidy) {
   int nal = freq.size();
   NumericVector geno(nal);
@@ -44,6 +43,33 @@ IntegerVector sampleReads(NumericVector geno, int nreads, double overdispersion)
   IntegerVector readassign = sample(nal, nreads, true, newprobs, false);
   for(int i = 0; i < nreads; i++){
     out[readassign[i]] += 1;
+  }
+  
+  return out;
+}
+
+// Simulate a genotype matrix
+// [[Rcpp::export]]
+NumericMatrix simGeno(NumericVector alleleFreq, IntegerVector alleles2loc, int nsam, double inbreeding, int ploidy){
+  int nal = alleles2loc.size();
+  IntegerVector alleles = seq(0, nal - 1);
+  IntegerVector thesecol;
+  int thisnal;
+  NumericVector thesefreq;
+  NumericVector thisgeno;
+  NumericMatrix out(nsam, nal);
+  int maxL = max(alleles2loc);
+  
+  for(int L = 1; L <= maxL; L++){
+    thesecol = alleles[alleles2loc == L];
+    thesefreq = alleleFreq[thesecol];
+    thisnal = thesecol.size();
+    for(int s = 0; s < nsam; s++){
+      thisgeno = sampleGenotype(thesefreq, inbreeding, ploidy);
+      for(int a = 0; a < thisnal; a++){
+        out(s, thesecol[a]) = thisgeno[a];
+      }
+    }
   }
   
   return out;

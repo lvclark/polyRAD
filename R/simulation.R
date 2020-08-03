@@ -39,16 +39,8 @@ simAlleleDepth <- function(locDepth, genotypes, alleles2loc, overdispersion = 20
 simGenotypes <- function(alleleFreq, alleles2loc, nsam, inbreeding, ploidy){
   if(length(alleleFreq) != length(alleles2loc)) stop("Need same number of alleles in alleleFreq and alleles2loc.")
   
-  geno <- matrix(0L, nrow = nsam, ncol = length(alleleFreq),
-                 dimnames = list(NULL, names(alleleFreq)))
-  
-  for(L in unique(alleles2loc)){
-    thesecol <- which(alleles2loc == L)
-    thesefreq <- alleleFreq[thesecol]
-    for(s in 1:nsam){
-      geno[s, thesecol] <- sampleGenotype(thesefreq, inbreeding, ploidy)
-    }
-  }
+  geno <- simGeno(alleleFreq, alleles2loc, nsam, inbreeding, ploidy) # Rcpp fn
+  colnames(geno) <- names(alleleFreq)
   
   return(geno)
 }
