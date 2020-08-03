@@ -10,7 +10,7 @@
 # median(apply(test2, 1, dmultinom, prob = testprob))
 
 # Wrapper function to simulate an allele depth matrix, given locus depth and genotypes
-simAlleleDepth <- function(locDepth, genotypes, alleles2loc, overdispersion = 20){
+SimAlleleDepth <- function(locDepth, genotypes, alleles2loc, overdispersion = 20){
   nsam <- nrow(genotypes)
   if(nrow(locDepth) != nsam) stop("genotypes and locDepth should have the same number of rows")
   if(length(alleles2loc) !=  ncol(genotypes)) stop("length of alleles2loc should match number of columns in genotypes.")
@@ -34,7 +34,7 @@ simAlleleDepth <- function(locDepth, genotypes, alleles2loc, overdispersion = 20
 # testdepth <- simAlleleDepth(exampleRAD$locDepth, mygeno, exampleRAD$alleles2loc)
 
 # Wrapper function to simulate genotype matrix
-simGenotypes <- function(alleleFreq, alleles2loc, nsam, inbreeding, ploidy){
+SimGenotypes <- function(alleleFreq, alleles2loc, nsam, inbreeding, ploidy){
   if(length(alleleFreq) != length(alleles2loc)) stop("Need same number of alleles in alleleFreq and alleles2loc.")
   
   geno <- simGeno(alleleFreq, alleles2loc, nsam, inbreeding, ploidy) # Rcpp fn
@@ -49,7 +49,7 @@ simGenotypes <- function(alleleFreq, alleles2loc, nsam, inbreeding, ploidy){
 # 1 - (0.26/0.316) # 0.18, about right with sampling error
 
 # Get expected Hind/He distribution based on depths and allele freqs in a RADdata object
-expectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
+ExpectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
                            inbreeding = 0, overdispersion = 20,
                            reps = ceiling(5000 / nLoci(object)),
                            quiet = FALSE, plot = TRUE){
@@ -67,9 +67,9 @@ expectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
   
   for(i in seq_len(reps)){
     if(!quiet && i %% 10 == 1) message(paste("Simulating rep", i))
-    geno <- simGenotypes(object$alleleFreq, object$alleles2loc, nTaxa(object),
+    geno <- SimGenotypes(object$alleleFreq, object$alleles2loc, nTaxa(object),
                          inbreeding, ploidy)
-    depths <- simAlleleDepth(object$locDepth, geno, object$alleles2loc,
+    depths <- SimAlleleDepth(object$locDepth, geno, object$alleles2loc,
                              overdispersion)
     rownames(depths) <- GetTaxa(object)
     simrad <- RADdata(depths, object$alleles2loc, object$locTable,
@@ -83,7 +83,7 @@ expectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
     q <- quantile(out, probs = c(0.025, 0.975))
     cat(c(paste("Mean Hind/He:", formatC(mean(out), digits = 3)),
           paste("Standard deviation:", formatC(sd(out), digits = 3)),
-          paste("95% of observations between", formatC(q[1], digits = 3),
+          paste("95% of observations are between", formatC(q[1], digits = 3),
                 "and", formatC(q[2], digits = 3))),
         sep = "\n")
   }

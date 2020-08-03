@@ -38,7 +38,8 @@ Lindsay V. Clark
 }
 
 \seealso{
-\code{\link{HindHe}}, \code{\link{readProcessSamMulti}}, \code{\link{readProcessIsoloci}}
+\code{\link{HindHe}}, \code{\link{ExpectedHindHe}},
+\code{\link{readProcessSamMulti}}, \code{\link{readProcessIsoloci}}
 }
 \examples{
 InbreedingFromHindHe(0.5, 2)

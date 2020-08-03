@@ -96,6 +96,8 @@ There are also various utilities for manipulating RADdata objects:
 For identifying problematic loci and individuals:
 * `HindHe`
 * `HindHeMapping`
+* `ExpectedHindHe`
+* `InbreedingFromHindHe`
 
 See `?GetTaxa` for a list of accessor functions as well.
 

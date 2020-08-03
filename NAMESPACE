@@ -8,7 +8,7 @@ AddGenotypePriorProb_HWE, AddGenotypePriorProb_LD,
 AddGenotypePriorProb_Mapping2Parents, AddPCA,
 AddPloidyChiSq, AddPloidyLikelihood, AddPriorTimesLikelihood,
 CanDoGetWeightedMeanGeno, EstimateContaminationRate, 
-EstimateParentalGenotypes, ExportGAPIT, Export_GWASpoly,
+EstimateParentalGenotypes, ExpectedHindHe, ExportGAPIT, Export_GWASpoly,
 Export_MAPpoly, Export_polymapR, Export_rrBLUP_Amat, Export_rrBLUP_GWAS,
 Export_TASSEL_Numeric, GetAlleleNames,
 GetBlankTaxa, GetContamRate, GetDonorParent, GetLikelyGen, 
@@ -22,17 +22,18 @@ PipelineMapping2Parents, RADdata, RADdata2VCF, readHMC, readProcessSamMulti,
 readProcessIsoloci,readStacks, readTagDigger, readTASSELGBSv2,
 RemoveHighDepthLoci, RemoveMonomorphicLoci, RemoveUngenotypedLoci,
 SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent,
+SimAlleleDepth, SimGenotypes,
 SplitByChromosome, StripDown, SubsetByLocus, SubsetByPloidy, SubsetByTaxon,
 TestOverdispersion, VCF2RADdata)
 
 importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom",
            "hclust", "cutree", "as.dist", "cor", "residuals", "lm.fit", "sd",
-           "median")
+           "median", "quantile")
 importFrom("utils", "read.csv", "write.table", "write.csv", "packageVersion")
 importFrom("fastmatch", "%fin%")
 importFrom("methods", "is")
 importFrom("Rcpp", "evalCpp")
-importFrom("graphics", "plot", "points", "text")
+importFrom("graphics", "plot", "points", "text", "hist")
 
 S3method(print, RADdata)
 S3method(AddAlleleFreqByTaxa, RADdata)

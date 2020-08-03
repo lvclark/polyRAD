@@ -121,7 +121,8 @@ Lindsay V. Clark
 }
 
 \seealso{
-\code{\link{InbreedingFromHindHe}}
+\code{\link{InbreedingFromHindHe}},
+\code{\link{ExpectedHindHe}}
 }
 \examples{
 data(exampleRAD)
