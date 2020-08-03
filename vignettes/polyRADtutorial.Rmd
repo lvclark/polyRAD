@@ -532,7 +532,7 @@ qq(overdispersionP[["9"]])
 qq(overdispersionP[["10"]])
 ```
 
-Again, nine looks like a good value.
+As with the mapping population, nine looks like a good value.
 
 ### Genotype calling
 
