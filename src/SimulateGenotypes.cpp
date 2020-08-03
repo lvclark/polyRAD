@@ -25,3 +25,26 @@ NumericVector sampleGenotype(NumericVector freq, double inbreeding, int ploidy) 
   
   return geno;
 }
+
+// Randomly generate reads based on a genotype and overdispersion
+// [[Rcpp::export]]
+IntegerVector sampleReads(NumericVector geno, int nreads, double overdispersion){
+  int nal = geno.size();
+  NumericVector initprobs = geno / sum(geno);
+  NumericVector alpha = initprobs * overdispersion;
+  NumericVector newprobs(nal);
+  IntegerVector out(nal);
+  
+  // Get read probabilities from gamma distribution
+  for(int a = 0; a < nal; a++){
+    newprobs[a] = Rcpp::rgamma(1, alpha[a], 1.0)[0];
+  }
+  
+  // Sample the reads
+  IntegerVector readassign = sample(nal, nreads, true, newprobs, false);
+  for(int i = 0; i < nreads; i++){
+    out[readassign[i]] += 1;
+  }
+  
+  return out;
+}

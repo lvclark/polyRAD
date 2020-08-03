@@ -1,13 +1,3 @@
-# Randomly generate reads based on a genotype and overdispersion
-sampleReads <- function(geno, nreads, overdispersion = 20){
-  initprobs <- geno / sum(geno)
-  alpha <- initprobs * overdispersion
-  newprobs <- stats::rgamma(length(geno), alpha, 1)
-  
-  out <- stats::rmultinom(1, size = nreads, prob = newprobs)
-  return(out)
-}
-
 # testing
 # sampleReads(c(1, 2, 1), 30, overdispersion = 100)
 # 
