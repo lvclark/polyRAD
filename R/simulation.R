@@ -98,8 +98,11 @@ expectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
   }
   
   if(!quiet){
-    cat(c(paste("Mean Hind/He:", mean(out)),
-          paste("Standard deviation:", sd(out))),
+    q <- quantile(out, probs = c(0.025, 0.975))
+    cat(c(paste("Mean Hind/He:", formatC(mean(out), digits = 3)),
+          paste("Standard deviation:", formatC(sd(out), digits = 3)),
+          paste("95% of observations between", formatC(q[1], digits = 3),
+                "and", formatC(q[2], digits = 3))),
         sep = "\n")
   }
   
