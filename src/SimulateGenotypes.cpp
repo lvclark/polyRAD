@@ -26,7 +26,6 @@ NumericVector sampleGenotype(NumericVector freq, double inbreeding, int ploidy) 
 }
 
 // Randomly generate reads based on a genotype and overdispersion
-// [[Rcpp::export]]
 IntegerVector sampleReads(NumericVector geno, int nreads, double overdispersion){
   int nal = geno.size();
   NumericVector initprobs = geno / sum(geno);
@@ -68,6 +67,39 @@ NumericMatrix simGeno(NumericVector alleleFreq, IntegerVector alleles2loc, int n
       thisgeno = sampleGenotype(thesefreq, inbreeding, ploidy);
       for(int a = 0; a < thisnal; a++){
         out(s, thesecol[a]) = thisgeno[a];
+      }
+    }
+  }
+  
+  return out;
+}
+
+// simulate an allele depth matrix, given locus depth and genotypes
+// [[Rcpp::export]]
+IntegerMatrix simAD(IntegerMatrix locDepth, NumericMatrix genotypes, IntegerVector alleles2loc, double overdispersion){
+  int nsam = genotypes.rows();
+  int nal = alleles2loc.size();
+  int nloc = locDepth.cols();
+  IntegerVector alleles = seq(0, nal - 1);
+  IntegerVector thesecol;
+  int thisnal;
+  NumericVector thisgeno;
+  IntegerVector thesedepths;
+  IntegerMatrix out(nsam, nal);
+  
+  for(int L = 1; L <= nloc; L++){
+    thesecol = alleles[alleles2loc == L];
+    thisnal = thesecol.size();
+    thisgeno = NumericVector(thisnal);
+    for(int s = 0; s < nsam; s++){
+      // Retrieve genotype
+      for(int a = 0; a < thisnal; a++){
+        thisgeno[a] = genotypes(s, thesecol[a]);
+      }
+      // Simulate depths and add to matrix
+      thesedepths = sampleReads(thisgeno, locDepth(s, L - 1), overdispersion);
+      for(int a = 0; a < thisnal; a++){
+        out(s, thesecol[a]) = thesedepths[a];
       }
     }
   }

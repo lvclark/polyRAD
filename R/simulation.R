@@ -15,16 +15,14 @@ simAlleleDepth <- function(locDepth, genotypes, alleles2loc, overdispersion = 20
   if(nrow(locDepth) != nsam) stop("genotypes and locDepth should have the same number of rows")
   if(length(alleles2loc) !=  ncol(genotypes)) stop("length of alleles2loc should match number of columns in genotypes.")
   
-  alleleDepth <- matrix(0L, nrow = nsam, ncol = ncol(genotypes),
-                        dimnames = dimnames(genotypes))
-  for(L in unique(alleles2loc)){
-    thesecol <- which(alleles2loc == L)
-    thisLocDepth <- locDepth[, as.character(L)]
-    for(s in 1:nsam){
-      alleleDepth[s, thesecol] <-
-        sampleReads(genotypes[s, thesecol], thisLocDepth[s], overdispersion)
-    }
+  locnames <- as.character(seq_len(max(alleles2loc)))
+  if(!all(locnames %in% colnames(locDepth))){
+    stop("Loci missing from locDepth or named incorrectly.")
   }
+  locDepth <- locDepth[,locnames] # ensure correct order for Rcpp fn
+  
+  alleleDepth <- simAD(locDepth, genotypes, alleles2loc, overdispersion) # Rcpp fn
+  dimnames(alleleDepth) <- dimnames(genotypes)
   
   return(alleleDepth)
 }
