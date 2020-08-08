@@ -71,6 +71,7 @@ For exporting the estimated genotypes to other software:
 * `Export_polymapR`
 * `Export_MAPpoly`
 * `Export_GWASpoly`
+* `Export_Structure`
 * `RADdata2VCF`
 
 If you need continuous numerical genotypes exported in some other format, see 

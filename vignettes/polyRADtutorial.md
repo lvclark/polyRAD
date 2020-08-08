@@ -1,7 +1,7 @@
 polyRAD Tutorial
 ================
 Lindsay V. Clark, University of Illinois, Urbana-Champaign
-03 August 2020
+08 August 2020
 
   - [Introduction <a name="introduction"></a>](#introduction)
   - [Summary of available functions
@@ -86,6 +86,7 @@ For exporting the estimated genotypes to other software:
   - `Export_polymapR`
   - `Export_MAPpoly`
   - `Export_GWASpoly`
+  - `Export_Structure`
   - `RADdata2VCF`
 
 If you need continuous numerical genotypes exported in some other
@@ -773,7 +774,7 @@ qq(overdispersionP[["10"]])
 
 ![](polyRADtutorial_files/figure-gfm/unnamed-chunk-31-3.png)<!-- -->
 
-Again, nine looks like a good value.
+As with the mapping population, nine looks like a good value.
 
 ### Genotype calling
 

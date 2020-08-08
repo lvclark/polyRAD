@@ -56,6 +56,7 @@ There are export functions for discrete genotypes for the following software:
 
 * [polymapR](https://cran.r-project.org/package=polymapR)
 * [GWASpoly](https://potatobreeding.cals.wisc.edu/software/)
+* [Structure](https://web.stanford.edu/group/pritchardlab/structure.html)
 
 Discrete genotypes can also be exported to [VCF](https://samtools.github.io/hts-specs/) for import to a variety of software.
 

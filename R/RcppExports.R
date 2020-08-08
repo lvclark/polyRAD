@@ -17,6 +17,10 @@ BestPloidies <- function(chisq) {
     .Call('_polyRAD_BestPloidies', PACKAGE = 'polyRAD', chisq)
 }
 
+FormatStructure <- function(genotypes, alleles2loc, ploidy) {
+    .Call('_polyRAD_FormatStructure', PACKAGE = 'polyRAD', genotypes, alleles2loc, ploidy)
+}
+
 GiniSimpson <- function(counts) {
     .Call('_polyRAD_GiniSimpson', PACKAGE = 'polyRAD', counts)
 }

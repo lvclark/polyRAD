@@ -61,6 +61,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// FormatStructure
+IntegerMatrix FormatStructure(IntegerMatrix genotypes, IntegerVector alleles2loc, int ploidy);
+RcppExport SEXP _polyRAD_FormatStructure(SEXP genotypesSEXP, SEXP alleles2locSEXP, SEXP ploidySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type genotypes(genotypesSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type alleles2loc(alleles2locSEXP);
+    Rcpp::traits::input_parameter< int >::type ploidy(ploidySEXP);
+    rcpp_result_gen = Rcpp::wrap(FormatStructure(genotypes, alleles2loc, ploidy));
+    return rcpp_result_gen;
+END_RCPP
+}
 // GiniSimpson
 double GiniSimpson(NumericVector counts);
 RcppExport SEXP _polyRAD_GiniSimpson(SEXP countsSEXP) {
@@ -230,6 +243,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_polyRAD_BestGenos", (DL_FUNC) &_polyRAD_BestGenos, 4},
     {"_polyRAD_CorrectGenos", (DL_FUNC) &_polyRAD_CorrectGenos, 8},
     {"_polyRAD_BestPloidies", (DL_FUNC) &_polyRAD_BestPloidies, 1},
+    {"_polyRAD_FormatStructure", (DL_FUNC) &_polyRAD_FormatStructure, 3},
     {"_polyRAD_GiniSimpson", (DL_FUNC) &_polyRAD_GiniSimpson, 1},
     {"_polyRAD_HindHeMat", (DL_FUNC) &_polyRAD_HindHeMat, 5},
     {"_polyRAD_HoOneParent", (DL_FUNC) &_polyRAD_HoOneParent, 4},

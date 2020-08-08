@@ -419,3 +419,78 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE,
   }
   return(vcf)
 }
+
+Export_Structure <- function(object, file, includeDistances = FALSE,
+                             extraCols = NULL, missingIfZeroReads = TRUE){
+  # sort data if necessary
+  if(includeDistances){
+    if(is.null(object$locTable$Chr) || is.null(object$locTable$Pos)){
+      stop("Chromosome and position needed in locTable if distances are to be output.")
+    }
+    ord <- order(object$locTable$Chr, object$locTable$Pos)
+    if(!identical(ord, seq_len(nLoci(object)))){
+      object <- SubsetByLocus(object, ord)
+    }
+    # get inter marker distances
+    distrow <- rep(-1, nLoci(object))
+    for(chr in unique(object$locTable$Chr)){
+      theserow <- which(object$locTable$Chr == chr)
+      distrow[theserow[-1]] <-
+        object$locTable$Pos[theserow[-1]] - object$locTable$Pos[theserow[-length(theserow)]]
+    }
+  }
+  # get genotype matrix
+  geno <- GetProbableGenotypes(object, omit1allelePerLocus = FALSE,
+                               naIfZeroReads = missingIfZeroReads)
+  # get ploidy
+  pind <- unique(geno$ploidy_index)
+  ploidies <- sapply(object$priorProbPloidies[pind], sum)
+  ploidy <- max(ploidies)
+  # put data into Structure format (Rcpp function)
+  strdata <- FormatStructure(geno$genotypes, object$alleles2loc, ploidy)
+  #colnames(strdata) <- GetLoci(object)
+  
+  # write file
+  if(is.null(extraCols)){
+    ncolx <- 1
+    outdf <- data.frame(rep(GetTaxa(object), each = ploidy),
+                        strdata)
+  } else {
+    ncolx <- 1 + ncol(extraCols)
+    if(!is.null(rownames(extraCols)) &&
+       !identical(rownames(extraCols), as.character(seq_len(nTaxa(object)))) &&
+       !identical(rownames(extraCols), GetTaxa(object))){
+      if(!all(GetTaxa(object) %in% rownames(extraCols))){
+        stop("Row names of extraCols don't match sample names.")
+      }
+      extraCols <- extraCols[GetTaxa(object),]
+    }
+    if(nrow(extraCols) != nTaxa(object)){
+      stop("Number of rows in extraCols is different from number of taxa in object.")
+    }
+    outdf <- data.frame(rep(GetTaxa(object), each = ploidy),
+                        extraCols[rep(seq_len(nTaxa(object)), each = ploidy),],
+                        strdata)
+  }
+  cat(paste(c(rep("", ncolx), GetLoci(object)), collapse = "\t"),
+      file = file, sep = "\n")
+  if(includeDistances){
+    cat(paste(c(rep("", ncolx), distrow), collapse = "\t"), file = file,
+        sep = "\n", append = TRUE)
+  }
+  write.table(outdf, file = file, append = TRUE, sep = "\t", col.names = FALSE,
+              row.names = FALSE, quote = FALSE)
+  cat(c(paste("Number of individuals:", nTaxa(object)),
+        paste("Number of loci:", nLoci(object)),
+        paste("Ploidy of data:", ploidy),
+        "Missing data value: -9", "", "File contains:",
+        "Row of marker names"),
+      sep = "\n")
+  if(includeDistances){
+    cat("Map distances between loci", sep = "\n")
+  }
+  cat("Individual ID for each individual", sep = "\n")
+  if(ncolx > 1){
+    cat(paste(ncolx - 1, "extra columns that you should define for Structure"))
+  }
+}

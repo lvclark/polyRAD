@@ -4,6 +4,8 @@ Added the ExpectedHindHe, SimGenotypes, and SimAlleleDepth functions.  The
 first in particular is intended to help the user to select a Hind/He threshold
 for filtering markers.
 
+Added the Export_Structure function.
+
 Fixed a bug in VCF2RADdata that would occur if expectedAlleles or expectedLoci
 were set too low.
 
