@@ -25,6 +25,10 @@ parser.add_argument("--ploidy", "-p", nargs = '?', type = int, default = 2,
                     help = "Expected ploidy after splitting isoloci.")
 parser.add_argument("--inbreeding", "-f", nargs = '?', type = float, default = 0.0,
                     help = "Inbreeding coefficient, ranging from 0 to 1.")
+parser.add_argument("--expHindHe", "-e", nargs = '?', type = float,
+                    help = "Expected value for Hind/He. Overrides ploidy and inbreeding if provided.")
+parser.add_argument("--maxHindHe", "-m", nargs = '?', type = float,
+                    help = "Maximum allowable value for Hind/He. Overrides ploidy and inbreeding if provided.")
 parser.add_argument("--logfile", "-l", nargs = '?', default = "",
                     help = "Optional path to file where log should be written.")
 parser.add_argument("--samples", "-s", nargs = '?', default = "",
@@ -46,10 +50,23 @@ max_alleles = args.maxalleles
 if outfile == "":
   outfile = alignfile.replace("align", "sorted")
 
-# maximum tolerable Hind/He: halfway between this and the next ploidy, on a log scale
-p2 = ploidy * 2
-maxHindHe = math.exp((math.log((ploidy - 1)/ploidy) + math.log((p2 - 1)/p2) + 2 * math.log(1 - inbreeding))/2)
-expHindHe = (ploidy - 1)/ploidy * (1 - inbreeding)
+# expected value for Hind/He
+if args.expHindHe == None:
+  expHindHe = (ploidy - 1)/ploidy * (1 - inbreeding)
+else:
+  expHindHe = args.expHindHe
+
+if args.maxHindHe == None:
+  # maximum tolerable Hind/He: halfway between this and the next ploidy, on a log scale
+  p2 = ploidy * 2
+  maxHindHe = math.exp((math.log((ploidy - 1)/ploidy) + math.log((p2 - 1)/p2) + 2 * math.log(1 - inbreeding))/2)
+else:
+  maxHindHe = args.maxHindHe
+
+if expHindHe < 0 or expHindHe > 1:
+  raise Exception("Expected Hind/He needs to be between zero and one.")
+if expHindHe > maxHindHe:
+  raise Exception("Max Hind/He needs to be greater than expected Hind/He.")
 
 def ProcessRowGroup(alignrows, depthrows, nisoloci, thresh, expHindHe,
                     outwriter, logcon):
