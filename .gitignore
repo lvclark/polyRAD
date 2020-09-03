@@ -60,3 +60,12 @@ polyRAD.Rproj
 
 # compiled python code
 inst/python/__pycache__
+
+# Files for testing sorting pipeline
+vignettes/diploids.txt
+vignettes/tetraploids.txt
+vignettes/samples.txt
+vignettes/Msa_split_1_align.csv
+vignettes/Msa_split_1_depth.csv
+vignettes/Msa_split_1_sorted.csv
+vignettes/Msa_test.vcf

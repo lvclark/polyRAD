@@ -12,3 +12,10 @@
 ^vignettes/*._files$
 ^vignettes/render_vignettes\.R$
 ^inst/python/__pycache__$
+^vignettes/diploids.txt$
+^vignettes/tetraploids.txt$
+^vignettes/samples.txt$
+^vignettes/Msa_split_1_align.csv$
+^vignettes/Msa_split_1_depth.csv$
+^vignettes/Msa_split_1_sorted.csv$
+^vignettes/Msa_test.vcf$

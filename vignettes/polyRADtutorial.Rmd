@@ -674,7 +674,7 @@ TotDepthT <- rowSums(mydata$locDepth)
 We will load these:
 
 ```{r}
-print(load(system.file("extdata", "MsaHindHe.RData", package = "polyRAD")))
+print(load(system.file("extdata", "MsaHindHe0.RData", package = "polyRAD")))
 ```
 
 This additionally provides a vector called `ploidies` indicating the ploidy of

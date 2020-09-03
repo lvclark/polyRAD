@@ -1,7 +1,7 @@
 polyRAD Tutorial
 ================
 Lindsay V. Clark, University of Illinois, Urbana-Champaign
-08 August 2020
+03 September 2020
 
   - [Introduction <a name="introduction"></a>](#introduction)
   - [Summary of available functions
@@ -945,7 +945,7 @@ TotDepthT <- rowSums(mydata$locDepth)
 We will load these:
 
 ``` r
-print(load(system.file("extdata", "MsaHindHe.RData", package = "polyRAD")))
+print(load(system.file("extdata", "MsaHindHe0.RData", package = "polyRAD")))
 ```
 
     ## [1] "myHindHe"  "ploidies"  "TotDepthT"

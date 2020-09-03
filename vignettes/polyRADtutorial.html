@@ -12,7 +12,7 @@
 
 <meta name="author" content="Lindsay V. Clark, University of Illinois, Urbana-Champaign" />
 
-<meta name="date" content="2020-08-08" />
+<meta name="date" content="2020-09-03" />
 
 <title>polyRAD Tutorial</title>
 
@@ -301,7 +301,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">polyRAD Tutorial</h1>
 <h4 class="author">Lindsay V. Clark, University of Illinois, Urbana-Champaign</h4>
-<h4 class="date">08 August 2020</h4>
+<h4 class="date">03 September 2020</h4>
 
 
 <div id="TOC">
@@ -748,7 +748,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <div class="sourceCode" id="cb101"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb101-1" title="1">myHindHe &lt;-<span class="st"> </span><span class="kw">HindHe</span>(mydata)</a>
 <a class="sourceLine" id="cb101-2" title="2">TotDepthT &lt;-<span class="st"> </span><span class="kw">rowSums</span>(mydata<span class="op">$</span>locDepth)</a></code></pre></div>
 <p>We will load these:</p>
-<div class="sourceCode" id="cb102"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb102-1" title="1"><span class="kw">print</span>(<span class="kw">load</span>(<span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;MsaHindHe.RData&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;polyRAD&quot;</span>)))</a></code></pre></div>
+<div class="sourceCode" id="cb102"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb102-1" title="1"><span class="kw">print</span>(<span class="kw">load</span>(<span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;MsaHindHe0.RData&quot;</span>, <span class="dt">package =</span> <span class="st">&quot;polyRAD&quot;</span>)))</a></code></pre></div>
 <pre><code>## [1] &quot;myHindHe&quot;  &quot;ploidies&quot;  &quot;TotDepthT&quot;</code></pre>
 <p>This additionally provides a vector called <code>ploidies</code> indicating the ploidy of each individual, determined primarily by flow cytometry. <code>myHindHe</code> is a matrix with one value per individual*locus, and <code>TotDepthT</code> is a vector showing the total read depth at each locus.</p>
 <p>To investigate individuals, we can take the row means of the matrix:</p>
