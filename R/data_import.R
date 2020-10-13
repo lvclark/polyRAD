@@ -926,7 +926,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   radout <- RemoveMonomorphicLoci(radout)
   
   # indicate whether non-variable sites included in alleleNucleotides
-  attr(radout$alleleNucleotides, "Variable_sites_only") <- is.null(refgenome)
+  attr(radout$alleleNucleotides, "Variable_sites_only") <- is.null(refgenome) && phaseSNPs
   
   return(radout)
 }
