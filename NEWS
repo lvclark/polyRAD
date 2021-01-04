@@ -6,6 +6,11 @@ for filtering markers.
 
 Added the Export_Structure function.
 
+In the variant calling pipeline, process_isoloci.py has been modified so that
+the user can set an expected and maximum Hind/He. The previous functionality,
+where these thresholds were calculated automatically from inbreeding, remains
+available.
+
 Fixed a bug in VCF2RADdata that would occur if expectedAlleles or expectedLoci
 were set too low.  VCF2RADdata now also sets the "Variable_sites_only" attribute
 to be FALSE if phaseSNPs = FALSE.
