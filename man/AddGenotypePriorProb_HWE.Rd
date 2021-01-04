@@ -38,7 +38,7 @@ genotype prior probabilities are estimated as:
 where \eqn{k} is the ploidy, \eqn{i} is the copy number of a given allele,
 and \eqn{p} is the allele frequency in the population.
 
-If the selfing rate is above zero, genotype prior probabilities are asjusted
+If the selfing rate is above zero, genotype prior probabilities are adjusted
 according to Equation 6 of de Silva et al. (2005):
 
 \deqn{P(G_{self}) = (1 - s)(I - sA)^{-1}P(G)}{P(G_{self}) = (1 - s) * (I - sA)^{-1}P(G)}
