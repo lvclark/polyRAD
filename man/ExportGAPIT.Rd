@@ -180,7 +180,7 @@ Selection with R Package rrBLUP.  \emph{The Plant Genome} \bold{4}, 250--255.
 
 \bold{TASSEL:}
 
-\url{http://www.maizegenetics.net/tassel}
+\url{https://www.maizegenetics.net/tassel}
 
 Bradbury, P. J., Zhang, Z., Kroon, D. E., Casstevens, T. M., Ramdoss, Y. 
 and Buckler, E. S. (2007) TASSEL: Software for association mapping of complex 

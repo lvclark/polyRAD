@@ -21,10 +21,10 @@ IntegerMatrix FormatStructure(IntegerMatrix genotypes, IntegerVector alleles2loc
     thisnal = thesecol.size();
     curr_row = 0;
     for(int s = 0; s < nsam; s++){
-      if(curr_row > s * ploidy){
-        Rcout << "Locus " << L << " sample " << s << "\n";
-        stop("Ploidy doesn't match genotype matrix");
-      }
+      //if(curr_row > s * ploidy){
+      //  Rcout << "Locus " << L << " sample " << s << "\n";
+      //  stop("Ploidy doesn't match genotype matrix");
+      //}
       curr_row = s * ploidy;
       for(int a = 0; a < thisnal; a ++){
         if(IntegerVector::is_na(genotypes(s, thesecol[a]))){

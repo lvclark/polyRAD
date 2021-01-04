@@ -47,7 +47,7 @@ Buckler, E. S. and Costich, D. E. (2013) Switchgrass genomic diversity, ploidy,
 and evolution: novel insights from a network-based SNP discovery protocol.  
 \emph{PLoS Genetics} \bold{9}, e1003215.
 
-\url{http://maizegenetics.net/tassel}
+\url{https://www.maizegenetics.net/tassel}
 
 \url{https://tassel.bitbucket.io/TasselArchived.html}
 }

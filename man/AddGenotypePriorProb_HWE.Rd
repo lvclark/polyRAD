@@ -71,7 +71,7 @@ Lindsay V. Clark
 De Silva, H. N., Hall, A. J., Rikkerink, E., and Fraser, L. G. (2005)
 Estimation of allele frequencies in polyploids under
 certain patterns of inheritance.  \emph{Heredity} \bold{95}, 327--334.
-\href{https://doi.org/10.1038/sj.hdy.6800728}{doi:10.1038/sj.hdy.6800728}
+\doi{10.1038/sj.hdy.6800728}
 }
 
 \seealso{
