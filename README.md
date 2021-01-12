@@ -4,7 +4,7 @@
 
 ``` r
 install.packages(c("qqman", "BiocManager"))
-BiocManager::install("VariantAnnotation", "pcaMethods")
+BiocManager::install(c("VariantAnnotation", "pcaMethods"))
 install.packages("polyRAD")
 ```
 
