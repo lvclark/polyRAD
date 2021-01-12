@@ -3,8 +3,9 @@
 **Are you installing polyRAD for the January 2021 workshop on Tools for Genomics Assisted Breeding of Polyploid Crops?**  If you want to follow along with the workshop, please get version 1.3 from CRAN (it was released very recently), and also install the CRAN package qqman and the Bioconductor package VariantAnnotation.  See instructions below, and get help during the TA session on January 12.
 
 ``` r
-install.packages(c("polyRAD", "qqman", "BiocManager"))
-BiocManager::install("VariantAnnotation")
+install.packages(c("qqman", "BiocManager"))
+BiocManager::install("VariantAnnotation", "pcaMethods")
+install.packages("polyRAD")
 ```
 
 **Continuing on with the README...**
