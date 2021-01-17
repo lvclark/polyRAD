@@ -71,11 +71,16 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   antiAlleleDepth <- expandedLocDepth - alleleDepth
   dimnames(antiAlleleDepth)[[2]] <- dimnames(alleleDepth)[[2]]
   
+  # initialize taxaPloidy with all taxa having all possible ploidies
+  taxaPloidy <- lapply(seq_len(length(possiblePloidies)),
+                       function(x) seq_len(nTaxa))
+  
   return(structure(list(alleleDepth = alleleDepth, alleles2loc = alleles2loc,
                         locTable = locTable, possiblePloidies = possiblePloidies,
                         locDepth = locDepth,
                         depthRatio = depthRatio, antiAlleleDepth = antiAlleleDepth,
-                        alleleNucleotides = alleleNucleotides), 
+                        alleleNucleotides = alleleNucleotides,
+                        taxaPloidy = taxaPloidy), 
                    class = "RADdata", taxa = taxa, nTaxa = nTaxa, nLoci = nLoci,
                    contamRate = contamRate))
 }
@@ -235,7 +240,12 @@ AddGenotypeLikelihood.RADdata <- function(object, overdispersion = 9, ...){
   }
   
   # get ploidies, ignoring inheritance pattern
-  ploidies <- sort(unique(sapply(object$possiblePloidies, sum)))
+  if(is.null(object$priorProbPloidies)){
+    ploidies0 <- sapply(object$possiblePloidies, sum)
+  } else {
+    ploidies0 <- sapply(object$priorProbPloidies, sum)
+  }
+  ploidies <- sort(unique(ploidies0))
   # fix any allele freq that are zero, to prevent NaN likelihood
   minfreq <- 1/nTaxa(object)/max(ploidies)
   alFreq[alFreq == 0] <- minfreq
@@ -246,7 +256,9 @@ AddGenotypeLikelihood.RADdata <- function(object, overdispersion = 9, ...){
   length(object$genotypeLikelihood) <- length(ploidies)
   # probability of getting each allele from contamination
   sampleContam <- attr(object, "contamRate") * alFreq
-  for(i in 1:length(ploidies)){
+  for(i in seq_along(ploidies)){
+    # taxa for this ploidy
+    thesetaxa <- sort(unique(unlist(object$taxaPloidy[ploidies0 == ploidies[i]])))
     # get probability of sampling each allele from each possible genotype
     sampleReal <- (0:ploidies[i])/ploidies[i] * (1 - attr(object, "contamRate"))
     alleleProb <- matrix(0, nrow = length(sampleReal), 
@@ -261,16 +273,16 @@ AddGenotypeLikelihood.RADdata <- function(object, overdispersion = 9, ...){
     
     # get likelihoods
     object$genotypeLikelihood[[i]] <- array(0, dim = c(ploidies[i]+1, 
-                                                  dim(object$alleleDepth)),
+                                                  dim(object$alleleDepth[thesetaxa,])),
                                        dimnames = list(as.character(0:ploidies[i]),
-                                                       GetTaxa(object),
+                                                       GetTaxa(object)[thesetaxa],
                                                        GetAlleleNames(object)))
     for(j in 1:(ploidies[i]+1)){
       # likelihoods under beta-binomial distribution
       object$genotypeLikelihood[[i]][j,,] <- 
         exp(object$depthSamplingPermutations +
-        sweep(lbeta(sweep(object$alleleDepth, 2, alleleProb[j,], "+"),
-                    sweep(object$antiAlleleDepth, 2, antiAlleleProb[j,], "+")),
+        sweep(lbeta(sweep(object$alleleDepth[thesetaxa,], 2, alleleProb[j,], "+"),
+                    sweep(object$antiAlleleDepth[thesetaxa,], 2, antiAlleleProb[j,], "+")),
               2, lbeta(alleleProb[j,], antiAlleleProb[j,]), "-"))
     }
     # fix likelihoods where all are zero
@@ -603,6 +615,7 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
 
   object$priorProb <- OutPriors
   object$priorProbPloidies <- object$possiblePloidies[pldcombosExpand[,"final"]]
+  object$taxaPloidy <- object$taxaPloidy[pldcombosExpand[,"final"]]
   object$donorPloidies <- object$possiblePloidies[pldcombosExpand[,"donor"]]
   object$recurrentPloidies <- object$possiblePloidies[pldcombosExpand[,"recurrent"]]
   attr(object, "priorType") <- "population" 
@@ -1367,6 +1380,23 @@ SetContamRate.RADdata <- function(object, value, ...){
     warning("contamRate higher than expected.")
   }
   attr(object, "contamRate") <- value
+  return(object)
+}
+
+SetTaxaPloidy <- function(object, value){
+  UseMethod("SetTaxaPloidy", object)
+}
+SetTaxaPloidy.RADdata <- function(object, value){
+  if(!is.list(value)) stop("Value must be list")
+  if(length(value) != length(object$possiblePloidies)) stop("List needs one vector of taxa indices for each possible ploidy.")
+  value <- lapply(value, as.integer)
+  allvals <- unlist(value)
+  if(any(is.na(allvals))) stop("All values must be integers.")
+  if(any(allvals < 1)) stop("All values must be greater than zero.")
+  if(any(allvals > nTaxa(object))) stop("Taxa indices exceed number of taxa in object.")
+  if(!is.null(object$priorProb)) warning("Genotype calls should be rerun now that ploidies have been reset")
+  
+  object$taxaPloidy <- value
   return(object)
 }
 
