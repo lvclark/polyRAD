@@ -633,12 +633,21 @@ AddGenotypePriorProb_HWE.RADdata <- function(object, selfing.rate = 0, ...){
   if(is.null(object$alleleFreq) || attr(object, "alleleFreqType") != "HWE"){
     stop("Allele frequencies not estimated under HWE.")
   }
-  priors <- list()
-  length(priors) <- length(object$possiblePloidies)
+
+  tx_pld_unique <- sort(unique(GetTaxaPloidy(object)))
+  # array of priors by marker, with marker inheritance patterns in rows and
+  # individual ploidies in columns.
+  priors <- array(list(),
+                  dim = c(length(object$possiblePloidies),
+                          length(tx_pld_unique)),
+                  dimnames = list(NULL, as.character(tx_pld_unique)))
   
-  for(i in 1:length(priors)){
-    priors[[i]] <- .HWEpriors(object$alleleFreq, object$possiblePloidies[[i]],
-                              selfing.rate)
+  for(i in seq_along(object$possiblePloidies)){
+    for(j in seq_along(tx_pld_unique)){
+      priors[[i, j]] <- .HWEpriors(object$alleleFreq,
+                                   object$possiblePloidies[[i]] * tx_pld_unique[j] / 2L,
+                                   selfing.rate)
+    }
   }
   
   object$priorProb <- priors
@@ -651,14 +660,20 @@ AddGenotypePriorProb_Even <- function(object, ...){
   UseMethod("AddGenotypePriorProb_Even", object)
 }
 AddGenotypePriorProb_Even.RADdata <- function(object, ...){
-  priors <- list()
-  length(priors) <- length(object$possiblePloidies)
-  for(i in 1:length(priors)){
-    thispld <- sum(object$possiblePloidies[[i]])
-    priors[[i]] <- matrix(1/(thispld + 1), nrow = thispld + 1, 
-                          ncol = nAlleles(object),
-                          dimnames = list(as.character(0:thispld),
-                                          GetAlleleNames(object)))
+  tx_pld_unique <- sort(unique(GetTaxaPloidy(object)))
+  priors <- array(list(),
+                  dim = c(length(object$possiblePloidies),
+                          length(tx_pld_unique)),
+                  dimnames = list(NULL, as.character(tx_pld_unique)))
+  
+  for(i in seq_along(object$possiblePloidies)){
+    for(j in seq_along(tx_pld_unique)){
+      thispld <- sum(object$possiblePloidies[[i]] * tx_pld_unique[j] / 2L)
+      priors[[i, j]] <- matrix(1/(thispld + 1), nrow = thispld + 1, 
+                            ncol = nAlleles(object),
+                            dimnames = list(as.character(0:thispld),
+                                            GetAlleleNames(object)))
+    }
   }
   object$priorProb <- priors
   object$priorProbPloidies <- object$possiblePloidies
@@ -1093,20 +1108,26 @@ AddGenotypePriorProb_ByTaxa.RADdata <- function(object, selfing.rate = 0, ...){
   if(is.null(object$alleleFreqByTaxa)){
     stop("Need to run AddAlleleFreqByTaxa first.")
   }
-  priors <- list()
-  length(priors) <- length(object$possiblePloidies)
+  tx_pld_unique <- sort(unique(GetTaxaPloidy(object)))
+  priors <- array(list(),
+                  dim = c(length(object$possiblePloidies),
+                          length(tx_pld_unique)),
+                  dimnames = list(NULL, as.character(tx_pld_unique)))
   
-  for(i in 1:length(priors)){
-    pldtot <- sum(object$possiblePloidies[[i]])
-    priors[[i]] <- array(NA, dim = c(pldtot + 1,
-                                     nTaxa(object), nAlleles(object)),
-                         dimnames = list(as.character(0:pldtot),
-                                         GetTaxa(object),
-                                         GetAlleleNames(object)))
-    for(j in 1:nTaxa(object)){
-      priors[[i]][,j,] <- .HWEpriors(object$alleleFreqByTaxa[j,], 
-                                     object$possiblePloidies[[i]],
-                                     selfing.rate)
+  for(i in seq_along(object$possiblePloidies)){
+    for(j in seq_along(tx_pld_unique)){
+      pldtot <- sum(object$possiblePloidies[[i]]) * tx_pld_unique[j] / 2L
+      thesetaxa <- which(GetTaxaPloidy(object) == tx_pld_unique[j])
+      priors[[i, j]] <- array(NA, dim = c(pldtot + 1,
+                                       length(thesetaxa), nAlleles(object)),
+                           dimnames = list(as.character(0:pldtot),
+                                           GetTaxa(object)[thesetaxa],
+                                           GetAlleleNames(object)))
+      for(k in seq_len(nTaxa(object))){
+        priors[[i, j]][,k,] <- .HWEpriors(object$alleleFreqByTaxa[k,], 
+                                       object$possiblePloidies[[i]] * tx_pld_unique[j] / 2L,
+                                       selfing.rate)
+      }
     }
   }
   
