@@ -2,7 +2,8 @@
 
 # RADdata class constructor ####
 RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies, 
-                    contamRate, alleleNucleotides){
+                    contamRate, alleleNucleotides,
+                    taxaPloidy = rep(2L, nrow(alleleDepth))){
   if(!is.integer(alleleDepth)){
     stop("alleleDepth must be in integer format.")
   }
@@ -52,8 +53,19 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   if(length(alleleNucleotides) != length(alleles2loc)){
     stop("Length of alleleNucleotides must be same as length of alleles2loc.")
   }
+  taxaPloidy <- as.integer(taxaPloidy)
+  if(length(taxaPloidy) != nrow(alleleDepth)){
+    stop("Need one ploidy for each taxon.")
+  }
+  if(any(is.na(taxaPloidy))){
+    stop("taxaPloidy must be integer.")
+  }
+  if(any(taxaPloidy < 1)){
+    stop("taxaPloidy must be positive integer.")
+  }
   
   taxa <- dimnames(alleleDepth)[[1]]
+  names(taxaPloidy) <- taxa
   nTaxa <- dim(alleleDepth)[1]
   nLoci <- dim(locTable)[1]
   locDepth <- t(apply(alleleDepth, 1, function(x) tapply(x, alleles2loc, sum)))
@@ -75,7 +87,8 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
                         locTable = locTable, possiblePloidies = possiblePloidies,
                         locDepth = locDepth,
                         depthRatio = depthRatio, antiAlleleDepth = antiAlleleDepth,
-                        alleleNucleotides = alleleNucleotides), 
+                        alleleNucleotides = alleleNucleotides,
+                        taxaPloidy = taxaPloidy), 
                    class = "RADdata", taxa = taxa, nTaxa = nTaxa, nLoci = nLoci,
                    contamRate = contamRate))
 }
@@ -124,8 +137,11 @@ print.RADdata <- function(x, ...){
     }
     return(paste(prefix, suffix, "ploid (", paste(y, collapse = " "), ")", sep = ""))
   }
+  txp <- unique(x$taxaPloidy)
   for(pl in x$possiblePloidies){
-    cat(printPloidies(pl), sep = "\n")
+    for(tp in txp){
+      cat(printPloidies(pl * tp / 2L), sep = "\n")
+    }
   }
   if(!is.null(attr(x, "alleleFreqType"))){
     cat("", paste("Allele frequencies estimated for", attr(x, "alleleFreqType")),
@@ -1368,6 +1384,31 @@ SetContamRate.RADdata <- function(object, value, ...){
   }
   attr(object, "contamRate") <- value
   return(object)
+}
+
+SetTaxaPloidy <- function(object, value, ...){
+  UseMethod("SetTaxaPloidy", object)
+}
+SetTaxaPloidy.RADdata <- function(object, value, ...){
+  value <- as.integer(value)
+  if(length(value) != nTaxa(object)){
+    stop("Need one ploidy for each taxon.")
+  }
+  if(any(is.na(value))){
+    stop("taxaPloidy must be integer.")
+  }
+  if(any(value < 1)){
+    stop("taxaPloidy must be positive integer.")
+  }
+  names(value) <- GetTaxa(object)
+  object$taxaPloidy <- value
+  return(object)
+}
+GetTaxaPloidy <- function(object, ...){
+  UseMethod("GetTaxaPloidy", object)
+}
+GetTaxaPloidy.RADdata <- function(object, ...){
+  return(object$taxaPloidy)
 }
 
 # Functions for assigning taxa to specific roles ####
