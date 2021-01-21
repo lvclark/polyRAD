@@ -288,12 +288,20 @@ Export_MAPpoly <- function(object, file, pheno = NULL, ploidyIndex = 1,
               col.names = FALSE, row.names = FALSE)
 }
 
-Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE){
-  # matrix of discrete genotypes
-  mygeno <- t(GetProbableGenotypes(object,
-                                   omit1allelePerLocus = TRUE,
-                                   omitCommonAllele = TRUE,
-                                   naIfZeroReads = naIfZeroReads)$genotypes)
+Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE, postmean = TRUE, digits = 3){
+  if(postmean){
+    mygeno <- t(GetWeightedMeanGenotypes(object, maxval = max(sapply(object$possiblePloidies, sum)),
+                                         omit1allelePerLocus = TRUE,
+                                         omitCommonAllele = TRUE,
+                                         naIfZeroReads = naIfZeroReads))
+    mygeno <- round(mygeno, digits = digits)
+  } else {
+    # matrix of discrete genotypes
+    mygeno <- t(GetProbableGenotypes(object,
+                                     omit1allelePerLocus = TRUE,
+                                     omitCommonAllele = TRUE,
+                                     naIfZeroReads = naIfZeroReads)$genotypes)
+  }
   
   # get loci to correspond to these alleles
   locindex <- object$alleles2loc[-OneAllelePerMarker(object,

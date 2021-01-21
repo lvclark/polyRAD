@@ -1,3 +1,7 @@
+## Changes in v1.4 ##
+
+Export_GWASpoly can now export posterior mean genotypes.
+
 ## Changes in v1.3 ##
 
 Added the ExpectedHindHe, SimGenotypes, and SimAlleleDepth functions.  The

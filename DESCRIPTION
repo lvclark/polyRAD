@@ -1,6 +1,6 @@
 Package: polyRAD
-Version: 1.3
-Date: 2021-01-04
+Version: 1.4
+Date: 2021-01-21
 Title: Genotype Calling with Uncertainty from Sequencing Data in Polyploids and Diploids
 Authors@R: c(person("Lindsay V.", "Clark", email = "lvclark@illinois.edu",
                     role = c("aut", "cre"), 
