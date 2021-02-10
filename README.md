@@ -1,15 +1,5 @@
 # polyRAD: Genotype Calling with Uncertainty from Sequencing Data in Polyploids and Diploids
 
-**Are you installing polyRAD for the January 2021 workshop on Tools for Genomics Assisted Breeding of Polyploid Crops?**  If you want to follow along with the workshop, please get version 1.3 from CRAN (it was released very recently), and also install the CRAN package qqman and the Bioconductor package VariantAnnotation.  See instructions below, and get help during the TA session on January 12.
-
-``` r
-install.packages(c("qqman", "BiocManager"))
-BiocManager::install(c("VariantAnnotation", "pcaMethods"))
-install.packages("polyRAD")
-```
-
-**Continuing on with the README...**
-
 The ultimate goal of polyRAD is to enable research that strives to end world hunger and conserve biodiversity.  On that note, I actively welcome input and contributions from diverse and underrepresented sources to help improve the software, and have adopted the [Contributor Covenant Code of Conduct](https://github.com/lvclark/polyRAD/blob/main/code_of_conduct.md).  If there is something I can do or add to make polyRAD more useful and approachable to you, [post an issue](https://github.com/lvclark/polyRAD/issues), start a [discussion](https://github.com/lvclark/polyRAD/discussions) or send me an [email](mailto:lvclark@illinois.edu)!  If you would like to create a new function yourself or propose edits to the code or documentation, feel free to make a pull request!  All levels of experience are welcome and you can contact me if you aren't sure how to get started with GitHub.  I am also open to collaborations, i.e. improving polyRAD as a component of a grant.
 
 See the [list of future features](https://github.com/lvclark/polyRAD/wiki/todo) and [issues](https://github.com/lvclark/polyRAD/issues) for some of the things that I'm already thinking of adding to polyRAD.
@@ -109,6 +99,8 @@ The tutorial document for the package is available [on Github](https://github.co
 
 A separate tutorial is available for the [variant calling pipeline](https://github.com/lvclark/polyRAD/blob/main/vignettes/isolocus_sorting.md).
 
+A video tutorial from January 2021 is available on [YouTube](https://www.youtube.com/watch?v=vjwFBspNpRc).
+
 ## Citation
 
 If you use polyRAD, please cite this manuscript:
@@ -135,6 +127,11 @@ doi:[10.13140/RG.2.2.18358.75847](https://doi.org/10.13140/RG.2.2.18358.75847)
 Clark LV, Lipka AE, and Sacks EJ (2018) polyRAD: Genotype Calling with Uncertainty from Sequencing Data
 in Polyploids and Diploids.  Plant and Animal Genome Conference XXVI, January 13-17, San Diego, California, USA.
 doi:[10.13140/RG.2.2.27134.08001](https://doi.org/10.13140/RG.2.2.27134.08001)
+
+## Need help with R?
+
+Video tutorials on R, Python, and linear algebra were produced as part of the NSF
+grant that funded polyRAD.  They can be found here: https://www.youtube.com/channel/UCcyeu245nwXnUDoxvcBPqVg
 
 ## Funding
 
