@@ -447,7 +447,13 @@ for installation instructions.
 Again, with your own dataset you will not need to use `system.file` (see 
 section on mapping populations).
 
-```{r message=FALSE, warning=FALSE}
+```{r echo = FALSE}
+# Determine if VariantAnnotation is installed, so we know whether to
+# execute the rest of the vignette.
+haveVA <- requireNamespace("VariantAnnotation", quietly = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE, eval = haveVA}
 library(VariantAnnotation)
 
 myVCF <- system.file("extdata", "Msi01genes.vcf", package = "polyRAD")
@@ -468,10 +474,15 @@ very low values; in a real dataset they should reflect how much data you are
 actually expecting.  It is best to slightly overestimate the number of expected
 alleles and loci.
 
-```{r}
+```{r eval = haveVA}
 mydata <- VCF2RADdata(myVCF, possiblePloidies = list(2, c(2,2)),
                       expectedLoci = 100, expectedAlleles = 500)
 mydata
+```
+
+```{r echo = FALSE, eval = !haveVA}
+# If we don't have VariantAnnotation, load in the dataset
+load(system.file("extdata", "vcfdata.RData", package = "polyRAD"))
 ```
 
 ### Quality control and parameter estimation
