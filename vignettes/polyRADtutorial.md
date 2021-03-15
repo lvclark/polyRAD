@@ -1,7 +1,7 @@
 polyRAD Tutorial
 ================
 Lindsay V. Clark, University of Illinois, Urbana-Champaign
-03 September 2020
+15 March 2021
 
   - [Introduction <a name="introduction"></a>](#introduction)
   - [Summary of available functions
@@ -690,7 +690,7 @@ hist(myhindheByLoc, col = "lightgrey",
 abline(v = 0.5, col = "blue", lwd = 2)
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
 The peak below 0.5 indicates well-behaved diploid loci. In a typical
 dataset with more markers, you can get more resolution on the histogram
@@ -724,7 +724,7 @@ ExpectedHindHe(mydata, inbreeding = 0.3, ploidy = 2, reps = 10)
     ## Standard deviation: 0.0545
     ## 95% of observations are between 0.237 and 0.469
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
 
 According to these results, good quality markers can be expected to have
 *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> values from about 0.24 to 0.47. Values lower than that
@@ -761,19 +761,19 @@ overdispersionP <- TestOverdispersion(mydata, to_test = 8:10)
 qq(overdispersionP[["8"]])
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
 
 ``` r
 qq(overdispersionP[["9"]])
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-31-2.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-33-2.png)<!-- -->
 
 ``` r
 qq(overdispersionP[["10"]])
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-31-3.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-33-3.png)<!-- -->
 
 As with the mapping population, nine looks like a good value.
 
@@ -795,7 +795,7 @@ Let’s take a look at allele frequencies:
 hist(mydataHWE$alleleFreq, breaks = 20, col = "lightgrey")
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
 
 We can do a different genotype probability estimation that models
 population structure and variation in allele frequencies among
@@ -822,7 +822,7 @@ Allele frequency estimates have changed slightly:
 hist(mydataPopStruct$alleleFreq, breaks = 20, col = "lightgrey")
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
 
 Here’s some of the population structure that was used for modeling
 allele frequencies (fairly weak in this case because so few markers were
@@ -832,7 +832,7 @@ used):
 plot(mydataPopStruct)
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
 
 And here’s an example of allele frequency varying across the
 environment. Allele frequencies were estimated for each taxon, and are
@@ -845,7 +845,7 @@ freqcol <- heat.colors(101)[round(mydataPopStruct$alleleFreqByTaxa[,myallele] * 
 plot(mydataPopStruct, pch = 21, bg = freqcol)
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
 
 ### Examining inheritance mode
 
@@ -859,7 +859,7 @@ plot(mydataPopStruct$ploidyChiSq[1,], mydataPopStruct$ploidyChiSq[2,],
 abline(a = 0, b = 1, col = "blue", lwd = 2)
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
 
 It seems that some markers look allotetraploid, and others look diploid.
 We can see if this matches *H*<sub>*i**n**d*</sub>/*H*<sub>*E*</sub> results.
@@ -879,7 +879,7 @@ ggplot(mapping = aes(x = myhindheByLoc[GetLoci(mydata)], y = myChiSqRat, fill = 
   scale_fill_brewer(palette = "YlOrRd")
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
 
 Markers that fall in (or near) the lower-left quadrent are probably
 well-behaved diploid markers, but others might represent merged
@@ -977,7 +977,7 @@ ggplot(data.frame(Depth = TotDepthT, HindHe = myHindHeByInd,
   labs(x = "Read Depth", y = "Hind/He", color = "Ploidy")
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-46-1.png)<!-- -->
 
 Dashed lines indicate the expected value under Hardy-Weinberg
 Equilibrium. This is (ploidy - 1)/ploidy, *e.g.* 0.5 for
@@ -1006,7 +1006,7 @@ hist(myHindHeByLoc2x, breaks = 50, xlab = "Hind/He",
 abline(v = 0.5, col = "blue", lwd = 2)
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-46-1.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-48-1.png)<!-- -->
 
 ``` r
 myHindHeByLoc4x <- colMeans(myHindHe4x, na.rm = TRUE)
@@ -1016,7 +1016,7 @@ hist(myHindHeByLoc4x, breaks = 50, xlab = "Hind/He",
 abline(v = 0.75, col = "blue", lwd = 2)
 ```
 
-![](polyRADtutorial_files/figure-gfm/unnamed-chunk-46-2.png)<!-- -->
+![](polyRADtutorial_files/figure-gfm/unnamed-chunk-48-2.png)<!-- -->
 
 Most loci look good, but those to the right of the blue line should
 probably be filtered from the dataset.
