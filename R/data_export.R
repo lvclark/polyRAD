@@ -503,3 +503,18 @@ Export_Structure <- function(object, file, includeDistances = FALSE,
     cat(paste(ncolx - 1, "extra columns that you should define for Structure"))
   }
 }
+
+Export_adegenet_genind <- function(object, ploidyIndex = 1){
+  object <- SubsetByPloidy(object, ploidies = object$priorProbPloidies[ploidyIndex])
+  
+  tab <- GetProbableGenotypes(object, omit1allelePerLocus = FALSE,
+                              multiallelic = "correct")$genotypes
+  colnames(tab) <- paste(sub("\\.", "_", GetLoci(object)[object$alleles2loc]),
+                         object$alleleNucleotides, sep = ".")
+  
+  out <- methods::new("genind", tab = tab,
+             ploidy = sum(object$priorProbPloidies[[1]]),
+             type = "codom")
+
+  return(out)
+}

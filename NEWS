@@ -2,6 +2,8 @@
 
 Export_GWASpoly can now export posterior mean genotypes.
 
+Export_adegenet_genind function added.
+
 ## Changes in v1.3 ##
 
 Added the ExpectedHindHe, SimGenotypes, and SimAlleleDepth functions.  The
