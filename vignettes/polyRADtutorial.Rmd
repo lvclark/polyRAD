@@ -273,7 +273,7 @@ deviate from what would be expected under binomial distibution?  The
 `TestOverdispersion` function will help us here.  We will use the `qqman`
 package to visualize the results.
 
-```{r message = FALSE, warning = FALSE}
+```{r message = FALSE, warning = FALSE, eval = requireNamespace("qqman", quietly = TRUE)}
 library(qqman)
 overdispersionP <- TestOverdispersion(mydata2, to_test = 6:10)
 qq(overdispersionP[["6"]])
@@ -537,7 +537,7 @@ mydata <- SubsetByLocus(mydata, keeploci)
 For natural populations and diversity panels, we can run `TestOverdispersion`
 before performing any genotype calling.
 
-```{r}
+```{r eval = requireNamespace("qqman", quietly = TRUE)}
 overdispersionP <- TestOverdispersion(mydata, to_test = 8:10)
 qq(overdispersionP[["8"]])
 qq(overdispersionP[["9"]])
@@ -622,7 +622,7 @@ abline(a = 0, b = 1, col = "blue", lwd = 2)
 It seems that some markers look allotetraploid, and others look diploid.  We can
 see if this matches $H_{ind}/H_E$ results.
 
-```{r}
+```{r message = FALSE, eval = requireNamespace("ggplot2", quietly = TRUE)}
 myChiSqRat <- mydataPopStruct$ploidyChiSq[1,] / mydataPopStruct$ploidyChiSq[2,]
 myChiSqRat <- tapply(myChiSqRat, mydataPopStruct$alleles2loc, mean)
 allelesPerLoc <- as.vector(table(mydataPopStruct$alleles2loc))
@@ -701,7 +701,7 @@ myHindHeByInd <- rowMeans(myHindHe, na.rm = TRUE)
 
 Then we can plot these versus depth for each ploidy.
 
-```{r}
+```{r eval = requireNamespace("ggplot2", quietly = TRUE)}
 ggplot(data.frame(Depth = TotDepthT, HindHe = myHindHeByInd,
                   Ploidy = ploidies),
   mapping = aes(x = Depth, y = HindHe, color = Ploidy)) +
