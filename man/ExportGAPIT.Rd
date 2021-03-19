@@ -170,7 +170,7 @@ equal to the highest ploidy output by \code{GetProbableGenotypes}.
 \references{
 \bold{GAPIT and FarmCPU:}
 
-\url{http://zzlab.net/GAPIT/}
+\url{http://www.zzlab.net/GAPIT/}
 
 Lipka, A. E., Tian, F., Wang, Q., Peiffer, J., Li, M., Bradbury, P. J., 
 Gore, M. A., Buckler, E. S. and Zhang, Z. (2012) GAPIT: genome association 
