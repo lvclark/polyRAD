@@ -3,6 +3,8 @@
 Bug fixed in GetProbableGenotypes when there are multiple possiblePloidies and
 multiallelic is set to "na" or "correct".
 
+Bug fixed in process_sam_multi.py for cases where sample names contain spaces.
+
 ## Changes in v1.4 ##
 
 Export_GWASpoly can now export posterior mean genotypes.
