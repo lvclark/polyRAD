@@ -91,16 +91,23 @@ install.packages("polyRAD")
 
 Alternatively, if there are new features not yet on the CRAN version that you
 want to use, you can install the development version here on GitHub at your own
-risk.  There are R packages such as `devtools` and `githubinstall` that 
-facilitate installing directly from GitHub.
+risk using the command
+
+```
+install.packages("polyRAD", repos = "https://lvclark.r-universe.dev")
+```
 
 ## Tutorial
 
-The tutorial document for the package is available [on Github](https://github.com/lvclark/polyRAD/blob/main/vignettes/polyRADtutorial.md).
+The tutorial document for the package is available [on R-universe](https://lvclark.r-universe.dev/articles/polyRAD/polyRADtutorial.html).
 
-A separate tutorial is available for the [variant calling pipeline](https://github.com/lvclark/polyRAD/blob/main/vignettes/isolocus_sorting.md).
+A separate tutorial is available for the [variant calling pipeline](https://lvclark.r-universe.dev/articles/polyRAD/isolocus_sorting.html).
 
 A video tutorial from January 2021 is available on [YouTube](https://www.youtube.com/watch?v=vjwFBspNpRc).
+
+A tutorial on [using polyRAD for population genetics](https://lvclark.r-universe.dev/articles/polyRADtutorials/population_genetics.html)
+is also available.  If you would like to have the dataset to follow along with that tutorial, run
+`install.packages("polyRADtutorials", repos = "https://lvclark.r-universe.dev")`.
 
 ## Citation
 
