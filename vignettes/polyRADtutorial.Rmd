@@ -488,7 +488,19 @@ load(system.file("extdata", "vcfdata.RData", package = "polyRAD"))
 
 ### Quality control and parameter estimation
 
-Before we perform genotype calling, we can test for diploid segregation at
+For natural populations and diversity panels, we can run `TestOverdispersion`
+before performing any genotype calling.
+
+```{r eval = requireNamespace("qqman", quietly = TRUE)}
+overdispersionP <- TestOverdispersion(mydata, to_test = 8:10)
+qq(overdispersionP[["8"]])
+qq(overdispersionP[["9"]])
+qq(overdispersionP[["10"]])
+```
+
+As with the mapping population, nine looks like a good value.
+
+Before we perform genotype calling, we can also test for Mendelian segregation at
 each marker using the $H_{ind}/H_E$ statistic.
 
 ```{r}
@@ -501,27 +513,33 @@ abline(v = 0.5, col = "blue", lwd = 2)
 
 The peak below 0.5 indicates well-behaved diploid loci.  In a typical dataset
 with more markers, you can get more resolution on the histogram (see the `breaks`
-argument of `hist`), but let's say the peak is at 0.35.  We can estimate an
-inbreeding coefficient from this value:
+argument of `hist`), but let's say the peak is at 0.35. The graph below can be
+used to estimate inbreeding from $H_{ind}/H_E$ and overdispersion.  For
+a diploid with overdispersion of 9 and $H_{ind}/H_E$ of 0.35, inbreeding is
+about 0.25.
 
-```{r}
-InbreedingFromHindHe(0.35, ploidy = 2)
-```
+![Estimation of inbreeding](overdispersion_inbreeding.png)
 
-From there, we can simulate what the $H_{ind}/H_E$ distribution might look like
-if the dataset consisted entirely of Mendelian diploid loci with mild
-overdispersion and no other technical issues.  Here `reps` is set to 10 because
+There is also the `InbreedingFromHindHe` function for estimating inbreeding,
+but it is from an older version of polyRAD and does not account for
+overdispersion, leading to overestimates of inbreeding.
+
+With overdispersion and inbreeding estimated,
+we can simulate what the $H_{ind}/H_E$ distribution might look like
+if the dataset consisted entirely of Mendelian diploid loci with
+no other technical issues.  Here `reps` is set to 10 because
 of the size of the dataset and the need for a short run time, but in your own
 data is is probably best to leave it at the default.  You do not need to use
 `set.seed` unless you are trying to reproduce this vignette exactly.
 
 ```{r}
 set.seed(803)
-ExpectedHindHe(mydata, inbreeding = 0.3, ploidy = 2, reps = 10)
+ExpectedHindHe(mydata, inbreeding = 0.25, ploidy = 2, overdispersion = 9,
+               reps = 10)
 ```
 
 According to these results, good quality markers can be expected to have
-$H_{ind}/H_E$ values from about 0.24 to 0.47.  Values lower than that
+$H_{ind}/H_E$ values from about 0.25 to 0.44.  Values lower than that
 indicate techical problems such as restriction cut site polymorphisms,
 causing overdispersion in the data that could reduce genotyping quality.
 Values higher than that indicate paralogy or higher ploidy than expected.
@@ -530,22 +548,12 @@ only remove markers where $H_{ind}/H_E$ is too low (although you may
 consider filtering differently in your own dataset).
 
 ```{r}
-mean(myhindheByLoc < 0.24) # about 29% of markers would be removed
-keeploci <- names(myhindheByLoc)[myhindheByLoc >= 0.24]
+mean(myhindheByLoc < 0.25) # about 33% of markers would be removed
+keeploci <- names(myhindheByLoc)[myhindheByLoc >= 0.25]
 mydata <- SubsetByLocus(mydata, keeploci)
 ```
 
-For natural populations and diversity panels, we can run `TestOverdispersion`
-before performing any genotype calling.
 
-```{r eval = requireNamespace("qqman", quietly = TRUE)}
-overdispersionP <- TestOverdispersion(mydata, to_test = 8:10)
-qq(overdispersionP[["8"]])
-qq(overdispersionP[["9"]])
-qq(overdispersionP[["10"]])
-```
-
-As with the mapping population, nine looks like a good value.
 
 ### Genotype calling
 

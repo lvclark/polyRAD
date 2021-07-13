@@ -284,25 +284,44 @@ tail that we observe above that value likely represents groups of tags that
 aligned to the same location but in fact represent paralogous loci.  The values
 near zero likely represent loci with very high amplification bias or
 overdispersion.  We will take the peak at 0.3 to represent typical well-behaved
-markers.  From this we estimate inbreeding (*F*):
+markers.
 
-```{r}
-InbreedingFromHindHe(hindhe = 0.3, ploidy = 2)
+To estimate inbreeding, we'll also need to estimate overdispersion.  You may
+want to check a broader range of values than 8 to 10.
+
+```{r eval = FALSE}
+overdispersionP <- TestOverdispersion(myRADprelim, to_test = 8:10)
 ```
+
+```{r echo = FALSE}
+load(system.file("extdata", "MsaOverdispersion.RData", package = "polyRAD"))
+```
+
+```{r eval = requireNamespace("qqman", quietly = TRUE)}
+qqman::qq(overdispersionP[["8"]])
+qqman::qq(overdispersionP[["9"]])
+qqman::qq(overdispersionP[["10"]])
+```
+
+If $H_{ind}/H_E$ is 0.3 and overdispersion is 9, we can estimate inbreeding
+to be about 0.37 using the figure below, which was generated using
+simulated data.
+
+![Estimation of inbreeding](overdispersion_inbreeding.png)
 
 If all markers were Mendelian, we can see what the expected distribution of
 $H_{ind}/H_E$ would look like, given the sample size and read depth distribution
 observed in the dataset.
 
 ```{r eval = FALSE}
-ExpectedHindHe(myRADprelim, inbreeding = 0.4, ploidy = 2)
+ExpectedHindHe(myRADprelim, inbreeding = 0.37, ploidy = 2)
 ```
 ```{r echo = FALSE}
 message("Simulating rep 1")
 message("Completed 5 simulation reps")
-cat(c("Mean Hind/He: 0.293",
-      "Standard deviation: 0.0881",
-      "95% of observations are between 0.149 and 0.469"), sep = "\n")
+cat(c("Mean Hind/He: 0.307",
+      "Standard deviation: 0.0879",
+      "95% of observations are between 0.162 and 0.509"), sep = "\n")
 load(system.file("extdata", "MsaHindHe3.RData", package = "polyRAD"))
 hist(testhhdist, xlab = "Hind/He", main = "Expected distribution of Hind/He",
      breaks = 30)
