@@ -2,6 +2,7 @@
 \alias{ExpectedHindHe}
 \alias{SimGenotypes}
 \alias{SimAlleleDepth}
+\alias{SimGenotypesMapping}
 \title{
 Simulate Data to Get Expected Distribution of Hind/He
 }
@@ -12,8 +13,10 @@ filtering loci based on \eqn{H_{ind}/H_E}{Hind/He} after running
 \code{ExpectedHindHe} takes allele frequencies, sample size, and read depths from
 a \code{\link{RADdata}} object, simulates genotypes and allelic read depths from
 these assuming Mendelian inheritance, and then estimates
-\eqn{H_{ind}/H_E}{Hind/He} for each simulated locus. \code{SimGenotypes} and
+\eqn{H_{ind}/H_E}{Hind/He} for each simulated locus. \code{SimGenotypes},
+\code{SimGenotypesMapping}, and
 \code{SimAlleleDepth} are internal functions used by \code{ExpectedHindHe}
+and \code{ExpectedHindHeMapping}
 but are provided at the user level since they may be more broadly useful.
 }
 \usage{
@@ -22,6 +25,9 @@ ExpectedHindHe(object, ploidy = object$possiblePloidies[[1]], inbreeding = 0,
                quiet = FALSE, plot = TRUE)
 
 SimGenotypes(alleleFreq, alleles2loc, nsam, inbreeding, ploidy)
+
+SimGenotypesMapping(donorGen, recurGen, alleles2loc, nsam, ploidy,
+                    n.gen.backcrossing, n.gen.selfing)
 
 SimAlleleDepth(locDepth, genotypes, alleles2loc, overdispersion = 20)
 }
@@ -54,6 +60,12 @@ Boolean indicating whether to suppress messages and results printed to console.
 Boolean indicating whether to plot a histogram of \eqn{H_{ind}/H_E}{Hind/He}
 values.
 }
+\item{n.gen.backcrossing}{
+An integer indicating the number of generations of backcrossing.
+}
+\item{n.gen.selfing}{
+An integer indicating the number of generations of self-fertilization.
+}
 \item{alleleFreq}{
 A vector of allele frequencies, as can be found in the \code{$alleleFreq} slot
 of a \code{RADdata} object after running \code{\link{AddAlleleFreqHWE}}.
@@ -64,6 +76,14 @@ An integer vector assigning alleles to loci, as can be found in the
 }
 \item{nsam}{
 An integer indicating the number of samples (number of taxa) to simulate.
+}
+\item{donorGen}{
+A vector indicating genotypes of the donor parent (which can be either parent
+if backcrossing was not performed), with one value for each allele in the
+dataset, and numbers indicating the copy number of each allele.
+}
+\item{recurGen}{
+A vector indicating genotypes of the recurrent parent, as with \code{donorGen}.
 }
 \item{locDepth}{
 An integer matrix indicating read depth at each taxon and locus.  Formatted as
@@ -82,7 +102,8 @@ or \code{SimGenotypes}, indicating genotypes as allele copy number.
 \code{ExpectedHindHe} invisibly returns a matrix, with loci in rows and reps in
 columns, containing \eqn{H_{ind}/H_E}{Hind/He} from the simulated loci.
 
-\code{SimGenotypes} returns a numeric matrix of allele copy number, with samples
+\code{SimGenotypes} and \code{SimGenotypesMapping} return a numeric matrix of
+allele copy number, with samples
 in rows and alleles in columns, similar to that produced by
 \code{\link{GetProbableGenotypes}}.
 
@@ -113,6 +134,24 @@ simreads <- SimAlleleDepth(exampleRAD$locDepth[1:10,], simgeno, exampleRAD$allel
 
 # Get expected Hind/He distribution if all loci in exampleRAD were well-behaved
 ExpectedHindHe(exampleRAD, reps = 10)
+
+# Mapping population example
+data(exampleRAD_mapping)
+exampleRAD_mapping <- SetDonorParent(exampleRAD_mapping, "parent1")
+exampleRAD_mapping <- SetRecurrentParent(exampleRAD_mapping, "parent2")
+exampleRAD_mapping <- AddAlleleFreqMapping(exampleRAD_mapping,
+                                           expectedFreqs = c(0.25, 0.75),
+                                           allowedDeviation = 0.08)
+exampleRAD_mapping <- AddGenotypeLikelihood(exampleRAD_mapping)
+exampleRAD_mapping <- EstimateParentalGenotypes(exampleRAD_mapping,
+                                                n.gen.backcrossing = 1)
+
+simgenomap <- SimGenotypesMapping(exampleRAD_mapping$likelyGeno_donor[1,],
+                                  exampleRAD_mapping$likelyGeno_recurrent[1,],
+                                  exampleRAD_mapping$alleles2loc,
+                                  nsam = 10, ploidy = 2,
+                                  n.gen.backcrossing = 1,
+                                  n.gen.selfing = 0)
 }
 
 \keyword{ datagen }

@@ -23,7 +23,7 @@ PipelineMapping2Parents, RADdata, RADdata2VCF, readHMC, readProcessSamMulti,
 readProcessIsoloci,readStacks, readTagDigger, readTASSELGBSv2,
 RemoveHighDepthLoci, RemoveMonomorphicLoci, RemoveUngenotypedLoci,
 SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent,
-SimAlleleDepth, SimGenotypes,
+SimAlleleDepth, SimGenotypes, SimGenotypesMapping,
 SplitByChromosome, StripDown, SubsetByLocus, SubsetByPloidy, SubsetByTaxon,
 TestOverdispersion, VCF2RADdata)
 

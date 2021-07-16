@@ -61,6 +61,10 @@ simGeno <- function(alleleFreq, alleles2loc, nsam, inbreeding, ploidy) {
     .Call('_polyRAD_simGeno', PACKAGE = 'polyRAD', alleleFreq, alleles2loc, nsam, inbreeding, ploidy)
 }
 
+simGenoMapping <- function(donorGeno, recurGeno, progGeno, genoProbs, alleles2loc, nsam, ploidy) {
+    .Call('_polyRAD_simGenoMapping', PACKAGE = 'polyRAD', donorGeno, recurGeno, progGeno, genoProbs, alleles2loc, nsam, ploidy)
+}
+
 simAD <- function(locDepth, genotypes, alleles2loc, overdispersion) {
     .Call('_polyRAD_simAD', PACKAGE = 'polyRAD', locDepth, genotypes, alleles2loc, overdispersion)
 }

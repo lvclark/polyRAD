@@ -210,6 +210,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// simGenoMapping
+NumericMatrix simGenoMapping(NumericVector donorGeno, NumericVector recurGeno, NumericMatrix progGeno, NumericVector genoProbs, IntegerVector alleles2loc, int nsam, int ploidy);
+RcppExport SEXP _polyRAD_simGenoMapping(SEXP donorGenoSEXP, SEXP recurGenoSEXP, SEXP progGenoSEXP, SEXP genoProbsSEXP, SEXP alleles2locSEXP, SEXP nsamSEXP, SEXP ploidySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type donorGeno(donorGenoSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type recurGeno(recurGenoSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type progGeno(progGenoSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type genoProbs(genoProbsSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type alleles2loc(alleles2locSEXP);
+    Rcpp::traits::input_parameter< int >::type nsam(nsamSEXP);
+    Rcpp::traits::input_parameter< int >::type ploidy(ploidySEXP);
+    rcpp_result_gen = Rcpp::wrap(simGenoMapping(donorGeno, recurGeno, progGeno, genoProbs, alleles2loc, nsam, ploidy));
+    return rcpp_result_gen;
+END_RCPP
+}
 // simAD
 IntegerMatrix simAD(IntegerMatrix locDepth, NumericMatrix genotypes, IntegerVector alleles2loc, double overdispersion);
 RcppExport SEXP _polyRAD_simAD(SEXP locDepthSEXP, SEXP genotypesSEXP, SEXP alleles2locSEXP, SEXP overdispersionSEXP) {
@@ -254,6 +271,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_polyRAD_MakeGTstrings", (DL_FUNC) &_polyRAD_MakeGTstrings, 2},
     {"_polyRAD_PrepVCFexport", (DL_FUNC) &_polyRAD_PrepVCFexport, 7},
     {"_polyRAD_simGeno", (DL_FUNC) &_polyRAD_simGeno, 5},
+    {"_polyRAD_simGenoMapping", (DL_FUNC) &_polyRAD_simGenoMapping, 7},
     {"_polyRAD_simAD", (DL_FUNC) &_polyRAD_simAD, 4},
     {"_polyRAD_ThirdDimProd", (DL_FUNC) &_polyRAD_ThirdDimProd, 3},
     {NULL, NULL, 0}

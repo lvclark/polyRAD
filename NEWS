@@ -1,4 +1,6 @@
-## Changes in v1.4.1 ##
+## Changes in v1.5 ##
+
+SimGenotypesMapping function added.
 
 Bug fixed in GetProbableGenotypes when there are multiple possiblePloidies and
 multiallelic is set to "na" or "correct".

@@ -99,3 +99,21 @@ ExpectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
 # data(exampleRAD)
 # expectedHindHe(exampleRAD)
 # expectedHindHe(mydata, reps = 10) # get from VCF in tutorial
+
+# Simulated genotypes in a mapping population
+SimGenotypesMapping <- function(donorGen, recurGen, alleles2loc, nsam, ploidy,
+                                n.gen.backcrossing, n.gen.selfing){
+  if(length(donorGen) != length(recurGen) ||
+     length(donorGen) != length(alleles2loc)){
+    stop("Need same number of alleles in donorGen, recurGen, and alleles2loc.")
+  }
+  # get possible progeny and their probabilities, treating each allele
+  # from each parent as unique.  (multiallelic genotypes)
+  progprob <- .buildProgProb(ploidy, n.gen.backcrossing, n.gen.selfing)
+  
+  geno <- simGenoMapping(donorGen, recurGen, progprob[[1]], progprob[[2]],
+                         alleles2loc, nsam, ploidy) # Rcpp fn
+  colnames(geno) <- names(donorGen)
+  
+  return(geno)
+}
