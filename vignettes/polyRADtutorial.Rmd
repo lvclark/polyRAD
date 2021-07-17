@@ -100,6 +100,7 @@ For identifying problematic loci and individuals:
 * `HindHe`
 * `HindHeMapping`
 * `ExpectedHindHe`
+* `ExpectedHindHeMapping`
 * `InbreedingFromHindHe`
 
 See `?GetTaxa` for a list of accessor functions as well.

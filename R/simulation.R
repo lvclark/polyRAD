@@ -117,3 +117,80 @@ SimGenotypesMapping <- function(donorGen, recurGen, alleles2loc, nsam, ploidy,
   
   return(geno)
 }
+
+ExpectedHindHeMapping <- function(object, ploidy = object$possiblePloidies[[1]],
+                           n.gen.backcrossing = 0, n.gen.selfing = 0, overdispersion = 20,
+                           freqAllowedDeviation = 0.05, minLikelihoodRatio = 10,
+                           reps = ceiling(5000 / nLoci(object)),
+                           quiet = FALSE, plot = TRUE){
+  if(length(ploidy) != 1){
+    stop("Please give a single value for ploidy; function assumes diploid or autopolyploid inheritance")
+  }
+  possfreq <- seq(0, 1, length.out = (n.gen.backcrossing + 1) * ploidy * 2 + 1)
+  if(is.null(object$likelyGeno_donor) || is.null(object$likelyGeno_recurrent)){
+    object <- AddAlleleFreqMapping(object, expectedFreqs = possfreq,
+                                   allowedDeviation = freqAllowedDeviation)
+    object <- AddGenotypeLikelihood(object, overdispersion = overdispersion)
+    object <- EstimateParentalGenotypes(object, n.gen.backcrossing = n.gen.backcrossing,
+                                        n.gen.intermating = 0, n.gen.selfing = n.gen.selfing,
+                                        donorParentPloidies = list(ploidy),
+                                        recurrentParentPloidies = list(ploidy),
+                                        minLikelihoodRatio = minLikelihoodRatio)
+  }
+  
+  # matrix of hind/he values for simulated loci
+  out <- matrix(0, nrow = nLoci(object), ncol = reps,
+                dimnames = list(GetLoci(object), NULL))
+  donParent <- GetDonorParent(object)
+  recParent <- GetRecurrentParent(object)
+  progeny <- setdiff(GetTaxa(object), c(donParent, recParent, GetBlankTaxa(object)))
+  
+  for(i in seq_len(reps)){
+    if(!quiet && i %% 10 == 1) message(paste("Simulating rep", i))
+    geno <- SimGenotypesMapping(object$likelyGeno_donor[as.character(ploidy),],
+                                object$likelyGeno_recurrent[as.character(ploidy),],
+                                object$alleles2loc, length(progeny), ploidy,
+                                n.gen.backcrossing, n.gen.selfing)
+    geno <- rbind(object$likelyGeno_donor[as.character(ploidy),],
+                  object$likelyGeno_recurrent[as.character(ploidy),],
+                  geno)
+    depths <- SimAlleleDepth(object$locDepth[c(donParent, recParent, progeny),],
+                             geno, object$alleles2loc,
+                             overdispersion)
+    rownames(depths) <- c(donParent, recParent, progeny)
+    simrad <- RADdata(depths, object$alleles2loc, object$locTable,
+                      object$possiblePloidies, GetContamRate(object),
+                      object$alleleNucleotides)
+    simrad <- SetDonorParent(simrad, donParent)
+    simrad <- SetRecurrentParent(simrad, recParent)
+    simrad <- AddAlleleFreqMapping(simrad, expectedFreqs = possfreq,
+                                   allowedDeviation = freqAllowedDeviation)
+    simrad <- AddDepthSamplingPermutations(simrad)
+    simrad <- AddGenotypeLikelihood(simrad, overdispersion = overdispersion)
+    simrad <- EstimateParentalGenotypes(simrad, n.gen.backcrossing = n.gen.backcrossing,
+                                        n.gen.intermating = 0, n.gen.selfing = n.gen.selfing,
+                                        donorParentPloidies = list(ploidy),
+                                        recurrentParentPloidies = list(ploidy),
+                                        minLikelihoodRatio = minLikelihoodRatio)
+    hh <- HindHeMapping(simrad, n.gen.backcrossing, 0, n.gen.selfing, ploidy,
+                        minLikelihoodRatio)
+    out[,i] <- colMeans(hh, na.rm = TRUE)
+  }
+  
+  if(!quiet){
+    message(paste("Completed", reps, "simulation reps."))
+    q <- quantile(out, probs = c(0.025, 0.975), na.rm = TRUE)
+    cat(c(paste("Mean Hind/He:", formatC(mean(out, na.rm = TRUE), digits = 3)),
+          paste("Standard deviation:", formatC(sd(out, na.rm = TRUE), digits = 3)),
+          paste("95% of observations are between", formatC(q[1], digits = 3),
+                "and", formatC(q[2], digits = 3))),
+        sep = "\n")
+  }
+  
+  if(plot){
+    hist(out, xlab = "Hind/He", main = "Expected distribution of Hind/He",
+         breaks = 30)
+  }
+  
+  invisible(out)
+}

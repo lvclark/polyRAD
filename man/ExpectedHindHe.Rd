@@ -3,6 +3,7 @@
 \alias{SimGenotypes}
 \alias{SimAlleleDepth}
 \alias{SimGenotypesMapping}
+\alias{ExpectedHindHeMapping}
 \title{
 Simulate Data to Get Expected Distribution of Hind/He
 }
@@ -13,8 +14,11 @@ filtering loci based on \eqn{H_{ind}/H_E}{Hind/He} after running
 \code{ExpectedHindHe} takes allele frequencies, sample size, and read depths from
 a \code{\link{RADdata}} object, simulates genotypes and allelic read depths from
 these assuming Mendelian inheritance, and then estimates
-\eqn{H_{ind}/H_E}{Hind/He} for each simulated locus. \code{SimGenotypes},
-\code{SimGenotypesMapping}, and
+\eqn{H_{ind}/H_E}{Hind/He} for each simulated locus.
+\code{ExpectedHindHeMapping} performs similar simulation and estimation, but
+in mapping populations based on parental genotypes and expected distribution
+of progeny genotypes.
+\code{SimGenotypes}, \code{SimGenotypesMapping}, and
 \code{SimAlleleDepth} are internal functions used by \code{ExpectedHindHe}
 and \code{ExpectedHindHeMapping}
 but are provided at the user level since they may be more broadly useful.
@@ -23,6 +27,12 @@ but are provided at the user level since they may be more broadly useful.
 ExpectedHindHe(object, ploidy = object$possiblePloidies[[1]], inbreeding = 0,
                overdispersion = 20, reps = ceiling(5000/nLoci(object)),
                quiet = FALSE, plot = TRUE)
+
+ExpectedHindHeMapping(object, ploidy = object$possiblePloidies[[1]],
+                      n.gen.backcrossing = 0, n.gen.selfing = 0,
+                      overdispersion = 20, freqAllowedDeviation = 0.05, 
+                      minLikelihoodRatio = 10, reps = ceiling(5000/nLoci(object)),
+                      quiet = FALSE, plot = TRUE)
 
 SimGenotypes(alleleFreq, alleles2loc, nsam, inbreeding, ploidy)
 
@@ -66,6 +76,14 @@ An integer indicating the number of generations of backcrossing.
 \item{n.gen.selfing}{
 An integer indicating the number of generations of self-fertilization.
 }
+\item{freqAllowedDeviation}{
+The amount by which allele frequencies are allowed to deviate from expected
+allele frequencies.  See \code{\link{AddAlleleFreqMapping}}.
+}
+\item{minLikelihoodRatio}{
+Minimum likelihood ratio for determining the most likely parental genotypes.
+See \code{\link{GetLikelyGen}}.
+}
 \item{alleleFreq}{
 A vector of allele frequencies, as can be found in the \code{$alleleFreq} slot
 of a \code{RADdata} object after running \code{\link{AddAlleleFreqHWE}}.
@@ -99,7 +117,8 @@ or \code{SimGenotypes}, indicating genotypes as allele copy number.
 %%  ~~ If necessary, more details than the description above ~~
 %}
 \value{
-\code{ExpectedHindHe} invisibly returns a matrix, with loci in rows and reps in
+\code{ExpectedHindHe} and \code{ExpectedHindHeMapping} invisibly return a
+matrix, with loci in rows and reps in
 columns, containing \eqn{H_{ind}/H_E}{Hind/He} from the simulated loci.
 
 \code{SimGenotypes} and \code{SimGenotypesMapping} return a numeric matrix of
@@ -152,6 +171,8 @@ simgenomap <- SimGenotypesMapping(exampleRAD_mapping$likelyGeno_donor[1,],
                                   nsam = 10, ploidy = 2,
                                   n.gen.backcrossing = 1,
                                   n.gen.selfing = 0)
+                                  
+ExpectedHindHeMapping(exampleRAD_mapping, n.gen.backcrossing = 1, reps = 10)
 }
 
 \keyword{ datagen }
