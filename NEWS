@@ -7,6 +7,9 @@ multiallelic is set to "na" or "correct".
 
 Bug fixed in process_sam_multi.py for cases where sample names contain spaces.
 
+Bug fixed in HindHeMapping when loci are discarded due to difficulty estimating
+parental genotypes.
+
 Vignettes have been updated with a figure to assist in estimating inbreeding.
 
 ## Changes in v1.4 ##
