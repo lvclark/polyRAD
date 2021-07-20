@@ -64,6 +64,7 @@ Discrete genotypes can also be exported to [VCF](https://samtools.github.io/hts-
 Genotype probabilities can be exported to:
 
 * [MAPpoly](https://github.com/mmollina/MAPpoly)
+* [polymapR](https://cran.r-project.org/package=polymapR)
 
 ## Installation
 

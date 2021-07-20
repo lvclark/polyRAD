@@ -69,6 +69,7 @@ For exporting the estimated genotypes to other software:
 * `Export_rrBLUP_GWAS`
 * `Export_TASSEL_Numeric`
 * `Export_polymapR`
+* `Export_polymapR_probs`
 * `Export_MAPpoly`
 * `Export_GWASpoly`
 * `Export_Structure`
