@@ -229,25 +229,6 @@ mydata <- SubsetByTaxon(mydata, taxa = keeptaxa)
 plot(mydata)
 ```
 
-Next we can check for markers that are behaving in a non-Mendelian fashion.
-If we are expecting diploid segregation, all markers should show a
-$H_{ind}/H_E$ value of 0.5 or less.  (For an autopolyploid, the expected value
-is $\frac{ploidy - 1}{ploidy}$.)
-
-```{r message = FALSE}
-myhindhe <- HindHeMapping(mydata, ploidy = 2L)
-hist(colMeans(myhindhe, na.rm = TRUE), col = "lightgrey",
-     xlab = "Hind/He", main = "Histogram of Hind/He by locus")
-```
-
-In this case, all of the markers look fine, but if they didn't, we would filter
-poor quality markers from the dataset.
-
-```{r}
-goodMarkers <- colnames(myhindhe)[which(colMeans(myhindhe, na.rm = TRUE) < 0.5)]
-mydata <- SubsetByLocus(mydata, goodMarkers)
-```
-
 Now we can perform a preliminary run of the pipeline.  The
 `allowedDeviation` argument indicates how different the apparent
 allele frequency (based on read depth ratios) can be from an expected
@@ -286,7 +267,39 @@ qq(overdispersionP[["10"]])
 ```
 
 It looks like `9` follows the red line most closely, so we'll use that for the
-overdispersion parameter.  Now we can re-run the pipeline to properly call the
+overdispersion parameter.
+
+Next we can check for markers that are behaving in a non-Mendelian fashion.
+If we are expecting diploid segregation, all markers should show a
+$H_{ind}/H_E$ value of 0.5 or less.  (For an autopolyploid, the expected value
+is $\frac{ploidy - 1}{ploidy}$.)
+
+```{r message = FALSE}
+myhindhe <- HindHeMapping(mydata, ploidy = 2L)
+hist(colMeans(myhindhe, na.rm = TRUE), col = "lightgrey",
+     xlab = "Hind/He", main = "Histogram of Hind/He by locus")
+```
+
+How does this compare to the distribution that we might expect from this dataset
+if all loci were Mendelian?  We will use `ExpectedHindHeMapping` with the
+overdispersion parameter that we estimated above.  One your own dataset,
+I recommend using the default value of `reps`.
+
+```{r}
+set.seed(720)
+ExpectedHindHeMapping(mydata, ploidy = 2, overdispersion = 9, reps = 2)
+```
+
+Comparing the observed distribution to the expected distribution, we may want
+to filter some markers.
+
+```{r}
+goodMarkers <- colnames(myhindhe)[which(colMeans(myhindhe, na.rm = TRUE) < 0.5 &
+                                          colMeans(myhindhe, na.rm = TRUE) > 0.4)]
+mydata <- SubsetByLocus(mydata, goodMarkers)
+```
+
+Now we can re-run the pipeline to properly call the
 genotypes.
 
 ```{r}
@@ -300,7 +313,7 @@ mydata <- PipelineMapping2Parents(mydata,
 
 We can examine the allele frequencies.
 Allele frequencies that fall outside of the expected ranges will be 
-recorded as they were estimated from read depth.  In this case all are within
+recorded as they were estimated from read depth.  In this case most are within
 the expected ranges.
 
 ```{r}
@@ -312,9 +325,9 @@ genotype at each locus, taxon, and ploidy.  This is the probability
 of seeing the observed distribution of reads.
 
 ```{r}
-mydata$alleleDepth[8,19:26]
-mydata$genotypeLikelihood[[1]][,8,19:26]
-mydata$genotypeLikelihood[[2]][,8,19:26]
+mydata$alleleDepth[8,9:16]
+mydata$genotypeLikelihood[[1]][,8,9:16]
+mydata$genotypeLikelihood[[2]][,8,9:16]
 ```
 
 Above, for one individal (Map1-018), we see its read depth at
@@ -334,8 +347,8 @@ can be ignored by increasing the `minLikelihoodRatio` argument to
 `PipelineMapping2Parents`.
 
 ```{r}
-mydata$priorProb[[1]][,19:26]
-mydata$priorProb[[2]][,19:26]
+mydata$priorProb[[1]][,9:16]
+mydata$priorProb[[2]][,9:16]
 ```
 
 Here we see some pretty big differences under the diploid and
@@ -352,7 +365,7 @@ genotype likelihoods and estimating a $\chi^2$ statistic.  Lower
 values indicate a better fit.
 
 ```{r}
-mydata$ploidyChiSq[,19:26]
+mydata$ploidyChiSq[,9:16]
 ```
 
 We can make a plot to get an overall sense of how well the markers
@@ -373,8 +386,8 @@ Now we'll examine the posterior genotype probabilities.  These are still
 estimated separately for each ploidy.
 
 ```{r}
-mydata$posteriorProb[[1]][,10,19:26]
-mydata$posteriorProb[[2]][,10,19:26]
+mydata$posteriorProb[[1]][,10,9:16]
+mydata$posteriorProb[[2]][,10,9:16]
 ```
 
 ### Results cleanup and export
@@ -423,8 +436,8 @@ genotypes that were used for estimating progeny priors using
 `$likelyGeno_donor` and `$likelyGeno_recurrent`.
 
 ```{r}
-mydata$likelyGeno_donor[,19:26]
-mydata$likelyGeno_recurrent[,19:26]
+mydata$likelyGeno_donor[,9:16]
+mydata$likelyGeno_recurrent[,9:16]
 ```
 
 ## Estimating genotype probabilities in a diversity panel <a name="diversity"></a>
