@@ -174,7 +174,7 @@ ExpectedHindHeMapping <- function(object, ploidy = object$possiblePloidies[[1]],
                                         minLikelihoodRatio = minLikelihoodRatio)
     hh <- HindHeMapping(simrad, n.gen.backcrossing, 0, n.gen.selfing, ploidy,
                         minLikelihoodRatio)
-    out[,i] <- colMeans(hh, na.rm = TRUE)
+    out[colnames(hh),i] <- colMeans(hh, na.rm = TRUE)
   }
   
   if(!quiet){
