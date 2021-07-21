@@ -40,7 +40,7 @@ samples_file = args.samples
 # Read in samples to keep, if provided, and confirm that they are
 # present in TTD file.
 with open(myttd, mode = 'r') as mycon:
-  ttd_samples = next(mycon).split()[1:]
+  ttd_samples = next(mycon).split('\t')[1:]
 if samples_file == "":
   samples = ttd_samples
   sample_index = [i for i in range(len(samples))]
@@ -219,10 +219,10 @@ def extractTTD(tags, ttdfile, sample_index):
   # sort tags for binary search
   sorted_tags, tagindex = zip(*sorted(zip(tags, range(ntags))))
   with open(ttdfile, mode = 'r') as mycon:
-    header = next(mycon).split()[1:]
+    header = next(mycon).split('\t')[1:]
     header = [header[i] for i in sample_index]
     for line in mycon:
-      row = line.split()
+      row = line.split('\t')
       tag = row[0]
       ti = bisect.bisect_left(sorted_tags, tag)
       if ti == ntags or sorted_tags[ti] != tag:

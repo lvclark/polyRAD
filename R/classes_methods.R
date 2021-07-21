@@ -941,7 +941,16 @@ GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
     pldindex <- rep(1L, length(allelesToExport))
     ploidyindices <- 1L
   } else {
-    pldindex <- BestPloidies(object$ploidyChiSq[,allelesToExport,drop=FALSE]) # Rcpp function
+    if(multiallelic == "ignore"){
+      pldindex <- BestPloidies(object$ploidyChiSq[,allelesToExport,drop=FALSE]) # Rcpp function
+    } else {
+      # If we are going to look at multiallelic genotypes, get the best ploidy
+      # for each locus instead of each allele.
+      locChiSq <- t(rowsum(t(object$ploidyChiSq), object$alleles2loc))
+      pldindex_loc <- BestPloidies(locChiSq)
+      names(pldindex_loc) <- colnames(locChiSq)
+      pldindex <- unname(pldindex_loc[as.character(object$alleles2loc)])
+    }
     ploidyindices <- sort(unique(pldindex))
   }
   names(pldindex) <- GetAlleleNames(object)[allelesToExport]

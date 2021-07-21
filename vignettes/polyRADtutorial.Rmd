@@ -69,9 +69,11 @@ For exporting the estimated genotypes to other software:
 * `Export_rrBLUP_GWAS`
 * `Export_TASSEL_Numeric`
 * `Export_polymapR`
+* `Export_polymapR_probs`
 * `Export_MAPpoly`
 * `Export_GWASpoly`
 * `Export_Structure`
+* `Export_adegenet_genind`
 * `RADdata2VCF`
 
 If you need continuous numerical genotypes exported in some other format, see 
@@ -99,6 +101,7 @@ For identifying problematic loci and individuals:
 * `HindHe`
 * `HindHeMapping`
 * `ExpectedHindHe`
+* `ExpectedHindHeMapping`
 * `InbreedingFromHindHe`
 
 See `?GetTaxa` for a list of accessor functions as well.
@@ -227,25 +230,6 @@ mydata <- SubsetByTaxon(mydata, taxa = keeptaxa)
 plot(mydata)
 ```
 
-Next we can check for markers that are behaving in a non-Mendelian fashion.
-If we are expecting diploid segregation, all markers should show a
-$H_{ind}/H_E$ value of 0.5 or less.  (For an autopolyploid, the expected value
-is $\frac{ploidy - 1}{ploidy}$.)
-
-```{r message = FALSE}
-myhindhe <- HindHeMapping(mydata, ploidy = 2L)
-hist(colMeans(myhindhe, na.rm = TRUE), col = "lightgrey",
-     xlab = "Hind/He", main = "Histogram of Hind/He by locus")
-```
-
-In this case, all of the markers look fine, but if they didn't, we would filter
-poor quality markers from the dataset.
-
-```{r}
-goodMarkers <- colnames(myhindhe)[which(colMeans(myhindhe, na.rm = TRUE) < 0.5)]
-mydata <- SubsetByLocus(mydata, goodMarkers)
-```
-
 Now we can perform a preliminary run of the pipeline.  The
 `allowedDeviation` argument indicates how different the apparent
 allele frequency (based on read depth ratios) can be from an expected
@@ -273,7 +257,7 @@ deviate from what would be expected under binomial distibution?  The
 `TestOverdispersion` function will help us here.  We will use the `qqman`
 package to visualize the results.
 
-```{r message = FALSE, warning = FALSE}
+```{r message = FALSE, warning = FALSE, eval = requireNamespace("qqman", quietly = TRUE)}
 library(qqman)
 overdispersionP <- TestOverdispersion(mydata2, to_test = 6:10)
 qq(overdispersionP[["6"]])
@@ -284,7 +268,39 @@ qq(overdispersionP[["10"]])
 ```
 
 It looks like `9` follows the red line most closely, so we'll use that for the
-overdispersion parameter.  Now we can re-run the pipeline to properly call the
+overdispersion parameter.
+
+Next we can check for markers that are behaving in a non-Mendelian fashion.
+If we are expecting diploid segregation, all markers should show a
+$H_{ind}/H_E$ value of 0.5 or less.  (For an autopolyploid, the expected value
+is $\frac{ploidy - 1}{ploidy}$.)
+
+```{r message = FALSE}
+myhindhe <- HindHeMapping(mydata, ploidy = 2L)
+hist(colMeans(myhindhe, na.rm = TRUE), col = "lightgrey",
+     xlab = "Hind/He", main = "Histogram of Hind/He by locus")
+```
+
+How does this compare to the distribution that we might expect from this dataset
+if all loci were Mendelian?  We will use `ExpectedHindHeMapping` with the
+overdispersion parameter that we estimated above.  One your own dataset,
+I recommend using the default value of `reps`.
+
+```{r}
+set.seed(720)
+ExpectedHindHeMapping(mydata, ploidy = 2, overdispersion = 9, reps = 2)
+```
+
+Comparing the observed distribution to the expected distribution, we may want
+to filter some markers.
+
+```{r}
+goodMarkers <- colnames(myhindhe)[which(colMeans(myhindhe, na.rm = TRUE) < 0.5 &
+                                          colMeans(myhindhe, na.rm = TRUE) > 0.4)]
+mydata <- SubsetByLocus(mydata, goodMarkers)
+```
+
+Now we can re-run the pipeline to properly call the
 genotypes.
 
 ```{r}
@@ -298,7 +314,7 @@ mydata <- PipelineMapping2Parents(mydata,
 
 We can examine the allele frequencies.
 Allele frequencies that fall outside of the expected ranges will be 
-recorded as they were estimated from read depth.  In this case all are within
+recorded as they were estimated from read depth.  In this case most are within
 the expected ranges.
 
 ```{r}
@@ -310,9 +326,9 @@ genotype at each locus, taxon, and ploidy.  This is the probability
 of seeing the observed distribution of reads.
 
 ```{r}
-mydata$alleleDepth[8,19:26]
-mydata$genotypeLikelihood[[1]][,8,19:26]
-mydata$genotypeLikelihood[[2]][,8,19:26]
+mydata$alleleDepth[8,9:16]
+mydata$genotypeLikelihood[[1]][,8,9:16]
+mydata$genotypeLikelihood[[2]][,8,9:16]
 ```
 
 Above, for one individal (Map1-018), we see its read depth at
@@ -332,8 +348,8 @@ can be ignored by increasing the `minLikelihoodRatio` argument to
 `PipelineMapping2Parents`.
 
 ```{r}
-mydata$priorProb[[1]][,19:26]
-mydata$priorProb[[2]][,19:26]
+mydata$priorProb[[1]][,9:16]
+mydata$priorProb[[2]][,9:16]
 ```
 
 Here we see some pretty big differences under the diploid and
@@ -350,7 +366,7 @@ genotype likelihoods and estimating a $\chi^2$ statistic.  Lower
 values indicate a better fit.
 
 ```{r}
-mydata$ploidyChiSq[,19:26]
+mydata$ploidyChiSq[,9:16]
 ```
 
 We can make a plot to get an overall sense of how well the markers
@@ -371,8 +387,8 @@ Now we'll examine the posterior genotype probabilities.  These are still
 estimated separately for each ploidy.
 
 ```{r}
-mydata$posteriorProb[[1]][,10,19:26]
-mydata$posteriorProb[[2]][,10,19:26]
+mydata$posteriorProb[[1]][,10,9:16]
+mydata$posteriorProb[[2]][,10,9:16]
 ```
 
 ### Results cleanup and export
@@ -421,8 +437,8 @@ genotypes that were used for estimating progeny priors using
 `$likelyGeno_donor` and `$likelyGeno_recurrent`.
 
 ```{r}
-mydata$likelyGeno_donor[,19:26]
-mydata$likelyGeno_recurrent[,19:26]
+mydata$likelyGeno_donor[,9:16]
+mydata$likelyGeno_recurrent[,9:16]
 ```
 
 ## Estimating genotype probabilities in a diversity panel <a name="diversity"></a>
@@ -447,7 +463,13 @@ for installation instructions.
 Again, with your own dataset you will not need to use `system.file` (see 
 section on mapping populations).
 
-```{r message=FALSE, warning=FALSE}
+```{r echo = FALSE}
+# Determine if VariantAnnotation is installed, so we know whether to
+# execute the rest of the vignette.
+haveVA <- requireNamespace("VariantAnnotation", quietly = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE, eval = haveVA}
 library(VariantAnnotation)
 
 myVCF <- system.file("extdata", "Msi01genes.vcf", package = "polyRAD")
@@ -468,15 +490,32 @@ very low values; in a real dataset they should reflect how much data you are
 actually expecting.  It is best to slightly overestimate the number of expected
 alleles and loci.
 
-```{r}
+```{r eval = haveVA}
 mydata <- VCF2RADdata(myVCF, possiblePloidies = list(2, c(2,2)),
                       expectedLoci = 100, expectedAlleles = 500)
 mydata
 ```
 
+```{r echo = FALSE, eval = !haveVA}
+# If we don't have VariantAnnotation, load in the dataset
+load(system.file("extdata", "vcfdata.RData", package = "polyRAD"))
+```
+
 ### Quality control and parameter estimation
 
-Before we perform genotype calling, we can test for diploid segregation at
+For natural populations and diversity panels, we can run `TestOverdispersion`
+before performing any genotype calling.
+
+```{r eval = requireNamespace("qqman", quietly = TRUE)}
+overdispersionP <- TestOverdispersion(mydata, to_test = 8:10)
+qq(overdispersionP[["8"]])
+qq(overdispersionP[["9"]])
+qq(overdispersionP[["10"]])
+```
+
+As with the mapping population, nine looks like a good value.
+
+Before we perform genotype calling, we can also test for Mendelian segregation at
 each marker using the $H_{ind}/H_E$ statistic.
 
 ```{r}
@@ -489,27 +528,33 @@ abline(v = 0.5, col = "blue", lwd = 2)
 
 The peak below 0.5 indicates well-behaved diploid loci.  In a typical dataset
 with more markers, you can get more resolution on the histogram (see the `breaks`
-argument of `hist`), but let's say the peak is at 0.35.  We can estimate an
-inbreeding coefficient from this value:
+argument of `hist`), but let's say the peak is at 0.35. The graph below can be
+used to estimate inbreeding from $H_{ind}/H_E$ and overdispersion.  For
+a diploid with overdispersion of 9 and $H_{ind}/H_E$ of 0.35, inbreeding is
+about 0.25.
 
-```{r}
-InbreedingFromHindHe(0.35, ploidy = 2)
-```
+![Estimation of inbreeding](overdispersion_inbreeding.png)
 
-From there, we can simulate what the $H_{ind}/H_E$ distribution might look like
-if the dataset consisted entirely of Mendelian diploid loci with mild
-overdispersion and no other technical issues.  Here `reps` is set to 10 because
+There is also the `InbreedingFromHindHe` function for estimating inbreeding,
+but it is from an older version of polyRAD and does not account for
+overdispersion, leading to overestimates of inbreeding.
+
+With overdispersion and inbreeding estimated,
+we can simulate what the $H_{ind}/H_E$ distribution might look like
+if the dataset consisted entirely of Mendelian diploid loci with
+no other technical issues.  Here `reps` is set to 10 because
 of the size of the dataset and the need for a short run time, but in your own
 data is is probably best to leave it at the default.  You do not need to use
 `set.seed` unless you are trying to reproduce this vignette exactly.
 
 ```{r}
 set.seed(803)
-ExpectedHindHe(mydata, inbreeding = 0.3, ploidy = 2, reps = 10)
+ExpectedHindHe(mydata, inbreeding = 0.25, ploidy = 2, overdispersion = 9,
+               reps = 10)
 ```
 
 According to these results, good quality markers can be expected to have
-$H_{ind}/H_E$ values from about 0.24 to 0.47.  Values lower than that
+$H_{ind}/H_E$ values from about 0.25 to 0.44.  Values lower than that
 indicate techical problems such as restriction cut site polymorphisms,
 causing overdispersion in the data that could reduce genotyping quality.
 Values higher than that indicate paralogy or higher ploidy than expected.
@@ -518,22 +563,12 @@ only remove markers where $H_{ind}/H_E$ is too low (although you may
 consider filtering differently in your own dataset).
 
 ```{r}
-mean(myhindheByLoc < 0.24) # about 29% of markers would be removed
-keeploci <- names(myhindheByLoc)[myhindheByLoc >= 0.24]
+mean(myhindheByLoc < 0.25) # about 33% of markers would be removed
+keeploci <- names(myhindheByLoc)[myhindheByLoc >= 0.25]
 mydata <- SubsetByLocus(mydata, keeploci)
 ```
 
-For natural populations and diversity panels, we can run `TestOverdispersion`
-before performing any genotype calling.
 
-```{r}
-overdispersionP <- TestOverdispersion(mydata, to_test = 8:10)
-qq(overdispersionP[["8"]])
-qq(overdispersionP[["9"]])
-qq(overdispersionP[["10"]])
-```
-
-As with the mapping population, nine looks like a good value.
 
 ### Genotype calling
 
@@ -611,7 +646,7 @@ abline(a = 0, b = 1, col = "blue", lwd = 2)
 It seems that some markers look allotetraploid, and others look diploid.  We can
 see if this matches $H_{ind}/H_E$ results.
 
-```{r}
+```{r message = FALSE, eval = requireNamespace("ggplot2", quietly = TRUE)}
 myChiSqRat <- mydataPopStruct$ploidyChiSq[1,] / mydataPopStruct$ploidyChiSq[2,]
 myChiSqRat <- tapply(myChiSqRat, mydataPopStruct$alleles2loc, mean)
 allelesPerLoc <- as.vector(table(mydataPopStruct$alleles2loc))
@@ -690,7 +725,7 @@ myHindHeByInd <- rowMeans(myHindHe, na.rm = TRUE)
 
 Then we can plot these versus depth for each ploidy.
 
-```{r}
+```{r eval = requireNamespace("ggplot2", quietly = TRUE)}
 ggplot(data.frame(Depth = TotDepthT, HindHe = myHindHeByInd,
                   Ploidy = ploidies),
   mapping = aes(x = Depth, y = HindHe, color = Ploidy)) +

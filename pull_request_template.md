@@ -34,8 +34,7 @@ in the above section.
 the code, including new functions and arguments.
 - [ ] The list of functions in `vignettes/polyRADtutorial.Rmd` has been updated
 to add any new functions.
-- [ ] If vignettes have been updated, `vignettes/render_vignettes.R` has been
-run (with `vignettes` as the working directory).
+- [ ] If vignettes have been updated, html versions have been knit.
 - [ ] New functions and/or methods have been listed in `NAMESPACE`.
 - [ ] If this is the first functionality added since the last release, 
 the minor version number (_e.g._ 2.4 -> 2.5) in `DESCRIPTION` has been updated.

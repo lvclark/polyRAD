@@ -1,3 +1,24 @@
+## Changes in v1.5 ##
+
+SimGenotypesMapping, ExpectedHindHeMapping, and Export_polymapR_probs functions
+added.
+
+Bug fixed in GetProbableGenotypes when there are multiple possiblePloidies and
+multiallelic is set to "na" or "correct".
+
+Bug fixed in process_sam_multi.py for cases where sample names contain spaces.
+
+Bug fixed in HindHeMapping when loci are discarded due to difficulty estimating
+parental genotypes.
+
+Vignettes have been updated with a figure to assist in estimating inbreeding.
+
+## Changes in v1.4 ##
+
+Export_GWASpoly can now export posterior mean genotypes.
+
+Export_adegenet_genind function added.
+
 ## Changes in v1.3 ##
 
 Added the ExpectedHindHe, SimGenotypes, and SimAlleleDepth functions.  The

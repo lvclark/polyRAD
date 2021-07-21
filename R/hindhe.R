@@ -54,6 +54,8 @@ HindHeMapping.RADdata <- function(object, n.gen.backcrossing = 0,
                        function(x) !any(is.na(x)) && sum(x) == ploidy)
   keeploc <- which(goodLocDon & goodLocRec)
   object <- SubsetByLocus(object, keeploc)
+  likelyGenDon <- object$likelyGeno_donor[as.character(ploidy),]
+  likelyGenRec <- object$likelyGeno_recurrent[as.character(ploidy),]
   
   # Get within- and across- parent probabilties of sampling two different alleles.
   parentHo <- matrix(c(HoOneParent(likelyGenRec, object$alleles2loc, keeploc, ploidy),

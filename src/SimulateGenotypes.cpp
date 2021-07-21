@@ -74,6 +74,69 @@ NumericMatrix simGeno(NumericVector alleleFreq, IntegerVector alleles2loc, int n
   return out;
 }
 
+// Simulate a genotype matrix in a mapping population
+// progGeno and genoProbs come from .buildProgProb
+// [[Rcpp::export]]
+NumericMatrix simGenoMapping(NumericVector donorGeno, NumericVector recurGeno, NumericMatrix progGeno,
+                             NumericVector genoProbs, IntegerVector alleles2loc, int nsam, int ploidy){
+  int nal = alleles2loc.size();
+  IntegerVector alleles = seq(0, nal - 1);
+  IntegerVector thesecol;
+  int thisnal;
+  NumericVector thisgeno;
+  NumericVector thisDonorGeno;
+  NumericVector thisRecurGeno;
+  NumericMatrix out(nsam, nal);
+  int maxL = max(alleles2loc);
+  int ngeno = genoProbs.size();
+  int genoindex;
+  int thisal1;
+  int thisal2 = 0;
+  
+  for(int L = 1; L <= maxL; L++){
+    thesecol = alleles[alleles2loc == L];
+    thisnal = thesecol.size();
+    thisDonorGeno = donorGeno[thesecol];
+    thisRecurGeno = recurGeno[thesecol];
+    // Cumulative sums of genotypes for allele lookup
+    // For some reason I get an error if declaring in header
+    NumericVector thisDonorCum = cumsum(thisDonorGeno);
+    NumericVector thisRecurCum = cumsum(thisRecurGeno);
+    for(int s = 0; s < nsam; s++){
+      // Determine which genotype this sample has
+      // NEED TO FIX; always gives 0
+      genoindex = sample(ngeno, 1, false, genoProbs, false)[0];
+      // For each allele in the genotype, determine its index in the output matrix
+      for(int a = 0; a < ploidy; a++){
+        // Number from 1 to 2*ploidy, indicating parent and copy
+        thisal1 = progGeno(genoindex, a);
+        // Higher numbers are for donor parent
+        if(thisal1 > ploidy){
+          thisal1 -= ploidy;
+          for(int b = 0; b < thisnal; b++){
+            if(thisDonorCum[b] >= thisal1){
+              thisal2 = thesecol[b];
+              break;
+            }
+          }
+        }
+        // Lower numbers are for recurrent parent
+        else {
+          for(int b = 0; b < thisnal; b++){
+            if(thisRecurCum[b] >= thisal1){
+              thisal2 = thesecol[b];
+              break;
+            }
+          }
+        }
+        out(s, thisal2) += 1;
+      }
+    }
+  }
+  
+  return out;
+}
+
 // simulate an allele depth matrix, given locus depth and genotypes
 // [[Rcpp::export]]
 IntegerMatrix simAD(IntegerMatrix locDepth, NumericMatrix genotypes, IntegerVector alleles2loc, double overdispersion){

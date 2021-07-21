@@ -288,12 +288,20 @@ Export_MAPpoly <- function(object, file, pheno = NULL, ploidyIndex = 1,
               col.names = FALSE, row.names = FALSE)
 }
 
-Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE){
-  # matrix of discrete genotypes
-  mygeno <- t(GetProbableGenotypes(object,
-                                   omit1allelePerLocus = TRUE,
-                                   omitCommonAllele = TRUE,
-                                   naIfZeroReads = naIfZeroReads)$genotypes)
+Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE, postmean = TRUE, digits = 3){
+  if(postmean){
+    mygeno <- t(GetWeightedMeanGenotypes(object, maxval = max(sapply(object$possiblePloidies, sum)),
+                                         omit1allelePerLocus = TRUE,
+                                         omitCommonAllele = TRUE,
+                                         naIfZeroReads = naIfZeroReads))
+    mygeno <- round(mygeno, digits = digits)
+  } else {
+    # matrix of discrete genotypes
+    mygeno <- t(GetProbableGenotypes(object,
+                                     omit1allelePerLocus = TRUE,
+                                     omitCommonAllele = TRUE,
+                                     naIfZeroReads = naIfZeroReads)$genotypes)
+  }
   
   # get loci to correspond to these alleles
   locindex <- object$alleles2loc[-OneAllelePerMarker(object,
@@ -494,4 +502,58 @@ Export_Structure <- function(object, file, includeDistances = FALSE,
   if(ncolx > 1){
     cat(paste(ncolx - 1, "extra columns that you should define for Structure"))
   }
+}
+
+Export_adegenet_genind <- function(object, ploidyIndex = 1){
+  object <- SubsetByPloidy(object, ploidies = object$priorProbPloidies[ploidyIndex])
+  
+  tab <- GetProbableGenotypes(object, omit1allelePerLocus = FALSE,
+                              multiallelic = "correct")$genotypes
+  colnames(tab) <- paste(sub("\\.", "_", GetLoci(object)[object$alleles2loc]),
+                         object$alleleNucleotides, sep = ".")
+  
+  out <- methods::new("genind", tab = tab,
+             ploidy = sum(object$priorProbPloidies[[1]]),
+             type = "codom")
+
+  return(out)
+}
+
+Export_polymapR_probs <- function(object, maxPcutoff = 0.9,
+                                  correctParentalGenos = TRUE,
+                                  multiallelic = "correct"){
+  if(!is(object, "RADdata")){
+    stop("RADdata object needed")
+  }
+  if(length(object$posteriorProb) > 1){
+    stop("Only one ploidy allowed for Export_polymapR_probs.")
+  }
+  object <- RemoveUngenotypedLoci(object, removeNonvariant = TRUE)
+  p1 <- dim(object$posteriorProb[[1]])[1] # ploidy plus one
+  omitals <- OneAllelePerMarker(object, commonAllele = TRUE)
+  keepals <- GetAlleleNames(object)[-omitals]
+  
+  probmat <- matrix(object$posteriorProb[[1]][,,keepals],
+                    nrow = nTaxa(object) * length(keepals),
+                    ncol = p1,
+                    dimnames = list(NULL, paste0("P", seq_len(p1) - 1L)),
+                    byrow = TRUE)
+  out <- data.frame(SampleName = rep(GetTaxa(object), times = length(keepals)),
+                    MarkerName = rep(keepals, each = nTaxa(object)),
+                    probmat)
+  genomat <- GetProbableGenotypes(object, omit1allelePerLocus = TRUE,
+                                  omitCommonAllele = TRUE,
+                                  correctParentalGenos = correctParentalGenos,
+                                  multiallelic = multiallelic)$genotypes
+  genovect <- as.vector(genomat)
+  out$maxP <- numeric(nTaxa(object) * length(keepals))
+  for(i in seq_len(p1) - 1L){
+    theserows <- which(genovect == i)
+    out$maxP[theserows] <- out[[paste0("P", i)]][theserows]
+  }
+  out$maxgeno <- genovect
+  out$geno <- genovect
+  out$geno[out$maxP < maxPcutoff] <- NA_real_
+  
+  return(out)
 }

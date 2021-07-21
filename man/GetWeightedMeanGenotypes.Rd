@@ -144,7 +144,7 @@ each allele.  These values can be treated as discrete genotypes.
 }
 \item{ploidy_index}{
 A vector with one value per allele.  It contains the index
-of the most inheritance mode of that allele in 
+of the most likely inheritance mode of that allele in 
 \code{object$priorProbPloidies}.
 }
 }
