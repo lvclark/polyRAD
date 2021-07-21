@@ -1126,13 +1126,13 @@ AddGenotypePriorProb_ByTaxa.RADdata <- function(object, selfing.rate = 0, ...){
   for(i in seq_along(object$possiblePloidies)){
     for(j in seq_along(tx_pld_unique)){
       pldtot <- sum(object$possiblePloidies[[i]]) * tx_pld_unique[j] / 2L
-      thesetaxa <- which(GetTaxaPloidy(object) == tx_pld_unique[j])
+      thesetaxa <- GetTaxaByPloidy(object, tx_pld_unique[j])
       priors[[i, j]] <- array(NA, dim = c(pldtot + 1,
                                        length(thesetaxa), nAlleles(object)),
                            dimnames = list(as.character(0:pldtot),
-                                           GetTaxa(object)[thesetaxa],
+                                           thesetaxa,
                                            GetAlleleNames(object)))
-      for(k in seq_len(nTaxa(object))){
+      for(k in thesetaxa){
         priors[[i, j]][,k,] <- .HWEpriors(object$alleleFreqByTaxa[k,], 
                                        object$possiblePloidies[[i]] * tx_pld_unique[j] / 2L,
                                        selfing.rate)
@@ -1439,6 +1439,12 @@ GetTaxaPloidy <- function(object, ...){
 }
 GetTaxaPloidy.RADdata <- function(object, ...){
   return(object$taxaPloidy)
+}
+GetTaxaByPloidy <- function(object, ...){
+  UseMethod("GetTaxaByPloidy")
+}
+GetTaxaByPloidy.RADdata <- function(object, ploidy, ...){
+  return(GetTaxa(object)[GetTaxaPloidy(object) == ploidy])
 }
 
 # Functions for assigning taxa to specific roles ####
