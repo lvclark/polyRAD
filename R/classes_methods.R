@@ -256,49 +256,58 @@ AddGenotypeLikelihood.RADdata <- function(object, overdispersion = 9, ...){
   minfreq <- 1/nTaxa(object)/max(ploidies)
   alFreq[alFreq == 0] <- minfreq
   alFreq[alFreq == 1] <- 1 - minfreq
+  # get ploidies by taxa
+  tx_pld_unique <- sort(unique(GetTaxaPloidy(object)))
   
   # set up list for genotype likelihoods and loop through
-  object$genotypeLikelihood <- list()
-  length(object$genotypeLikelihood) <- length(ploidies)
+  object$genotypeLikelihood <- array(list(),
+                                     dim = c(length(ploidies),
+                                             length(tx_pld_unique)),
+                                     dimnames = list(NULL, as.character(tx_pld_unique)))
   # probability of getting each allele from contamination
   sampleContam <- attr(object, "contamRate") * alFreq
-  for(i in 1:length(ploidies)){
-    # get probability of sampling each allele from each possible genotype
-    sampleReal <- (0:ploidies[i])/ploidies[i] * (1 - attr(object, "contamRate"))
-    alleleProb <- matrix(0, nrow = length(sampleReal), 
-                         ncol = length(sampleContam))
-    for(j in 1:length(sampleReal)){
-      alleleProb[j,] <- sampleReal[j] + sampleContam
-    }
-    antiAlleleProb <- 1 - alleleProb
-    # multiply probabilities by overdispersion factor for betabinomial
-    alleleProb <- alleleProb * overdispersion
-    antiAlleleProb <- antiAlleleProb * overdispersion
-    
-    # get likelihoods
-    object$genotypeLikelihood[[i]] <- array(0, dim = c(ploidies[i]+1, 
-                                                  dim(object$alleleDepth)),
-                                       dimnames = list(as.character(0:ploidies[i]),
-                                                       GetTaxa(object),
-                                                       GetAlleleNames(object)))
-    for(j in 1:(ploidies[i]+1)){
-      # likelihoods under beta-binomial distribution
-      object$genotypeLikelihood[[i]][j,,] <- 
-        exp(object$depthSamplingPermutations +
-        sweep(lbeta(sweep(object$alleleDepth, 2, alleleProb[j,], "+"),
-                    sweep(object$antiAlleleDepth, 2, antiAlleleProb[j,], "+")),
-              2, lbeta(alleleProb[j,], antiAlleleProb[j,]), "-"))
-    }
-    # fix likelihoods where all are zero
-    totlik <- colSums(object$genotypeLikelihood[[i]])
-    toRecalculate <- which(totlik == 0, arr.ind = TRUE)
-    if(dim(toRecalculate)[1] > 0){
-      for(k in 1:dim(toRecalculate)[1]){
-        taxon <- toRecalculate[k,1]
-        allele <- toRecalculate[k,2]
-        # for rare cases where likelihood still not estimated, set to one
-        if(sum(object$genotypeLikelihood[[i]][, taxon, allele]) == 0){
-          object$genotypeLikelihood[[i]][, taxon, allele] <- 1
+  for(i in seq_along(ploidies)){
+    for(h in seq_along(tax_pld_unique)){
+      pldtot <- sum(object$possiblePloidies[[i]]) * tx_pld_unique[h] / 2L
+      # get probability of sampling each allele from each possible genotype
+      sampleReal <- (0:pldtot)/pldtot * (1 - attr(object, "contamRate"))
+      alleleProb <- matrix(0, nrow = length(sampleReal), 
+                           ncol = length(sampleContam))
+      for(j in seq_along(sampleReal)){
+        alleleProb[j,] <- sampleReal[j] + sampleContam
+      }
+      antiAlleleProb <- 1 - alleleProb
+      # multiply probabilities by overdispersion factor for betabinomial
+      alleleProb <- alleleProb * overdispersion
+      antiAlleleProb <- antiAlleleProb * overdispersion
+      
+      thesetaxa <- GetTaxaByPloidy(object, tx_pld_unique[h])
+      
+      # get likelihoods
+      object$genotypeLikelihood[[i,h]] <- array(0, dim = c(pldtot+1, 
+                                                         length(thesetaxa), nAlleles(object)),
+                                              dimnames = list(as.character(0:pldtot),
+                                                              thesetaxa,
+                                                              GetAlleleNames(object)))
+      for(j in 1:(pldtot+1)){
+        # likelihoods under beta-binomial distribution
+        object$genotypeLikelihood[[i,h]][j,,] <- 
+          exp(object$depthSamplingPermutations[thesetaxa,] +
+                sweep(lbeta(sweep(object$alleleDepth[thesetaxa,], 2, alleleProb[j,], "+"),
+                            sweep(object$antiAlleleDepth[thesetaxa,], 2, antiAlleleProb[j,], "+")),
+                      2, lbeta(alleleProb[j,], antiAlleleProb[j,]), "-"))
+      }
+      # fix likelihoods where all are zero
+      totlik <- colSums(object$genotypeLikelihood[[i,h]])
+      toRecalculate <- which(totlik == 0, arr.ind = TRUE)
+      if(dim(toRecalculate)[1] > 0){
+        for(k in 1:dim(toRecalculate)[1]){
+          taxon <- toRecalculate[k,1]
+          allele <- toRecalculate[k,2]
+          # for rare cases where likelihood still not estimated, set to one
+          if(sum(object$genotypeLikelihood[[i,h]][, taxon, allele]) == 0){
+            object$genotypeLikelihood[[i,h]][, taxon, allele] <- 1
+          }
         }
       }
     }
