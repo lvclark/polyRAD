@@ -6,13 +6,24 @@ See the [list of future features](https://github.com/lvclark/polyRAD/wiki/todo) 
 
 polyRAD is available on CRAN or can be installed from this repository.
 
-## Purpose
+## Table of Contents
+
+- [Purpose](#purpose)
+- [Why polyRAD](#whypolyrad)
+- [Formats supported](#formats)
+- [Installation](#installation)
+- [Tutorial](#tutorial)
+- [Citation](#citation)
+- [Need help with R?](#rhelp)
+- [Funding](#funding)
+
+## <a name="purpose"></a>Purpose
 
 Genotypes derived from genotyping-by-sequencing (GBS) and restriction site-associated DNA sequencing (RAD-seq) have inherent uncertainty associated with them due to sampling error, i.e. some alleles might not get sequenced at all, or might not be sequenced in exact proportion to their copy number in the genome.  This package imports read depth in a variety of formats output by various bioinformatics pipelines and estimates the probability of each possible genotype for each taxon and locus.  Unlike similar pipelines, polyRAD can account for population structure and variable inheritance modes (autopolyploid, allopolyploid, intermediate).  Genotypes and/or probability distributions can then be exported for downstream analysis such as genome-wide association, genomic selection, QTL mapping, or population structure analysis.
 
 Starting with version 1.2, polyRAD also includes its own variant calling pipeline.  It is designed for highly duplicated (typically allopolyploid) reference genomes, and can help correct and filter markers that appear to consist of multiple paralogous loci.  Even in non-duplicated genomes, the same statistic can be used for filtering non-Mendelian loci, as well as loci with considerable amounts of amplification bias and/or overdispersion in the sequencing data.  This filtering can be performed before genotype calling.
 
-## Why polyRAD?
+## <a name="whypolyrad"></a>Why polyRAD?
 
 If you're like me, you don't want to waste a lot of money sequencing your DNA samples at a higher depth than is necessary.  You would rather spend that money adding more samples to the project, or using a different restriction enzyme to get more markers!  You may have also noticed that some loci get sequenced at a much higher depth than others, which means that if you sequence the same library a second time, you aren't likely to get a lot of reads for the loci that need it most.  So how can we get the maximum amount of information out of sequencing data where many loci are low depth?  And, for example, if we only have five reads, how can we estimate allele dosage in a heterozygous octoploid?
 
@@ -34,7 +45,7 @@ For an explanation of Bayesian genotype calling and posterior mean genotypes, se
 
 In particular, by using population structure and linkage to inform genotype priors on a per-individual basis, high depth markers are used by polyRAD to improve the accuracy of genotyping at low depth markers.  All pipelines allow autopolyploidy, allopolyploidy, or some mixture of the two.  And because non-model organisms need some love, reference genomes are optional.
 
-## Formats supported
+## <a name="formats"></a>Formats supported
 
 To hopefully answer the question, "Can I use polyRAD?":
 
@@ -66,7 +77,7 @@ Genotype probabilities can be exported to:
 * [MAPpoly](https://github.com/mmollina/MAPpoly)
 * [polymapR](https://cran.r-project.org/package=polymapR)
 
-## Installation
+## <a name="installation"></a>Installation
 
 polyRAD depends on some Bioconductor packages.  Before attempting to install polyRAD, run
 
@@ -98,7 +109,7 @@ risk using the command
 install.packages("polyRAD", repos = "https://lvclark.r-universe.dev")
 ```
 
-## Tutorial
+## <a name="tutorial"></a>Tutorial
 
 The tutorial document for the package is available [on R-universe](https://lvclark.r-universe.dev/articles/polyRAD/polyRADtutorial.html).
 
@@ -110,7 +121,7 @@ A tutorial on [using polyRAD for population genetics](https://lvclark.r-universe
 is also available.  If you would like to have the dataset to follow along with that tutorial, run
 `install.packages("polyRADtutorials", repos = "https://lvclark.r-universe.dev")`.
 
-## Citation
+## <a name="citation"></a>Citation
 
 If you use polyRAD, please cite this manuscript:
 
@@ -137,12 +148,12 @@ Clark LV, Lipka AE, and Sacks EJ (2018) polyRAD: Genotype Calling with Uncertain
 in Polyploids and Diploids.  Plant and Animal Genome Conference XXVI, January 13-17, San Diego, California, USA.
 doi:[10.13140/RG.2.2.27134.08001](https://doi.org/10.13140/RG.2.2.27134.08001)
 
-## Need help with R?
+## <a name="rhelp"></a>Need help with R?
 
 Video tutorials on R, Python, and linear algebra were produced as part of the NSF
 grant that funded polyRAD.  They can be found here: https://www.youtube.com/channel/UCcyeu245nwXnUDoxvcBPqVg
 
-## Funding
+## <a name="funding"></a>Funding
 
 This material is based upon work supported by the National Science Foundation under Grant No. 
 [1661490](https://www.nsf.gov/awardsearch/showAward?AWD_ID=1661490&HistoricalAwards=false).  
