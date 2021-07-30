@@ -1496,3 +1496,85 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   }
   return(radout)
 }
+
+readDArTtag <- function(file, excludeHaps = NULL, includeHaps = NULL,
+                        n.header.rows = 7, sample.name.row = 7, 
+                        trim.sample.names = "_[^_]+_[ABCDEFGH][[:digit:]][012]?$",
+                        sep = ",",
+                        possiblePloidies = list(2), contamRate = 0.001){
+  if(!is.null(excludeHaps) && !is.null(includeHaps)){
+    stop("Only specify one of excludeHaps or includeHaps")
+  }
+  mycon <- file(file, open = 'r')
+  hdr <- readLines(mycon, n = n.header.rows)
+  tab <- read.table(mycon, header = TRUE, sep = sep)
+  close(mycon)
+  
+  # determine number of leading columns
+  hdr.split <- strsplit(hdr, split = ",")
+  n.lead.cols <-
+    unique(sapply(hdr.split, function(x) min(grep(".+", x)) - 1))
+  if(length(n.lead.cols) != 1){
+    stop("Not all sample headers start on same column. Be sure not to count the row starting with AlleleID towards n.header.rows.")
+  }
+  if(!all(c("AlleleID", "CloneID", "AlleleSequence" %in% colnames(tab)))){
+    stop("Need AlleleID, CloneID, and AlleleSequence columns.")
+  }
+  
+  # Get sample names
+  if(sample.name.row == n.header.rows + 1){
+    samples <- colnames(tab)[-seq_len(n.lead.cols)]
+  } else {
+    if(sample.name.row < 1 || sample.name.row > n.header.rows){
+      stop("sample.name.row should be within header rows or column headers.")
+    }
+    samples <- hdr.split[[sample.name.row]][-seq_len(n.lead.cols)]
+  }
+  if(trim.sample.names != ""){
+    samples <- sub(trim.sample.names, "", samples)
+  }
+  if(anyDuplicated(samples)){
+    stop("Not all sample names are unique.  Check sample.name.row and trim.sample.names.")
+  }
+  
+  # Filter haplotypes if needed
+  if(!is.null(includeHaps)){
+    if(!all(includeHaps %in% tab$AlleleID)){
+      stop("Not all haplotypes in includeHaps found in AlleleID.")
+    }
+    tab <- tab[tab$AlleleID %in% includeHaps,]
+  }
+  if(!is.null(excludeHaps)){
+    if(!all(excludeHaps %in% tab$AlleleID)){
+      warning("Not all haplotypes in excludeHaps found in AlleleID.")
+    }
+    tab <- tab[!tab$AlleleID %in% excludeHaps,]
+  }
+  if(anyDuplicated(tab$AlleleID)){
+    stop("Duplicate AlleleIDs found.")
+  }
+  
+  # Build locTable
+  loci <- unique(tab$CloneID)
+  locTable <- data.frame(row.names = loci,
+                         Chr = sub("_[[:digit:]]+$", "", loci),
+                         Pos = as.integer(sub("^.+_", "", loci)))
+  refals <- paste0(loci, "|Ref_001")
+  if(!all(refals %in% tab$AlleleID)){
+    warning("Reference sequence not recorded due to not all loci having reference alleles.  Expecting Ref_001.")
+  } else {
+    locTable$Ref <- tab$AlleleSequence[match(refals, tab$AlleleID)]
+  }
+  
+  # Allele info
+  alleles2loc <- match(tab$CloneID, loci)
+  alleleNucleotides <- tab$AlleleSequence
+  
+  # Allelic read depth
+  alleleDepth <- t(as.matrix(tab[,-seq_len(n.lead.cols)]))
+  colnames(alleleDepth) <- tab$AlleleID
+  rownames(alleleDepth) <- samples
+  
+  return(RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
+                 contamRate, alleleNucleotides))
+}
