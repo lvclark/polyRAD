@@ -10,7 +10,7 @@ Author: Lindsay V. Clark [aut, cre] (<https://orcid.org/0000-0002-3881-9252>),
   U.S. National Science Foundation [fnd]
 Maintainer: Lindsay V. Clark <lvclark@illinois.edu>
 Depends: R (>= 3.5.0)
-Imports: fastmatch, pcaMethods, methods, Rcpp
+Imports: fastmatch, pcaMethods, methods, Rcpp, stringi
 Suggests: rrBLUP, Rsamtools, GenomeInfoDb, Biostrings, GenomicRanges, VariantAnnotation,
   SummarizedExperiment, S4Vectors, IRanges, BiocGenerics, knitr, rmarkdown,
   GenomicFeatures, qqman, ggplot2, adegenet

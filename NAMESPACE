@@ -35,6 +35,7 @@ importFrom("fastmatch", "%fin%")
 importFrom("methods", "is")
 importFrom("Rcpp", "evalCpp")
 importFrom("graphics", "plot", "points", "text", "hist")
+importFrom("stringi", "stri_reverse", "stri_trans_char")
 
 S3method(print, RADdata)
 S3method(AddAlleleFreqByTaxa, RADdata)

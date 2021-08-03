@@ -1497,7 +1497,7 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   return(radout)
 }
 
-readDArTtag <- function(file, excludeHaps = NULL, includeHaps = NULL,
+readDArTtag <- function(file, botloci, excludeHaps = NULL, includeHaps = NULL,
                         n.header.rows = 7, sample.name.row = 7, 
                         trim.sample.names = "_[^_]+_[ABCDEFGH][[:digit:]][012]?$",
                         sep = ",",
@@ -1561,7 +1561,11 @@ readDArTtag <- function(file, excludeHaps = NULL, includeHaps = NULL,
     stop("Duplicate AlleleIDs found.")
   }
   
-  ### Add in code to do reverse complement where appropriate
+  # Do reverse complement where appropriate
+  botrows <- which(tab$CloneID %in% botloci)
+  tab$AlleleSequence[botrows] <-
+    stri_reverse(stri_trans_char(tab$AlleleSequence[botrows],
+                                 "ACGTRYSWKMBDHVN", "TGCAYRSWMKVHDBN"))
   
   # Build locTable
   loci <- unique(tab$CloneID)
