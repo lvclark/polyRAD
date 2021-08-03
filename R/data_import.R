@@ -1561,6 +1561,8 @@ readDArTtag <- function(file, excludeHaps = NULL, includeHaps = NULL,
     stop("Duplicate AlleleIDs found.")
   }
   
+  ### Add in code to do reverse complement where appropriate
+  
   # Build locTable
   loci <- unique(tab$CloneID)
   locTable <- data.frame(row.names = loci,
@@ -1569,8 +1571,20 @@ readDArTtag <- function(file, excludeHaps = NULL, includeHaps = NULL,
   refals <- paste0(loci, "|Ref_001")
   if(!all(refals %in% tab$AlleleID)){
     warning("Reference sequence not recorded due to not all loci having reference alleles.  Expecting Ref_001.")
+    warning("Positions incorrect because target SNP could not be ascertained.")
   } else {
     locTable$Ref <- tab$AlleleSequence[match(refals, tab$AlleleID)]
+    altals <- paste0(loci, "|Alt_002")
+    if(!all(altals %in% tab$AlleleID)){
+      warning("Positions incorrect because target SNP could not be ascertained.")
+    } else {
+      # Convert position from target SNP to tag start
+      altseq <- tab$AlleleSequence[match(altals, tab$AlleleID)]
+      snppos <-
+        mapply(function(x, y) which(charToRaw(x) != charToRaw(y))[1],
+               locTable$Ref, altseq, USE.NAMES = FALSE)
+      locTable$Pos <- locTable$Pos - snppos + 1L
+    }
   }
   
   # Allele info
