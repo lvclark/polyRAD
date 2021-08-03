@@ -1530,11 +1530,18 @@ readDArTtag <- function(file, excludeHaps = NULL, includeHaps = NULL,
     }
     samples <- hdr.split[[sample.name.row]][-seq_len(n.lead.cols)]
   }
-  if(trim.sample.names != ""){
-    samples <- sub(trim.sample.names, "", samples)
-  }
   if(anyDuplicated(samples)){
-    stop("Not all sample names are unique.  Check sample.name.row and trim.sample.names.")
+    stop("Not all sample names are unique.  Check sample.name.row.")
+  }
+  if(trim.sample.names != ""){
+    samplesOLD <- samples
+    samples <- sub(trim.sample.names, "", samples)
+    dups <- duplicated(samples)
+    if(any(dups)){
+      warning("Some sample names not trimmed, to avoid duplicates.")
+      samples[dups] <- samplesOLD[dups]
+    }
+    stopifnot(!anyDuplicated(samples))
   }
   
   # Filter haplotypes if needed
