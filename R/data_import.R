@@ -1569,6 +1569,7 @@ readDArTtag <- function(file, excludeHaps = NULL, includeHaps = NULL,
   # Allele info
   alleles2loc <- match(tab$CloneID, loci)
   alleleNucleotides <- tab$AlleleSequence
+  attr(alleleNucleotides, "Variable_sites_only") <- FALSE
   
   # Allelic read depth
   alleleDepth <- t(as.matrix(tab[,-seq_len(n.lead.cols)]))
