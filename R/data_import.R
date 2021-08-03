@@ -1517,7 +1517,7 @@ readDArTtag <- function(file, excludeHaps = NULL, includeHaps = NULL,
   if(length(n.lead.cols) != 1){
     stop("Not all sample headers start on same column. Be sure not to count the row starting with AlleleID towards n.header.rows.")
   }
-  if(!all(c("AlleleID", "CloneID", "AlleleSequence" %in% colnames(tab)))){
+  if(!all(c("AlleleID", "CloneID", "AlleleSequence") %in% colnames(tab))){
     stop("Need AlleleID, CloneID, and AlleleSequence columns.")
   }
   
