@@ -1623,9 +1623,7 @@ readDArTtag <- function(file, botloci = NULL, blastfile = NULL,
     }
   }
   botrows <- which(tab$CloneID %in% botloci)
-  tab$AlleleSequence[botrows] <-
-    stri_reverse(stri_trans_char(tab$AlleleSequence[botrows],
-                                 "ACGTRYSWKMBDHVN", "TGCAYRSWMKVHDBN"))
+  tab$AlleleSequence[botrows] <- reverseComplement(tab$AlleleSequence[botrows])
   locTable$Tag_strand <- ifelse(loci %in% botloci, "bot", "top")
 
   # Add reference sequence to locTable
