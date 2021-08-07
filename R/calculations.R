@@ -244,7 +244,8 @@ setGeneric("reverseComplement", signature="x",
 setMethod("reverseComplement", "character",
           function(x, ...){
             stri_reverse(stri_trans_char(x,
-                                         "ACGTRYSWKMBDHVN", "TGCAYRSWMKVHDBN"))
+                                         "ACGTRYSWKMBDHVNacgtryswkmbdhvn",
+                                         "TGCAYRSWMKVHDBNtgcayrswmkvhdbn"))
           } 
 )
 
