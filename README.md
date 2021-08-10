@@ -8,6 +8,8 @@ polyRAD is available on CRAN or can be installed from this repository.
 
 ## Table of Contents
 
+<img src='man/figures/logo.png' align="right" height="139" />
+
 - [Purpose](#purpose)
 - [Why polyRAD](#whypolyrad)
 - [Formats supported](#formats)
