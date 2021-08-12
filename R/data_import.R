@@ -1655,6 +1655,7 @@ readDArTtag <- function(file, botloci = NULL, blastfile = NULL,
   colnames(alleleDepth) <- tab$AlleleID
   rownames(alleleDepth) <- samples
   
+  message("Building RADdata object...")
   return(RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
                  contamRate, alleleNucleotides))
 }
