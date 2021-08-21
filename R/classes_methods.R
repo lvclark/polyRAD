@@ -702,6 +702,9 @@ AddPloidyLikelihood.RADdata <- function(object, excludeTaxa = GetBlankTaxa(objec
   if(attr(object, "priorType") != "population"){
     stop("AddPloidyLikelihood not yet defined for priors estimated on a per-taxon basis.")
   }
+  if(ncol(object$priorProb) > 1){
+    stop("AddPloidyLikelihood not yet defined for multiploid populations.")
+  }
   taxa <- GetTaxa(object)
   if(!is.null(attr(object, "donorParent"))){
     taxa <- taxa[taxa != GetDonorParent(object)]
@@ -719,8 +722,8 @@ AddPloidyLikelihood.RADdata <- function(object, excludeTaxa = GetBlankTaxa(objec
   object$ploidyLikelihood <- matrix(nrow = length(object$priorProb),
                                     ncol = nAlleles,
                                     dimnames = list(NULL, GetAlleleNames(object)))
-  for(i in 1:length(object$priorProb)){
-    thisploidy <- dim(object$priorProb[[i]])[1] - 1
+  for(i in 1:nrow(object$priorProb)){
+    thisploidy <- dim(object$priorProb[[i,1]])[1] - 1
     thesegen <- sapply(likgen, function(x) x[as.character(thisploidy),])
     countstable <- matrix(0L, nrow = thisploidy + 1, ncol = dim(thesegen)[1],
                           dimnames = list(as.character(0:thisploidy),
@@ -730,11 +733,11 @@ AddPloidyLikelihood.RADdata <- function(object, excludeTaxa = GetBlankTaxa(objec
     }
     # get ploidy likelihood
     thislikehd <- sapply(1:nAlleles, function(x){
-      if(any(is.na(object$priorProb[[i]][,x]))){
+      if(any(is.na(object$priorProb[[i,1]][,x]))){
         NA
       } else {
         dmultinom(countstable[,x], 
-                  prob = object$priorProb[[i]][,x])
+                  prob = object$priorProb[[i,1]][,x])
       }
     })
     object$ploidyLikelihood[i,] <- thislikehd
