@@ -54,6 +54,10 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
     stop("Length of alleleNucleotides must be same as length of alleles2loc.")
   }
   taxaPloidy <- as.integer(taxaPloidy)
+  if(length(taxaPloidy) == 1){
+    # repeat ploidy for all samples if only one is provided
+    taxaPloidy <- rep(taxaPloidy, times = nrow(alleleDepth))
+  }
   if(length(taxaPloidy) != nrow(alleleDepth)){
     stop("Need one ploidy for each taxon.")
   }
