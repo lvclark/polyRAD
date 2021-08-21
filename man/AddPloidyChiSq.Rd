@@ -42,13 +42,10 @@ likelihood for a genotype with zero prior probability,
 }
 \value{
 A \code{"RADdata"} object identical to the one passed to the function,
-but with matrices added to the \code{$ploidyChiSq} and \code{$ploidyChiSqP}
-slots.  Both matrices have ploidies (matching \code{object$priorProb}) in
+but with a matrix added to the \code{$ploidyChiSq}
+slot.  This matrix has inheritance rows (matching \code{object$priorProb}) in
 rows and alleles in columns.  \code{object$ploidyChiSq} contains the 
-\eqn{\chi ^ 2}{chi-squared} values.  \code{object$ploidyChiSqP} contains
-p-values, \emph{i.e.} the probability of genotype distributions deviating
-that far from expectations if the expectations are correct.  These 
-p-values may be relatively low due to genotype uncertainty.
+\eqn{\chi ^ 2}{chi-squared} values.
 }
 
 \author{
@@ -74,7 +71,6 @@ exampleRAD_mapping <- AddGenotypePriorProb_Mapping2Parents(exampleRAD_mapping,
 exampleRAD_mapping <- AddPloidyChiSq(exampleRAD_mapping)
 # view chi-squared and p-values (diploid only)
 exampleRAD_mapping$ploidyChiSq
-exampleRAD_mapping$ploidyChiSqP
 }
 
 \keyword{ methods }
