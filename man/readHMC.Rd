@@ -63,7 +63,8 @@ archived versions of TASSEL.
 
 \seealso{
 \code{\link{readTagDigger}}, \code{\link{VCF2RADdata}}, 
-\code{\link{readStacks}}, \code{\link{readTASSELGBSv2}}
+\code{\link{readStacks}}, \code{\link{readTASSELGBSv2}},
+\code{\link{readDArTtag}}
 }
 \examples{
 # for this example we'll create dummy files rather than using real ones

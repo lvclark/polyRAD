@@ -237,6 +237,18 @@ polyRADsubmat <- matrix(c(0,1,1,1, 0,0,0,1,1,1, 0,0,0,1, 0,1,1, # A
                                            'S', 'Y', 'K', 'V', 'H', 'D', 'B', 
                                            'N', '-', '.')))
 
+# Reverse complement; set up as S4 method to be compatible with Biostrings
+setGeneric("reverseComplement", signature="x",
+           function(x, ...) standardGeneric("reverseComplement")
+)
+setMethod("reverseComplement", "character",
+          function(x, ...){
+            stri_reverse(stri_trans_char(x,
+                                         "ACGTRYSWKMBDHVNacgtryswkmbdhvn",
+                                         "TGCAYRSWMKVHDBNtgcayrswmkvhdbn"))
+          } 
+)
+
 #### Getting genotype priors in mapping pops and simulating selfing ####
 
 # function to generate all gamete genotypes for a set of genotypes.

@@ -48,6 +48,7 @@ alignment information into a RADdata object:
 * `readTASSELGBSv2`
 * `readProcessSamMulti`
 * `readProcessIsoloci`
+* `readDArTtag`
 
 More generally, the `RADdata` function is used for constructing RADdata
 objects; see the help page for that function for more information on what 

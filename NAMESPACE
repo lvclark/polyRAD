@@ -19,8 +19,9 @@ InbreedingFromHindHe, IterateHWE, IterateHWE_LD,
 IteratePopStruct, IteratePopStructLD, LocusInfo, MakeTasselVcfFilter,
 MergeIdenticalHaplotypes, MergeRareHaplotypes, MergeTaxaDepth, nTaxa, nAlleles,
 nLoci, OneAllelePerMarker, 
-PipelineMapping2Parents, RADdata, RADdata2VCF, readHMC, readProcessSamMulti,
-readProcessIsoloci,readStacks, readTagDigger, readTASSELGBSv2,
+PipelineMapping2Parents, RADdata, RADdata2VCF, readHMC, readDArTtag,
+readProcessSamMulti, readProcessIsoloci,
+readStacks, readTagDigger, readTASSELGBSv2,
 RemoveHighDepthLoci, RemoveMonomorphicLoci, RemoveUngenotypedLoci,
 SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent,
 SimAlleleDepth, SimGenotypes, SimGenotypesMapping,
@@ -30,11 +31,13 @@ TestOverdispersion, VCF2RADdata)
 importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom",
            "hclust", "cutree", "as.dist", "cor", "residuals", "lm.fit", "sd",
            "median", "quantile")
-importFrom("utils", "read.csv", "write.table", "write.csv", "packageVersion")
+importFrom("utils", "read.csv", "read.table","write.table", "write.csv",
+           "packageVersion")
 importFrom("fastmatch", "%fin%")
-importFrom("methods", "is")
+importFrom("methods", "is", "setGeneric", "setMethod")
 importFrom("Rcpp", "evalCpp")
 importFrom("graphics", "plot", "points", "text", "hist")
+importFrom("stringi", "stri_reverse", "stri_trans_char")
 
 S3method(print, RADdata)
 S3method(AddAlleleFreqByTaxa, RADdata)
@@ -91,3 +94,5 @@ S3method(SubsetByPloidy, RADdata)
 S3method(SubsetByTaxon, RADdata)
 S3method(StripDown, RADdata)
 S3method(TestOverdispersion, RADdata)
+
+exportMethods(reverseComplement)

@@ -1496,3 +1496,166 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   }
   return(radout)
 }
+
+readDArTtag <- function(file, botloci = NULL, blastfile = NULL,
+                        excludeHaps = NULL, includeHaps = NULL,
+                        n.header.rows = 7, sample.name.row = 7, 
+                        trim.sample.names = "_[^_]+_[ABCDEFGH][[:digit:]][012]?$",
+                        sep.counts = ",", sep.blast = "\t",
+                        possiblePloidies = list(2), contamRate = 0.001){
+  if(!is.null(excludeHaps) && !is.null(includeHaps)){
+    stop("Only specify one of excludeHaps or includeHaps")
+  }
+  if(is.null(botloci) && is.null(blastfile)){
+    stop("Need to specify botloci or blastfile.")
+  }
+  if(!is.null(botloci) && !is.null(blastfile)){
+    stop("Only specify one of botloci or blastfile.")
+  }
+  message("Importing read counts...")
+  mycon <- file(file, open = 'r')
+  hdr <- readLines(mycon, n = n.header.rows)
+  tab <- read.table(mycon, header = TRUE, sep = sep.counts)
+  close(mycon)
+  
+  # determine number of leading columns
+  hdr.split <- strsplit(hdr, split = ",")
+  n.lead.cols <-
+    unique(sapply(hdr.split, function(x) min(grep(".+", x)) - 1))
+  if(length(n.lead.cols) != 1){
+    stop("Not all sample headers start on same column. Be sure not to count the row starting with AlleleID towards n.header.rows.")
+  }
+  if(!all(c("AlleleID", "CloneID", "AlleleSequence") %in% colnames(tab))){
+    stop("Need AlleleID, CloneID, and AlleleSequence columns.")
+  }
+  
+  # Get sample names
+  if(sample.name.row == n.header.rows + 1){
+    samples <- colnames(tab)[-seq_len(n.lead.cols)]
+  } else {
+    if(sample.name.row < 1 || sample.name.row > n.header.rows){
+      stop("sample.name.row should be within header rows or column headers.")
+    }
+    samples <- hdr.split[[sample.name.row]][-seq_len(n.lead.cols)]
+  }
+  if(anyDuplicated(samples)){
+    stop("Not all sample names are unique.  Check sample.name.row.")
+  }
+  if(trim.sample.names != ""){
+    samplesOLD <- samples
+    samples <- sub(trim.sample.names, "", samples)
+    dups <- duplicated(samples)
+    if(any(dups)){
+      warning("Some sample names not trimmed, to avoid duplicates.")
+      samples[dups] <- samplesOLD[dups]
+    }
+    stopifnot(!anyDuplicated(samples))
+  }
+  
+  # Filter haplotypes if needed
+  if(!is.null(includeHaps)){
+    if(!all(includeHaps %in% tab$AlleleID)){
+      stop("Not all haplotypes in includeHaps found in AlleleID.")
+    }
+    tab <- tab[tab$AlleleID %in% includeHaps,]
+  }
+  if(!is.null(excludeHaps)){
+    if(!all(excludeHaps %in% tab$AlleleID)){
+      warning("Not all haplotypes in excludeHaps found in AlleleID.")
+    }
+    tab <- tab[!tab$AlleleID %in% excludeHaps,]
+  }
+  if(anyDuplicated(tab$AlleleID)){
+    stop("Duplicate AlleleIDs found.")
+  }
+  
+  # Build locTable
+  loci <- unique(tab$CloneID)
+  refals <- paste0(loci, "|Ref_001")
+  locTable <- data.frame(row.names = loci,
+                         Chr = sub("_[[:digit:]]+$", "", loci),
+                         Pos = as.integer(sub("^.+_", "", loci)))
+  
+  # Do reverse complement where appropriate
+  if(!is.null(blastfile)){
+    # Import BLAST results
+    message("Importing BLAST results...")
+    blastres <- read.table(blastfile, header = TRUE, sep = sep.blast)
+    botbool <- logical(length(loci))
+    alignedbool <- logical(length(loci))
+    qidcol <- which(colnames(blastres) %in% c("qseqid", "Query"))
+    subcol <- which(colnames(blastres) %in% c("sseqid", "Subject"))
+    sstartcol <- which(colnames(blastres) %in% c("sstart", "S_start"))
+    sendcol <- which(colnames(blastres) %in% c("send", "S_end"))
+    pidentcol <- which(colnames(blastres) %in% c("pident", "X.Identity"))
+    perfectmatch <- blastres[[pidentcol]] == 100
+    if(!all(lengths(list(qidcol, subcol, sstartcol, sendcol, pidentcol)) == 1)){
+      stop("Problem with column headers in BLAST file.")
+    }
+    for(i in seq_along(loci)){
+      # Find perfect matches for the reference allele
+      theserows <- which(blastres[[qidcol]] == refals[i] & perfectmatch)
+      # Check that chromosome is correct
+      theserows <- theserows[grep(paste0("(.+_)?", locTable$Chr[i], "$"),
+                                  blastres[[subcol]][theserows])]
+      # Check that position is correct
+      thispos <- locTable$Pos[i]
+      theserows <- theserows[(blastres[[sstartcol]][theserows] <= thispos &
+                                blastres[[sendcol]][theserows] >= thispos) |
+                               (blastres[[sstartcol]][theserows] >= thispos &
+                                  blastres[[sendcol]][theserows] <= thispos)]
+      if(length(theserows) >= 1){
+        alignedbool[i] <- TRUE
+        # Determine strandedness
+        botbool[i] <-
+          blastres[[sstartcol]][theserows[1]] > blastres[[sendcol]][theserows[1]]
+      }
+    }
+    botloci <- loci[botbool]
+    # subset to loci with alignments
+    loci <- loci[alignedbool]
+    refals <- refals[alignedbool]
+    locTable <- locTable[alignedbool,]
+    tab <- tab[tab$CloneID %in% loci,]
+    nnotaligned <- sum(!alignedbool)
+    if(nnotaligned > 0){
+      warning(paste("Discarded", nnotaligned, "loci without correct alignments."))
+    }
+  }
+  botrows <- which(tab$CloneID %in% botloci)
+  tab$AlleleSequence[botrows] <- reverseComplement(tab$AlleleSequence[botrows])
+  locTable$Tag_strand <- ifelse(loci %in% botloci, "bot", "top")
+
+  # Add reference sequence to locTable
+  if(!all(refals %in% tab$AlleleID)){
+    warning("Reference sequence not recorded due to not all loci having reference alleles.  Expecting Ref_001.")
+    warning("Positions incorrect because target SNP could not be ascertained.")
+  } else {
+    locTable$Ref <- tab$AlleleSequence[match(refals, tab$AlleleID)]
+    altals <- paste0(loci, "|Alt_002")
+    if(!all(altals %in% tab$AlleleID)){
+      warning("Positions incorrect because target SNP could not be ascertained.")
+    } else {
+      # Convert position from target SNP to tag start
+      altseq <- tab$AlleleSequence[match(altals, tab$AlleleID)]
+      snppos <-
+        mapply(function(x, y) which(charToRaw(x) != charToRaw(y))[1],
+               locTable$Ref, altseq, USE.NAMES = FALSE)
+      locTable$Pos <- locTable$Pos - snppos + 1L
+    }
+  }
+  
+  # Allele info
+  alleles2loc <- match(tab$CloneID, loci)
+  alleleNucleotides <- tab$AlleleSequence
+  attr(alleleNucleotides, "Variable_sites_only") <- FALSE
+  
+  # Allelic read depth
+  alleleDepth <- t(as.matrix(tab[,-seq_len(n.lead.cols)]))
+  colnames(alleleDepth) <- tab$AlleleID
+  rownames(alleleDepth) <- samples
+  
+  message("Building RADdata object...")
+  return(RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
+                 contamRate, alleleNucleotides))
+}

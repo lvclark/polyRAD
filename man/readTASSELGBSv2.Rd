@@ -75,7 +75,8 @@ this function.  This is to prevent errors with
 
 \seealso{
 Other data import functions:  \code{\link{readStacks}}, \code{\link{readHMC}},
-\code{\link{readTagDigger}}, \code{\link{VCF2RADdata}}
+\code{\link{readTagDigger}}, \code{\link{VCF2RADdata}},
+\code{\link{readDArTtag}}
 }
 \examples{
 # get files for this example
