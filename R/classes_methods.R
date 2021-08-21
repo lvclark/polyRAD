@@ -766,49 +766,64 @@ AddPloidyChiSq.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object),
   }
   
   nAllele <- nAlleles(object)
-  object$ploidyChiSq <- matrix(NA, nrow = length(object$priorProb),
+  object$ploidyChiSq <- matrix(0, nrow = length(object$priorProb),
                                ncol = nAllele,
                                dimnames = list(NULL, GetAlleleNames(object)))
-  object$ploidyChiSqP <- matrix(NA, nrow = length(object$priorProb),
-                                ncol = nAllele,
-                                dimnames = list(NULL, GetAlleleNames(object)))
+  # object$ploidyChiSqP <- matrix(NA, nrow = length(object$priorProb),
+  #                               ncol = nAllele,
+  #                               dimnames = list(NULL, GetAlleleNames(object)))
   
   # get weighted genotype tallies from genotype likelihoods
-  gental <- list()
-  length(gental) <- length(object$genotypeLikelihood)
-  for(i in 1:length(gental)){
-    # likelihood total for each individual and locus at this ploidy
-    totlik <- colSums(object$genotypeLikelihood[[i]][,taxa,])
-    # normalize likelihoods by total for each individual and locus
-    normlik <- sweep(object$genotypeLikelihood[[i]][,taxa,],
-                     2:3, totlik, FUN = "/")
-    # get population proportion of genotype likelihoods for allele and copy number
-    gental[[i]] <- apply(normlik, c(1,3), mean)
+  gental <- array(list(),
+                  dim = dim(object$genotypeLikelihood),
+                  dimnames = dimnames(object$genotypeLikelihood))
+  for(i in seq_len(nrow(gental))){
+    for(h in seq_len(ncol(gental))){
+      thesetaxa <- intersect(taxa, dimnames(object$genotypeLikelihood[[i,h]])[[2]])
+      # likelihood total for each individual and locus at this ploidy
+      totlik <- colSums(object$genotypeLikelihood[[i,h]][,thesetaxa,])
+      # normalize likelihoods by total for each individual and locus
+      normlik <- sweep(object$genotypeLikelihood[[i,h]][,thesetaxa,],
+                       2:3, totlik, FUN = "/")
+      # get population proportion of genotype likelihoods for allele and copy number
+      gental[[i,h]] <- apply(normlik, c(1,3), mean)
+    }
   }
   
   # loop through ploidies
-  for(i in 1:length(object$priorProb)){
-    thisploidy <- dim(object$priorProb[[i]])[1] - 1
-    whichlik <- which(sapply(object$genotypeLikelihood, 
-                             function(x) dim(x)[1] - 1) == thisploidy)
-    stopifnot(length(whichlik) == 1)
-    # get priors
-    if(attr(object, "priorType") == "population"){
-      thesepriors <- object$priorProb[[i]]
-    } else {
-      # convert priors by taxon to population priors
-      thesepriors <- rowMeans(aperm(object$priorProb[[i]], c(1,3,2)), dims = 2)
+  for(i in seq_len(nrow(object$priorProb))){
+    thisploidy <- sum(object$priorProbPloidies[[i]])
+    whichlik <-
+      which(sapply(object$genotypeLikelihood[[,1]], 
+                   function(x){
+                     dim(x)[1] - 1L == thisploidy *
+                       as.integer(colnames(object$genotypeLikelihood)[1]) / 2L
+                   }))
+    stopifnot(length(whichlik) == 1L)
+    stopifnot(all(sapply(colnames(object$genotypeLikelihood),
+                         function(x){
+                           dim(object$genotypeLikelhood[[whichlik,x]])[1] - 1L ==
+                             thisploidy * as.integer(x) / 2L
+                         })))
+    for(h in seq_len(ncol(object$priorProb))){
+      # get priors
+      if(attr(object, "priorType") == "population"){
+        thesepriors <- object$priorProb[[i,h]]
+      } else {
+        # convert priors by taxon to population priors
+        thesepriors <- rowMeans(aperm(object$priorProb[[i,h]], c(1,3,2)), dims = 2)
+      }
+      # estimate the components that are summed to make chi square
+      chisqcomp <- (gental[[whichlik,h]] - thesepriors)^2/
+        thesepriors * length(taxa)
+      # chi-squared statistic
+      thesechisq <- apply(chisqcomp, 2, function(x) sum(x[x != Inf]))
+      object$ploidyChiSq[i,] <- object$ploidyChiSq[i,] + thesechisq
     }
-    # estimate the components that are summed to make chi square
-    chisqcomp <- (gental[[whichlik]] - thesepriors)^2/
-      thesepriors * length(taxa)
     # degrees of freedom
-    theseDF <- colSums(thesepriors != 0) - 1
-    # chi-squared statistic
-    thesechisq <- apply(chisqcomp, 2, function(x) sum(x[x != Inf]))
-    object$ploidyChiSq[i,] <- thesechisq
+    # theseDF <- colSums(thesepriors != 0) - 1
     # p-values
-    object$ploidyChiSqP[i,] <- pchisq(thesechisq, theseDF, lower.tail = FALSE)
+    # object$ploidyChiSqP[i,] <- pchisq(thesechisq, theseDF, lower.tail = FALSE)
   }
   
   return(object)
