@@ -3,7 +3,7 @@
 # RADdata class constructor ####
 RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies, 
                     contamRate, alleleNucleotides,
-                    taxaPloidy = rep(2L, nrow(alleleDepth))){
+                    taxaPloidy = 2L){
   if(!is.integer(alleleDepth)){
     stop("alleleDepth must be in integer format.")
   }
@@ -66,6 +66,14 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   }
   if(any(taxaPloidy < 1)){
     stop("taxaPloidy must be positive integer.")
+  }
+  if(is.null(names(taxaPloidy))){
+    names(taxaPloidy) <- rownames(alleleDepth)
+  } else {
+    if(!setequal(names(taxaPloidy), rownames(alleleDepth))){
+      stop("Sample names must match between taxaPloidy and alleleDepth.")
+    }
+    taxaPloidy <- taxaPloidy[rownames(alleleDepth)]
   }
   
   taxa <- dimnames(alleleDepth)[[1]]
