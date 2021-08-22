@@ -894,7 +894,7 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
     altokeep <- altokeep[-mymatch]
   }  
   
-  nPloidies <- length(object$priorProb)
+  nPloidies <- nrow(object$priorProb)
   
   # get weights for ploidies to use for each allele
   if(is.null(object$ploidyChiSq)){
@@ -921,22 +921,27 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
                    ncol = length(altokeep),
                    dimnames = list(GetTaxa(object),
                                    GetAlleleNames(object)[altokeep]))
-  # loop through ploidies
+  # loop through locus ploidies
   for(i in 1:nPloidies){
-    # values to represent each allele copy number
-    thesegenval <- seq(minval, maxval, length.out = dim(object$posteriorProb[[i]])[1])
-    # weighted mean genotypes for this ploidy
-    thesewm <- rowSums(aperm(sweep(object$posteriorProb[[i]][,,altokeep],
-                                   1, thesegenval, "*"), 
-                             c(2,3,1)), 
-                       dims = 2)
-    # multiply by weight for this ploidy and add to total
-    thesewm <- sweep(thesewm, 2, ploidyweights[i,], "*")
-    nasofar <- is.na(wmgeno)
-    nanew <- is.na(thesewm)
-    add <- !nasofar & !nanew
-    wmgeno[nasofar] <- thesewm[nasofar]
-    wmgeno[add] <- wmgeno[add] + thesewm[add]
+    # loop through taxa ploidies
+    for(h in seq_len(ncol(object$priorProb))){
+      # taxa with this ploidy
+      thesetaxa <- rownames(object$priorProb[[i,h]])
+      # values to represent each allele copy number
+      thesegenval <- seq(minval, maxval, length.out = dim(object$posteriorProb[[i,h]])[1])
+      # weighted mean genotypes for this ploidy
+      thesewm <- rowSums(aperm(sweep(object$posteriorProb[[i,h]][,,altokeep],
+                                     1, thesegenval, "*"), 
+                               c(2,3,1)), 
+                         dims = 2)
+      # multiply by weight for this ploidy and add to total
+      thesewm <- sweep(thesewm, 2, ploidyweights[i,], "*")
+      nasofar <- is.na(wmgeno[thesetaxa,])
+      nanew <- is.na(thesewm)
+      add <- !nasofar & !nanew
+      wmgeno[thesetaxa,][nasofar] <- thesewm[nasofar]
+      wmgeno[thesetaxa,][add] <- wmgeno[add] + thesewm[add]
+    }
   }
   # where there was no good ploidy, put in missing data
   wmgeno[,colSums(ploidyweights) == 0] <- NA
@@ -994,28 +999,35 @@ GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
   }
   names(pldindex) <- GetAlleleNames(object)[allelesToExport]
   
-  # loop through ploidies and fill in matrix
+  # loop through locus ploidies and fill in matrix
   for(p in ploidyindices){
     thesealleles <- which(pldindex == p)
-    thispld = dim(object$posteriorProb[[p]])[1] - 1L
-    outmat[,thesealleles] <- BestGenos(object$posteriorProb[[p]][,,allelesToExport[thesealleles]],
-                                       thispld, nTaxa(object), length(thesealleles)) # Rcpp function
-    # correct or delete genotypes that don't sum to ploidy
-    if(multiallelic %in% c("na", "correct")){
-      # fix up alleles2loc and determine number of loci
-      thisA2L <- object$alleles2loc[thesealleles]
-      theseLoci <- unique(thisA2L)
-      thisA2L <- match(thisA2L, theseLoci)
-      # run the Rcpp function do to the correction
-      outmat[,thesealleles] <- 
-        CorrectGenos(outmat[,thesealleles], 
-                     object$posteriorProb[[p]][,,allelesToExport[thesealleles]],
-                     thisA2L, nTaxa(object), thispld, length(thesealleles),
-                     length(theseLoci), multiallelic == "correct")
+    # loop through taxa ploidies
+    for(h in seq_len(object$posteriorProb)){
+      thispld <- dim(object$posteriorProb[[p,h]])[1] - 1L
+      thesetaxa <- rownames(object$posteriorProb)
+      outmat[thesetaxa,thesealleles] <-
+        BestGenos(object$posteriorProb[[p,h]][,,allelesToExport[thesealleles]],
+                  thispld, length(thesetaxa), length(thesealleles)) # Rcpp function
+      # correct or delete genotypes that don't sum to ploidy
+      if(multiallelic %in% c("na", "correct")){
+        # fix up alleles2loc and determine number of loci
+        thisA2L <- object$alleles2loc[thesealleles]
+        theseLoci <- unique(thisA2L)
+        thisA2L <- match(thisA2L, theseLoci)
+        # run the Rcpp function do to the correction
+        outmat[thesetaxa,thesealleles] <- 
+          CorrectGenos(outmat[thesetaxa,thesealleles], 
+                       object$posteriorProb[[p,h]][,,allelesToExport[thesealleles]],
+                       thisA2L, length(thesetaxa), thispld, length(thesealleles),
+                       length(theseLoci), multiallelic == "correct")
+      }
     }
+    
     # correct parent genotypes if this is a mapping population
     if(correctParentalGenos && !is.null(object$likelyGeno_donor) &&
        !is.null(object$likelyGeno_recurrent)){
+      ### Fix this section when working through mapping pipeline
       pld.d <- sum(object$donorPloidies[[p]])
       pld.r <- sum(object$recurrentPloidies[[p]])
       outmat[GetDonorParent(object), thesealleles] <- 
