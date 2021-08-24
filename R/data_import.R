@@ -1515,7 +1515,8 @@ readDArTtag <- function(file, botloci = NULL, blastfile = NULL,
   message("Importing read counts...")
   mycon <- file(file, open = 'r')
   hdr <- readLines(mycon, n = n.header.rows)
-  tab <- read.table(mycon, header = TRUE, sep = sep.counts)
+  tab <- read.table(mycon, header = TRUE, sep = sep.counts,
+                    stringsAsFactors = FALSE)
   close(mycon)
   
   # determine number of leading columns
@@ -1580,7 +1581,8 @@ readDArTtag <- function(file, botloci = NULL, blastfile = NULL,
   if(!is.null(blastfile)){
     # Import BLAST results
     message("Importing BLAST results...")
-    blastres <- read.table(blastfile, header = TRUE, sep = sep.blast)
+    blastres <- read.table(blastfile, header = TRUE, sep = sep.blast,
+                           stringsAsFactors = FALSE)
     botbool <- logical(length(loci))
     alignedbool <- logical(length(loci))
     qidcol <- which(colnames(blastres) %in% c("qseqid", "Query"))
