@@ -74,7 +74,7 @@ Lindsay V. Clark
 
 \seealso{
 \code{\link{readHMC}}, \code{\link{readStacks}}, \code{\link{VCF2RADdata}},
-\code{\link{readTASSELGBSv2}}, \code{\link{readDArTtag}}
+\code{\link{readTASSELGBSv2}}, \code{\link{readDArTag}}
 }
 \examples{
 # for this example we'll create dummy files

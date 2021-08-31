@@ -158,7 +158,7 @@ To export to VCF: \code{\link{RADdata2VCF}}
 
 Other data import functions:  \code{\link{readStacks}}, \code{\link{readHMC}},
 \code{\link{readTagDigger}}, \code{\link{readTASSELGBSv2}},
-\code{\link{readProcessIsoloci}}
+\code{\link{readProcessIsoloci}}, \code{\link{readDArTag}}
 }
 \examples{
 # get the example VCF installed with polyRAD
