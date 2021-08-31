@@ -698,7 +698,7 @@ random intermating among all progeny.  In all cases, I recommend running
 genotype calling functions, as demonstrated in the previous sections.
 
 Below we'll work with a dataset from *Miscanthus sacchariflorus*, including 635
-individuals and 5182 loci
+individuals and 1000 loci
 ([Clark et al. 2018](https://doi.org/10.1093/aob/mcy161)).  The `RADdata` object
 is not provided here due to size, but the following objects were created from it:
 
@@ -776,7 +776,7 @@ filtered from the dataset.
 
 ```{r}
 goodLoci <- colnames(myHindHe)[myHindHeByLoc2x < 0.5 & myHindHeByLoc4x < 0.75]
-length(goodLoci) # 3233 out of 5182 markers retained
+length(goodLoci) # 611 out of 1000 markers retained
 head(goodLoci)
 ```
 
