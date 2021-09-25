@@ -930,7 +930,7 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
     # loop through taxa ploidies
     for(h in seq_len(ncol(object$priorProb))){
       # taxa with this ploidy
-      thesetaxa <- rownames(object$priorProb[[i,h]])
+      thesetaxa <- dimnames(object$posteriorProb[[i,h]])[[2]]
       # values to represent each allele copy number
       thesegenval <- seq(minval, maxval, length.out = dim(object$posteriorProb[[i,h]])[1])
       # weighted mean genotypes for this ploidy
@@ -944,7 +944,7 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
       nanew <- is.na(thesewm)
       add <- !nasofar & !nanew
       wmgeno[thesetaxa,][nasofar] <- thesewm[nasofar]
-      wmgeno[thesetaxa,][add] <- wmgeno[add] + thesewm[add]
+      wmgeno[thesetaxa,][add] <- wmgeno[thesetaxa,][add] + thesewm[add]
     }
   }
   # where there was no good ploidy, put in missing data
