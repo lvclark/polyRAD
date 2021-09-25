@@ -279,7 +279,7 @@ AddGenotypeLikelihood.RADdata <- function(object, overdispersion = 9, ...){
   # probability of getting each allele from contamination
   sampleContam <- attr(object, "contamRate") * alFreq
   for(i in seq_along(ploidies)){
-    for(h in seq_along(tax_pld_unique)){
+    for(h in seq_along(tx_pld_unique)){
       pldtot <- sum(object$possiblePloidies[[i]]) * tx_pld_unique[h] / 2L
       # get probability of sampling each allele from each possible genotype
       sampleReal <- (0:pldtot)/pldtot * (1 - attr(object, "contamRate"))
@@ -777,7 +777,7 @@ AddPloidyChiSq.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object),
   }
   
   nAllele <- nAlleles(object)
-  object$ploidyChiSq <- matrix(0, nrow = length(object$priorProb),
+  object$ploidyChiSq <- matrix(0, nrow = nrow(object$priorProb),
                                ncol = nAllele,
                                dimnames = list(NULL, GetAlleleNames(object)))
   # object$ploidyChiSqP <- matrix(NA, nrow = length(object$priorProb),
@@ -805,7 +805,7 @@ AddPloidyChiSq.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object),
   for(i in seq_len(nrow(object$priorProb))){
     thisploidy <- sum(object$priorProbPloidies[[i]])
     whichlik <-
-      which(sapply(object$genotypeLikelihood[[,1]], 
+      which(sapply(object$genotypeLikelihood[,1], 
                    function(x){
                      dim(x)[1] - 1L == thisploidy *
                        as.integer(colnames(object$genotypeLikelihood)[1]) / 2L
@@ -813,7 +813,7 @@ AddPloidyChiSq.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object),
     stopifnot(length(whichlik) == 1L)
     stopifnot(all(sapply(colnames(object$genotypeLikelihood),
                          function(x){
-                           dim(object$genotypeLikelhood[[whichlik,x]])[1] - 1L ==
+                           dim(object$genotypeLikelihood[[whichlik,x]])[1] - 1L ==
                              thisploidy * as.integer(x) / 2L
                          })))
     for(h in seq_len(ncol(object$priorProb))){
