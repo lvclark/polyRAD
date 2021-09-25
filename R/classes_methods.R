@@ -859,12 +859,16 @@ AddGenotypePosteriorProb.RADdata <- function(object, ...){
   } else {
     PTL <- object$priorTimesLikelihood
   }
-  object$posteriorProb <- list()
-  length(object$posteriorProb) <- length(PTL)
-  for(i in 1:length(object$posteriorProb)){
-    totPriorTimesLikeli <- colSums(PTL[[i]])
-    object$posteriorProb[[i]] <- sweep(PTL[[i]], c(2,3),
-                                       totPriorTimesLikeli, FUN = "/")
+  object$posteriorProb <- array(list(),
+                                dim = dim(PTL),
+                                dimnames = dimnames(PTL))
+
+  for(i in seq_len(nrow(object$posteriorProb))){
+    for(h in seq_len(ncol(object$posteriorProb))){
+      totPriorTimesLikeli <- colSums(PTL[[i,h]])
+      object$posteriorProb[[i,h]] <- sweep(PTL[[i,h]], c(2,3),
+                                         totPriorTimesLikeli, FUN = "/")
+    }
   }
   return(object)
 }

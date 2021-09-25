@@ -76,42 +76,49 @@
     stop("Genotype likelihoods must be added first.")
   }
   
-  ploidytotpriors <- sapply(object$priorProb, function(x) dim(x)[1] - 1)
-  ploidytotlikeli <- sapply(object$genotypeLikelihood, function(x) dim(x)[1] - 1)
+  ploidytotpriors <- sapply(object$priorProb[,1], function(x) dim(x)[1] - 1)
+  ploidytotlikeli <- sapply(object$genotypeLikelihood[,1], function(x) dim(x)[1] - 1)
   
-  results <- list()
-  length(results) <- length(object$priorProb)
+  results <- array(list(),
+                   dim = dim(object$priorProb),
+                   dimnames = dimnames(object$priorProb))
   
-  for(i in 1:length(object$priorProb)){
+  for(i in seq_len(nrow(object$priorProb))){
     j <- which(ploidytotlikeli == ploidytotpriors[i])
     stopifnot(length(j) == 1)
-    if(attr(object, "priorType") == "population"){
-      # expand priors out by individuals
-      thispriorarr <- array(object$priorProb[[i]], 
-                            dim = c(dim(object$priorProb[[i]])[1], 1, 
-                                    dim(object$priorProb[[i]])[2]))[,rep(1, nTaxa(object)),]
-      dimnames(thispriorarr) <- dimnames(object$genotypeLikelihoods)[[j]]
-    } else {
-      thispriorarr <- object$priorProb[[i]]
-    }
-    stopifnot(identical(dim(thispriorarr), dim(object$genotypeLikelihood[[j]])))
-    results[[i]] <- thispriorarr * object$genotypeLikelihood[[j]]
-    # factor in LD if present
-    if(!is.null(object$priorProbLD)){
-      results[[i]] <- results[[i]] * object$priorProbLD[[i]]
-    }
-    # find any that total to zero (within taxon x allele) and replace with priors
-    totzero <- which(colSums(results[[i]]) == 0)
-    if(length(totzero) > 0){
-      for(a in 1:dim(thispriorarr)[1]){
-        results[[i]][a,,][totzero] <- thispriorarr[a,,][totzero]
+    for(h in seq_len(ncol(object$priorProb))){
+      thesetaxa <- dimnames(object$genotypeLikelihood[[j,h]])[[2]]
+      if(attr(object, "priorType") == "population"){
+        # expand priors out by individuals
+        thispriorarr <- array(object$priorProb[[i,h]], 
+                              dim = c(dim(object$priorProb[[i,h]])[1], 1, 
+                                      dim(object$priorProb[[i,h]])[2]))[,rep(1, length(thesetaxa)),]
+        dimnames(thispriorarr) <- dimnames(object$genotypeLikelihoods[[j,h]])
+      } else {
+        thispriorarr <- object$priorProb[[i,h]]
       }
-    }
-    # in a mapping population, don't use priors for parents
-    if(!is.null(attr(object, "donorParent")) &&
-       !is.null(attr(object, "recurrentParent"))){
-      parents <- c(GetDonorParent(object), GetRecurrentParent(object))
-      results[[i]][, parents, ] <- object$genotypeLikelihood[[j]][, parents, ]
+      stopifnot(identical(dim(thispriorarr), dim(object$genotypeLikelihood[[j,h]])))
+      results[[i,h]] <- thispriorarr * object$genotypeLikelihood[[j,h]]
+      # factor in LD if present
+      if(!is.null(object$priorProbLD)){
+        results[[i,h]] <- results[[i,h]] * object$priorProbLD[[i,h]]
+      }
+      # find any that total to zero (within taxon x allele) and replace with priors
+      totzero <- which(colSums(results[[i,h]]) == 0)
+      if(length(totzero) > 0){
+        for(a in 1:dim(thispriorarr)[1]){
+          results[[i,h]][a,,][totzero] <- thispriorarr[a,,][totzero]
+        }
+      }
+      # in a mapping population, don't use priors for parents
+      if(!is.null(attr(object, "donorParent")) &&
+         !is.null(attr(object, "recurrentParent"))){
+        parents <- c(GetDonorParent(object), GetRecurrentParent(object))
+        parents <- intersect(parents, thesetaxa)
+        if(length(parents) > 0){ # only fix if this is the ploidy for at least one parent
+          results[[i,h]][, parents, ] <- object$genotypeLikelihood[[j,h]][, parents, ]
+        }
+      }
     }
   }
   
