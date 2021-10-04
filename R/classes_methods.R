@@ -985,7 +985,7 @@ GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
                    dimnames = list(GetTaxa(object), 
                                    GetAlleleNames(object)[allelesToExport]))
   # index of which ploidy was exported for each allele
-  if(length(object$posteriorProb) == 1){
+  if(nrow(object$posteriorProb) == 1){
     pldindex <- rep(1L, length(allelesToExport))
     ploidyindices <- 1L
   } else {
@@ -1007,11 +1007,11 @@ GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
   for(p in ploidyindices){
     thesealleles <- which(pldindex == p)
     # loop through taxa ploidies
-    for(h in seq_len(object$posteriorProb)){
+    for(h in seq_len(ncol(object$posteriorProb))){
       thispld <- dim(object$posteriorProb[[p,h]])[1] - 1L
-      thesetaxa <- rownames(object$posteriorProb)
+      thesetaxa <- dimnames(object$posteriorProb[[p,h]])[[2]]
       outmat[thesetaxa,thesealleles] <-
-        BestGenos(object$posteriorProb[[p,h]][,,allelesToExport[thesealleles]],
+        BestGenos(object$posteriorProb[[p,h]][,thesetaxa,allelesToExport[thesealleles]],
                   thispld, length(thesetaxa), length(thesealleles)) # Rcpp function
       # correct or delete genotypes that don't sum to ploidy
       if(multiallelic %in% c("na", "correct")){
@@ -1022,7 +1022,7 @@ GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
         # run the Rcpp function do to the correction
         outmat[thesetaxa,thesealleles] <- 
           CorrectGenos(outmat[thesetaxa,thesealleles], 
-                       object$posteriorProb[[p,h]][,,allelesToExport[thesealleles]],
+                       object$posteriorProb[[p,h]][,thesetaxa,allelesToExport[thesealleles]],
                        thisA2L, length(thesetaxa), thispld, length(thesealleles),
                        length(theseLoci), multiallelic == "correct")
       }
