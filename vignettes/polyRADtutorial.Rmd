@@ -255,21 +255,17 @@ mydata2 <- PipelineMapping2Parents(mydata,
 We can use these preliminary estimates to determine whether we need to adjust
 the overdispersion parameter.  Exactly how much does read depth distribution
 deviate from what would be expected under binomial distibution?  The 
-`TestOverdispersion` function will help us here.  We will use the `qqman`
-package to visualize the results.
+`TestOverdispersion` function will help us here.
 
-```{r message = FALSE, warning = FALSE, eval = requireNamespace("qqman", quietly = TRUE)}
-library(qqman)
-overdispersionP <- TestOverdispersion(mydata2, to_test = 6:10)
-qq(overdispersionP[["6"]])
-qq(overdispersionP[["7"]])
-qq(overdispersionP[["8"]])
-qq(overdispersionP[["9"]])
-qq(overdispersionP[["10"]])
+```{r}
+overdispersionP <- TestOverdispersion(mydata2, to_test = 8:15)
+
+sapply(overdispersionP, quantile, probs = c(0.01, 0.25, 0.5, 0.75, 0.99))
 ```
 
-It looks like `9` follows the red line most closely, so we'll use that for the
-overdispersion parameter.
+It looks like `12` follows the expected distribution of p-values most
+closely, both from the automated output of `TestOverdispersion` and from
+examining the quantiles of p-values.
 
 Next we can check for markers that are behaving in a non-Mendelian fashion.
 If we are expecting diploid segregation, all markers should show a
@@ -289,15 +285,15 @@ I recommend using the default value of `reps`.
 
 ```{r}
 set.seed(720)
-ExpectedHindHeMapping(mydata, ploidy = 2, overdispersion = 9, reps = 2)
+ExpectedHindHeMapping(mydata, ploidy = 2, overdispersion = 12, reps = 2)
 ```
 
 Comparing the observed distribution to the expected distribution, we may want
 to filter some markers.
 
 ```{r}
-goodMarkers <- colnames(myhindhe)[which(colMeans(myhindhe, na.rm = TRUE) < 0.5 &
-                                          colMeans(myhindhe, na.rm = TRUE) > 0.4)]
+goodMarkers <- colnames(myhindhe)[which(colMeans(myhindhe, na.rm = TRUE) < 0.52 &
+                                          colMeans(myhindhe, na.rm = TRUE) > 0.41)]
 mydata <- SubsetByLocus(mydata, goodMarkers)
 ```
 
@@ -307,7 +303,7 @@ genotypes.
 ```{r}
 mydata <- PipelineMapping2Parents(mydata, 
                                   freqAllowedDeviation = 0.06,
-                                  useLinkage = TRUE, overdispersion = 9,
+                                  useLinkage = TRUE, overdispersion = 12,
                                   minLikelihoodRatio = 2)
 ```
 
@@ -327,19 +323,19 @@ genotype at each locus, taxon, and ploidy.  This is the probability
 of seeing the observed distribution of reads.
 
 ```{r}
-mydata$alleleDepth[8,9:16]
-mydata$genotypeLikelihood[[1]][,8,9:16]
-mydata$genotypeLikelihood[[2]][,8,9:16]
+mydata$alleleDepth["Map1-089",1:8]
+mydata$genotypeLikelihood[[1]][,"Map1-089",1:8]
+mydata$genotypeLikelihood[[2]][,"Map1-089",1:8]
 ```
 
-Above, for one individal (Map1-018), we see its read depth at
+Above, for one individal (Map1-089), we see its read depth at
 eight alleles (four loci), followed by the genotype likelihoods
-under diploid and tetraploid models.  For example, at locus TP35570, 
+under diploid and tetraploid models.  For example, at locus TP19030, 
 heterozygosity is the most likely state, although there is a chance that
-this individual is homozygous for allele 0 and the four reads of allele 1
+this individual is homozygous for allele 1 and the two reads of allele 0
 were due to contamination.  If this locus is allotetraploid, it is most
-likely that there is one copy of allele 1 and three copies of allele 0.
-Other loci have higher depth and as a result there is less uncertainty
+likely that there is one copy of allele 0 and three copies of allele 1.
+Other individuals have higher depth and as a result there is less uncertainty
 in the genotype, particularly for the diploid model.
 
 The prior genotype probabilities (expected genotype distributions) are also
@@ -349,14 +345,14 @@ can be ignored by increasing the `minLikelihoodRatio` argument to
 `PipelineMapping2Parents`.
 
 ```{r}
-mydata$priorProb[[1]][,9:16]
-mydata$priorProb[[2]][,9:16]
+mydata$priorProb[[1]][,1:8]
+mydata$priorProb[[2]][,1:8]
 ```
 
 Here we see some pretty big differences under the diploid and
-allotetraploid models.  For example, if TP35570 is behaving in a diploid
+allotetraploid models.  For example, if TP19030 is behaving in a diploid
 fashion we expect F2-like segregation since both parents were 
-heterozygous.  However, if TP35570 is behaving in an allotetraploid
+heterozygous.  However, if TP19030 is behaving in an allotetraploid
 fashion, a 1:1 segregation ratio is expected due to one parent being
 heterozygous at one isolocus and the other being homozygous at both
 isoloci.
@@ -367,7 +363,7 @@ genotype likelihoods and estimating a $\chi^2$ statistic.  Lower
 values indicate a better fit.
 
 ```{r}
-mydata$ploidyChiSq[,9:16]
+mydata$ploidyChiSq[,1:8]
 ```
 
 We can make a plot to get an overall sense of how well the markers
@@ -388,8 +384,8 @@ Now we'll examine the posterior genotype probabilities.  These are still
 estimated separately for each ploidy.
 
 ```{r}
-mydata$posteriorProb[[1]][,10,9:16]
-mydata$posteriorProb[[2]][,10,9:16]
+mydata$posteriorProb[[1]][,"Map1-089",1:8]
+mydata$posteriorProb[[2]][,"Map1-089",1:8]
 ```
 
 ### Results cleanup and export
@@ -438,8 +434,8 @@ genotypes that were used for estimating progeny priors using
 `$likelyGeno_donor` and `$likelyGeno_recurrent`.
 
 ```{r}
-mydata$likelyGeno_donor[,9:16]
-mydata$likelyGeno_recurrent[,9:16]
+mydata$likelyGeno_donor[,1:8]
+mydata$likelyGeno_recurrent[,1:8]
 ```
 
 ## Estimating genotype probabilities in a diversity panel <a name="diversity"></a>
@@ -507,14 +503,13 @@ load(system.file("extdata", "vcfdata.RData", package = "polyRAD"))
 For natural populations and diversity panels, we can run `TestOverdispersion`
 before performing any genotype calling.
 
-```{r eval = requireNamespace("qqman", quietly = TRUE)}
-overdispersionP <- TestOverdispersion(mydata, to_test = 8:10)
-qq(overdispersionP[["8"]])
-qq(overdispersionP[["9"]])
-qq(overdispersionP[["10"]])
+```{r}
+overdispersionP <- TestOverdispersion(mydata, to_test = 8:14)
+
+sapply(overdispersionP, quantile, probs = c(0.01, 0.25, 0.5, 0.75, 0.99))
 ```
 
-As with the mapping population, nine looks like a good value.
+In this case, ten looks like a good value.
 
 Before we perform genotype calling, we can also test for Mendelian segregation at
 each marker using the $H_{ind}/H_E$ statistic.
@@ -531,7 +526,7 @@ The peak below 0.5 indicates well-behaved diploid loci.  In a typical dataset
 with more markers, you can get more resolution on the histogram (see the `breaks`
 argument of `hist`), but let's say the peak is at 0.35. The graph below can be
 used to estimate inbreeding from $H_{ind}/H_E$ and overdispersion.  For
-a diploid with overdispersion of 9 and $H_{ind}/H_E$ of 0.35, inbreeding is
+a diploid with overdispersion of 10 and $H_{ind}/H_E$ of 0.35, inbreeding is
 about 0.25.
 
 ![Estimation of inbreeding](overdispersion_inbreeding.png)
@@ -550,13 +545,13 @@ data is is probably best to leave it at the default.  You do not need to use
 
 ```{r}
 set.seed(803)
-ExpectedHindHe(mydata, inbreeding = 0.25, ploidy = 2, overdispersion = 9,
+ExpectedHindHe(mydata, inbreeding = 0.25, ploidy = 2, overdispersion = 10,
                reps = 10)
 ```
 
 According to these results, good quality markers can be expected to have
-$H_{ind}/H_E$ values from about 0.25 to 0.44.  Values lower than that
-indicate techical problems such as restriction cut site polymorphisms,
+$H_{ind}/H_E$ values from about 0.24 to 0.47.  Values lower than that
+indicate technical problems such as restriction cut site polymorphisms,
 causing overdispersion in the data that could reduce genotyping quality.
 Values higher than that indicate paralogy or higher ploidy than expected.
 Since we are allowing for allotetraploidy in our genotype calling, we'll 
@@ -564,8 +559,8 @@ only remove markers where $H_{ind}/H_E$ is too low (although you may
 consider filtering differently in your own dataset).
 
 ```{r}
-mean(myhindheByLoc < 0.25) # about 33% of markers would be removed
-keeploci <- names(myhindheByLoc)[myhindheByLoc >= 0.25]
+mean(myhindheByLoc < 0.24) # about 33% of markers would be removed
+keeploci <- names(myhindheByLoc)[myhindheByLoc >= 0.24]
 mydata <- SubsetByLocus(mydata, keeploci)
 ```
 
@@ -580,7 +575,7 @@ Since *Miscanthus* is highly outcrossing, we will leave the `selfing.rate`
 argument at its default of zero.
 
 ```{r message = FALSE}
-mydataHWE <- IterateHWE(mydata, tol = 1e-3, overdispersion = 9)
+mydataHWE <- IterateHWE(mydata, tol = 1e-3, overdispersion = 10)
 ```
 
 Let's take a look at allele frequencies:
@@ -604,7 +599,7 @@ setting a seed so that the vignette always renders in the same way.
 ```{r message = FALSE}
 set.seed(3908)
 mydataPopStruct <- IteratePopStruct(mydata, nPcsInit = 8, tol = 5e-03,
-                                    overdispersion = 9)
+                                    overdispersion = 10)
 ```
 
 Allele frequency estimates have changed slightly:

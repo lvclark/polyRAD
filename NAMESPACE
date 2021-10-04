@@ -30,7 +30,7 @@ TestOverdispersion, VCF2RADdata)
 
 importFrom("stats", "dist", "dmultinom", "pchisq", "lm", "na.omit", "dbinom",
            "hclust", "cutree", "as.dist", "cor", "residuals", "lm.fit", "sd",
-           "median", "quantile")
+           "median", "quantile", "ppoints")
 importFrom("utils", "read.csv", "read.table","write.table", "write.csv",
            "packageVersion")
 importFrom("fastmatch", "%fin%")

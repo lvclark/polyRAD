@@ -1,3 +1,8 @@
+## Changes in v1.6 ##
+
+TestOverdispersion now prints a helpful suggestion for which overdispersion
+parameter to use.  The use of qqman has been eliminated from the vignettes.
+
 ## Changes in v1.5 ##
 
 SimGenotypesMapping, ExpectedHindHeMapping, Export_polymapR_probs,
