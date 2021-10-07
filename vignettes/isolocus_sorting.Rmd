@@ -288,6 +288,9 @@ markers.
 
 To estimate inbreeding, we'll also need to estimate overdispersion.  You may
 want to check a broader range of values than 9 to 14.
+In the matrix of quantiles, we are
+looking for columns where the 25th percentile is about 0.25, the 50th
+percentile is about 0.5, etc.
 
 ```{r eval = FALSE}
 overdispersionP <- TestOverdispersion(myRADprelim, to_test = 9:14)

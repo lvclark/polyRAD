@@ -265,7 +265,9 @@ sapply(overdispersionP, quantile, probs = c(0.01, 0.25, 0.5, 0.75, 0.99))
 
 It looks like `12` follows the expected distribution of p-values most
 closely, both from the automated output of `TestOverdispersion` and from
-examining the quantiles of p-values.
+examining the quantiles of p-values.  In the matrix of quantiles, we are
+looking for columns where the 25th percentile is about 0.25, the 50th
+percentile is about 0.5, etc.
 
 Next we can check for markers that are behaving in a non-Mendelian fashion.
 If we are expecting diploid segregation, all markers should show a
@@ -509,7 +511,9 @@ overdispersionP <- TestOverdispersion(mydata, to_test = 8:14)
 sapply(overdispersionP, quantile, probs = c(0.01, 0.25, 0.5, 0.75, 0.99))
 ```
 
-In this case, ten looks like a good value.
+In this case, ten looks like a good value.  In the matrix of quantiles, we are
+looking for columns where the 25th percentile is about 0.25, the 50th
+percentile is about 0.5, etc.
 
 Before we perform genotype calling, we can also test for Mendelian segregation at
 each marker using the $H_{ind}/H_E$ statistic.
