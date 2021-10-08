@@ -142,7 +142,7 @@ Variant Call Format specification: \url{http://samtools.github.io/hts-specs/}
 
 TASSEL GBSv2 pipeline: \url{https://bitbucket.org/tasseladmin/tassel-5-source/wiki/Tassel5GBSv2Pipeline}
 
-GATK: \url{https://gatk.broadinstitute.org}
+GATK: \url{https://gatk.broadinstitute.org/hc/en-us}
 
 Tassel4-Poly: \url{https://github.com/guilherme-pereira/tassel4-poly}
 }
@@ -158,7 +158,7 @@ To export to VCF: \code{\link{RADdata2VCF}}
 
 Other data import functions:  \code{\link{readStacks}}, \code{\link{readHMC}},
 \code{\link{readTagDigger}}, \code{\link{readTASSELGBSv2}},
-\code{\link{readProcessIsoloci}}
+\code{\link{readProcessIsoloci}}, \code{\link{readDArTag}}
 }
 \examples{
 # get the example VCF installed with polyRAD

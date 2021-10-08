@@ -38,7 +38,7 @@ Lindsay V. Clark
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-\code{\link{readDArTtag}} uses this function internally.
+\code{\link{readDArTag}} uses this function internally.
 }
 \examples{
 reverseComplement(c("AAGT", "CCA"))

@@ -1,5 +1,5 @@
-\name{readDArTtag}
-\alias{readDArTtag}
+\name{readDArTag}
+\alias{readDArTag}
 \title{
 Import Data from DArT Sequencing
 }
@@ -16,11 +16,11 @@ results are used so that sequence and position are accurately stored in the
 installation for example files.
 }
 \usage{
-readDArTtag(file, botloci = NULL, blastfile = NULL, excludeHaps = NULL,
-            includeHaps = NULL, n.header.rows = 7, sample.name.row = 7,
-            trim.sample.names = "_[^_]+_[ABCDEFGH][[:digit:]][012]?$",
-            sep.counts = ",", sep.blast = "\t", possiblePloidies = list(2),
-            contamRate = 0.001)
+readDArTag(file, botloci = NULL, blastfile = NULL, excludeHaps = NULL,
+           includeHaps = NULL, n.header.rows = 7, sample.name.row = 7,
+           trim.sample.names = "_[^_]+_[ABCDEFGH][[:digit:]][012]?$",
+           sep.counts = ",", sep.blast = "\t", possiblePloidies = list(2),
+           contamRate = 0.001)
 }
 \arguments{
   \item{file}{
@@ -114,15 +114,15 @@ Lindsay V. Clark
 }
 \examples{
 # Example files installed with polyRAD
-dartfile <- system.file("extdata", "DArTtag_example.csv", package = "polyRAD")
-blastfile <- system.file("extdata", "DArTtag_BLAST_example.txt",
+dartfile <- system.file("extdata", "DArTag_example.csv", package = "polyRAD")
+blastfile <- system.file("extdata", "DArTag_BLAST_example.txt",
                          package = "polyRAD")
 
 # One haplotype doesn't seem to have correct alignment (see BLAST results)
 exclude_hap <- c("Chr1_30668472|RefMatch_004")
 
 # Import data
-mydata <- readDArTtag(dartfile, blastfile = blastfile,
+mydata <- readDArTag(dartfile, blastfile = blastfile,
                       excludeHaps = exclude_hap,
                       possiblePloidies = list(4))
 }

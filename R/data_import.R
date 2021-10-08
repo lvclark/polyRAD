@@ -1497,7 +1497,7 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   return(radout)
 }
 
-readDArTtag <- function(file, botloci = NULL, blastfile = NULL,
+readDArTag <- function(file, botloci = NULL, blastfile = NULL,
                         excludeHaps = NULL, includeHaps = NULL,
                         n.header.rows = 7, sample.name.row = 7, 
                         trim.sample.names = "_[^_]+_[ABCDEFGH][[:digit:]][012]?$",
