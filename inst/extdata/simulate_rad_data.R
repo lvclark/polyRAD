@@ -8,14 +8,15 @@ taxa <- paste("sample", formatC(1:100, format='d', width = 3, flag = '0'), sep =
 loci <- paste("loc", 1:4, sep = "")
 realFreq <- c(0.2, 0.8, 0.1, 0.3, 0.6, 0.95, 0.05, 0.3, 0.7)
 locPloidies <- c(2,2,4,2)
+taxaPloidy <- rep(c(2L, 3L), times = c(80,20))
 realGen <- matrix(0L, nrow = 100, ncol = length(alleles2loc))
 depth <- matrix(NA_integer_, nrow = 100, ncol = length(alleles2loc),
                 dimnames = list(taxa, paste(loci[alleles2loc], alNuc, sep = "_")))
 for(L in 1:max(alleles2loc)){
   thesecol <- which(alleles2loc == L)
-  thispld <- locPloidies[L]
   thesefreq <- realFreq[thesecol]
   for(s in 1:length(taxa)){
+    thispld <- locPloidies[L] * taxaPloidy[s] / 2L
     for(i in 1:thispld){
       thisAl <- sample(thesecol, size = 1, prob = thesefreq)
       realGen[s,thisAl] <- realGen[s,thisAl] + 1
@@ -30,16 +31,17 @@ for(L in 1:max(alleles2loc)){
 }
 
 realGen[1:10,]
+tail(realGen)
 depth[1:10,]
 
 exampleRAD <- RADdata(depth, as.integer(alleles2loc), 
                       data.frame(row.names = loci, Chr = c(1,4,6,9), 
                                  Pos = c(1111020, 33069, 2637920, 5549872)),
-                      list(2L, 4L), 0.001, alNuc)
+                      list(2L, 4L), 0.001, alNuc, taxaPloidy)
 exampleRAD
 exampleRAD$depthRatio[1:10,]
 
-save(exampleRAD, file = "exampleRAD.RData")
+save(exampleRAD, file = "data/exampleRAD.RData")
 
 # make a simple mapping dataset to use in documentation examples
 alleles2loc <- rep(1:4, each = 2)
@@ -83,7 +85,7 @@ depth[1:20,]
 exampleRAD_mapping <- RADdata(depth, alleles2loc, 
                               data.frame(row.names = loci, Chr = c(1,4,6,9), 
                                          Pos = c(1111020, 33069, 2637920, 5549872)),
-                              list(2L), 0.001, alNuc)
+                              list(2L), 0.001, alNuc, 2L)
 exampleRAD_mapping
 
-save(exampleRAD_mapping, file = "exampleRAD_mapping.RData")
+save(exampleRAD_mapping, file = "data/exampleRAD_mapping.RData")
