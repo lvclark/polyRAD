@@ -1634,7 +1634,7 @@ CanDoGetWeightedMeanGeno <- function(object, ...){
 }
 CanDoGetWeightedMeanGeno.RADdata <- function(object, ...){
   return(!is.null(object$posteriorProb) && 
-           (!is.null(object$ploidyChiSq) || length(object$posteriorProb) == 1))
+           (!is.null(object$ploidyChiSq) || nrow(object$posteriorProb) == 1))
 }
 
 SubsetByTaxon <- function(object, ...){
