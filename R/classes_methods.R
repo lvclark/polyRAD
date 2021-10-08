@@ -1485,7 +1485,14 @@ SetTaxaPloidy.RADdata <- function(object, value, ...){
   if(any(value < 1)){
     stop("taxaPloidy must be positive integer.")
   }
-  names(value) <- GetTaxa(object)
+  if(!is.null(names(value))){
+    if(!setequal(names(value), GetTaxa(object))){
+      stop("Vector names do not match taxa names in object")
+    }
+    value <- value[GetTaxa(object)]
+  } else {
+    names(value) <- GetTaxa(object)
+  }
   object$taxaPloidy <- value
   return(object)
 }

@@ -14,8 +14,8 @@ Export_MAPpoly, Export_polymapR, Export_polymapR_probs, Export_rrBLUP_Amat,
 Export_rrBLUP_GWAS, Export_Structure, Export_TASSEL_Numeric, GetAlleleNames,
 GetBlankTaxa, GetContamRate, GetDonorParent, GetLikelyGen, 
 GetLocDepth, GetLoci, GetProbableGenotypes, GetRecurrentParent, 
-GetTaxa, GetWeightedMeanGenotypes, HindHe, HindHeMapping,
-InbreedingFromHindHe, IterateHWE, IterateHWE_LD,
+GetTaxa, GetTaxaByPloidy, GetTaxaPloidy, GetWeightedMeanGenotypes, HindHe,
+HindHeMapping, InbreedingFromHindHe, IterateHWE, IterateHWE_LD,
 IteratePopStruct, IteratePopStructLD, LocusInfo, MakeTasselVcfFilter,
 MergeIdenticalHaplotypes, MergeRareHaplotypes, MergeTaxaDepth, nTaxa, nAlleles,
 nLoci, OneAllelePerMarker, 
@@ -24,7 +24,7 @@ readProcessSamMulti, readProcessIsoloci,
 readStacks, readTagDigger, readTASSELGBSv2,
 RemoveHighDepthLoci, RemoveMonomorphicLoci, RemoveUngenotypedLoci,
 SetBlankTaxa, SetContamRate, SetDonorParent, SetRecurrentParent,
-SimAlleleDepth, SimGenotypes, SimGenotypesMapping,
+SetTaxaPloidy, SimAlleleDepth, SimGenotypes, SimGenotypesMapping,
 SplitByChromosome, StripDown, SubsetByLocus, SubsetByPloidy, SubsetByTaxon,
 TestOverdispersion, VCF2RADdata)
 
@@ -69,6 +69,8 @@ S3method(GetLoci, RADdata)
 S3method(GetProbableGenotypes, RADdata)
 S3method(GetRecurrentParent, RADdata)
 S3method(GetTaxa, RADdata)
+S3method(GetTaxaByPloidy, RADdata)
+S3method(GetTaxaPloidy, RADdata)
 S3method(GetWeightedMeanGenotypes, RADdata)
 S3method(HindHe, RADdata)
 S3method(HindHeMapping, RADdata)
@@ -88,6 +90,7 @@ S3method(SetBlankTaxa, RADdata)
 S3method(SetContamRate, RADdata)
 S3method(SetDonorParent, RADdata)
 S3method(SetRecurrentParent, RADdata)
+S3method(SetTaxaPloidy, RADdata)
 S3method(SplitByChromosome, RADdata)
 S3method(SubsetByLocus, RADdata)
 S3method(SubsetByPloidy, RADdata)
