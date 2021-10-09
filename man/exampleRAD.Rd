@@ -11,12 +11,13 @@ Miniature Datasets for Testing polyRAD Functions
 simulated \code{"\link{RADdata}"} datasets for testing polyRAD
 functions.  Each has four loci.  \code{exampleRAD} is a 
 natural population of 100 individuals with a mix of diploid and tetraploid 
-loci.
+loci, with 80 individuals diploid and 20 individuals triploid.
 \code{exampleRAD_mapping} is a diploid BC1 mapping population with two parents
 and 100 progeny.
 \code{Msi01genes} is a \code{"RADdata"} object with 585 taxa and 24 loci,
 containing real data from \emph{Miscanthus sinensis}, obtained by using
-\code{\link{VCF2RADdata}} on the file Msi01genes.vcf.
+\code{\link{VCF2RADdata}} on the file Msi01genes.vcf.  All individuals are
+diploid.
 }
 \usage{
 data(exampleRAD)
