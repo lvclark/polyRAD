@@ -305,8 +305,8 @@ AddGenotypeLikelihood.RADdata <- function(object, overdispersion = 9, ...){
         # likelihoods under beta-binomial distribution
         object$genotypeLikelihood[[i,h]][j,,] <- 
           exp(object$depthSamplingPermutations[thesetaxa,] +
-                sweep(lbeta(sweep(object$alleleDepth[thesetaxa,], 2, alleleProb[j,], "+"),
-                            sweep(object$antiAlleleDepth[thesetaxa,], 2, antiAlleleProb[j,], "+")),
+                sweep(lbeta(sweep(object$alleleDepth[thesetaxa,, drop = FALSE], 2, alleleProb[j,], "+"),
+                            sweep(object$antiAlleleDepth[thesetaxa,, drop = FALSE], 2, antiAlleleProb[j,], "+")),
                       2, lbeta(alleleProb[j,], antiAlleleProb[j,]), "-"))
       }
       # fix likelihoods where all are zero
@@ -792,9 +792,9 @@ AddPloidyChiSq.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object),
     for(h in seq_len(ncol(gental))){
       thesetaxa <- intersect(taxa, dimnames(object$genotypeLikelihood[[i,h]])[[2]])
       # likelihood total for each individual and locus at this ploidy
-      totlik <- colSums(object$genotypeLikelihood[[i,h]][,thesetaxa,])
+      totlik <- colSums(object$genotypeLikelihood[[i,h]][,thesetaxa,, drop = FALSE])
       # normalize likelihoods by total for each individual and locus
-      normlik <- sweep(object$genotypeLikelihood[[i,h]][,thesetaxa,],
+      normlik <- sweep(object$genotypeLikelihood[[i,h]][,thesetaxa,, drop = FALSE],
                        2:3, totlik, FUN = "/")
       # get population proportion of genotype likelihoods for allele and copy number
       gental[[i,h]] <- apply(normlik, c(1,3), mean)
@@ -934,13 +934,13 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
       # values to represent each allele copy number
       thesegenval <- seq(minval, maxval, length.out = dim(object$posteriorProb[[i,h]])[1])
       # weighted mean genotypes for this ploidy
-      thesewm <- rowSums(aperm(sweep(object$posteriorProb[[i,h]][,,altokeep],
+      thesewm <- rowSums(aperm(sweep(object$posteriorProb[[i,h]][,,altokeep, drop = FALSE],
                                      1, thesegenval, "*"), 
                                c(2,3,1)), 
                          dims = 2)
       # multiply by weight for this ploidy and add to total
       thesewm <- sweep(thesewm, 2, ploidyweights[i,], "*")
-      nasofar <- is.na(wmgeno[thesetaxa,])
+      nasofar <- is.na(wmgeno[thesetaxa, ,drop = FALSE])
       nanew <- is.na(thesewm)
       add <- !nasofar & !nanew
       wmgeno[thesetaxa,][nasofar] <- thesewm[nasofar]
