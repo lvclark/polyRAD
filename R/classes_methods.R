@@ -1775,6 +1775,7 @@ SubsetByLocus.RADdata <- function(object, loci, ...){
   splitRADdata$antiAlleleDepth <- object$antiAlleleDepth[, thesealleles, drop = FALSE]
   splitRADdata$alleleNucleotides <- object$alleleNucleotides[thesealleles]
   attr(splitRADdata$alleleNucleotides, "Variable_sites_only") <- attr(object$alleleNucleotides, "Variable_sites_only")
+  splitRADdata$taxaPloidy <- object$taxaPloidy
   
   # additional components that may exist if some processing has already been done
   if(!is.null(object$depthSamplingPermutations)){
@@ -1787,16 +1788,22 @@ SubsetByLocus.RADdata <- function(object, loci, ...){
   }
   if(!is.null(object$genotypeLikelihood)){
     splitRADdata$genotypeLikelihood <- 
-      lapply(object$genotypeLikelihood, function(x) x[,, thesealleles, drop = FALSE])
+      array(lapply(object$genotypeLikelihood, function(x) x[,, thesealleles, drop = FALSE]),
+            dim = dim(object$genotypeLikelihood),
+            dimnames = dimnames(object$genotypeLikelihood))
   }
   if(!is.null(object$priorProb)){
     if(length(dim(object$priorProb[[1]])) == 3){
       splitRADdata$priorProb <- 
-        lapply(object$priorProb, function(x) x[,, thesealleles, drop = FALSE])
+        array(lapply(object$priorProb, function(x) x[,, thesealleles, drop = FALSE]),
+              dim = dim(object$priorProb),
+              dimnames = dimnames(object$priorProb))
     }
     if(length(dim(object$priorProb[[1]])) == 2){
       splitRADdata$priorProb <- 
-        lapply(object$priorProb, function(x) x[, thesealleles, drop = FALSE])
+        array(lapply(object$priorProb, function(x) x[, thesealleles, drop = FALSE]),
+              dim = dim(object$priorProb),
+              dimnames = dimnames(object$priorProb))
     }
   }
   if(!is.null(object$priorProbPloidies)){
@@ -1810,7 +1817,9 @@ SubsetByLocus.RADdata <- function(object, loci, ...){
   }
   if(!is.null(object$posteriorProb)){
     splitRADdata$posteriorProb <- 
-      lapply(object$posteriorProb, function(x) x[,, thesealleles, drop = FALSE])
+      array(lapply(object$posteriorProb, function(x) x[,, thesealleles, drop = FALSE]),
+            dim = dim(object$posteriorProb),
+            dimnames = dimnames(object$posteriorProb))
   }
   if(!is.null(object$alleleFreqByTaxa)){
     splitRADdata$alleleFreqByTaxa <- object$alleleFreqByTaxa[, thesealleles, drop = FALSE]
@@ -1828,7 +1837,9 @@ SubsetByLocus.RADdata <- function(object, loci, ...){
   }
   if(!is.null(object$priorProbLD)){
     splitRADdata$priorProbLD <- 
-      lapply(object$priorProbLD, function(x) x[,, thesealleles, drop = FALSE])
+      array(lapply(object$priorProbLD, function(x) x[,, thesealleles, drop = FALSE]),
+            dim = dim(object$priorProbLD),
+            dimnames = dimnames(object$priorProbLD))
   }
   if(!is.null(object$alleleLinkages)){
     splitRADdata$alleleLinkages <- object$alleleLinkages[thesealleles]
