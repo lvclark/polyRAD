@@ -1669,6 +1669,25 @@ SubsetByTaxon.RADdata <- function(object, taxa, ...){
   splitRADdata$depthRatio <- object$depthRatio[taxa, , drop = FALSE]
   splitRADdata$antiAlleleDepth <- object$antiAlleleDepth[taxa, , drop = FALSE]
   splitRADdata$alleleNucleotides <- object$alleleNucleotides
+  splitRADdata$taxaPloidy <- object$taxaPloidy[taxa]
+  
+  # all taxa ploidies after subsetting
+  # get ploidies by taxa
+  tx_pld_unique <- sort(unique(GetTaxaPloidy(splitRADdata)))
+  
+  # Internal function to subset genotypeLikelihood and similarly structured slots
+  subset2D3D <- function(slot){
+    out <- array(list(), dim = c(dim(slot)[1], length(tx_pld_unique)),
+                 dimnames = list(dimnames(slot)[[1]], as.character(tx_pld_unique)))
+    for(i in seq_len(nrow(slot))){
+      for(h in as.character(tx_pld_unique)){
+        thesetaxa <- intersect(GetTaxa(object)[taxa],
+                               dimnames(slot[[i,h]])[[2]])
+        out[[i, h]] <- slot[[i, h]][, thesetaxa,, drop = FALSE]
+      }
+    }
+    return(out)
+  }
   
   # slots that may have been added by other functions
   if(!is.null(object$depthSamplingPermutations)){
@@ -1680,14 +1699,14 @@ SubsetByTaxon.RADdata <- function(object, taxa, ...){
   }
   if(!is.null(object$genotypeLikelihood)){
     splitRADdata$genotypeLikelihood <- 
-      lapply(object$genotypeLikelihood, function(x) x[, taxa,, drop = FALSE])
+      subset2D3D(object$genotypeLikelihood)
   }
   if(!is.null(object$priorProb)){
-    if(length(dim(object$priorProb[[1]])) == 3){
+    if(length(dim(object$priorProb[[1,1]])) == 3){
       splitRADdata$priorProb <- 
-        lapply(object$priorProb, function(x) x[, taxa,, drop = FALSE])
+        subset2D3D(object$priorProb)
     } else {
-      splitRADdata$priorProb <- object$priorProb
+      splitRADdata$priorProb <- object$priorProb[,as.character(tx_pld_unique)]
     }
   }
   if(!is.null(object$priorProbPloidies)){
@@ -1701,7 +1720,7 @@ SubsetByTaxon.RADdata <- function(object, taxa, ...){
   }
   if(!is.null(object$posteriorProb)){
     splitRADdata$posteriorProb <- 
-      lapply(object$posteriorProb, function(x) x[, taxa,, drop = FALSE])
+      subset2D3D(object$posteriorProb)
   }
   if(!is.null(object$alleleFreqByTaxa)){
     splitRADdata$alleleFreqByTaxa <- object$alleleFreqByTaxa[taxa,, drop = FALSE]
@@ -1711,7 +1730,7 @@ SubsetByTaxon.RADdata <- function(object, taxa, ...){
   }
   if(!is.null(object$priorProbLD)){
     splitRADdata$priorProbLD <- 
-      lapply(object$priorProbLD, function(x) x[, taxa,, drop = FALSE])
+      subset2D3D(object$priorProbLD)
   }
   
   return(splitRADdata)
