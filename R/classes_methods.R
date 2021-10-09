@@ -1475,7 +1475,7 @@ SetTaxaPloidy <- function(object, value, ...){
   UseMethod("SetTaxaPloidy", object)
 }
 SetTaxaPloidy.RADdata <- function(object, value, ...){
-  value <- as.integer(value)
+  storage.mode(value) <- "integer"
   if(length(value) != nTaxa(object)){
     stop("Need one ploidy for each taxon.")
   }
