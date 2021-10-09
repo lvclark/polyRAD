@@ -16,8 +16,8 @@ loci, with 80 individuals diploid and 20 individuals triploid.
 and 100 progeny.
 \code{Msi01genes} is a \code{"RADdata"} object with 585 taxa and 24 loci,
 containing real data from \emph{Miscanthus sinensis}, obtained by using
-\code{\link{VCF2RADdata}} on the file Msi01genes.vcf.  All individuals are
-diploid.
+\code{\link{VCF2RADdata}} on the file Msi01genes.vcf.  Most individuals
+in \code{Msi01genes} are diploid, with three haploids and one triploid.
 }
 \usage{
 data(exampleRAD)
@@ -33,7 +33,8 @@ Randomly generated using a script available in
 polyRAD/extdata/simulate_rad_data.R.
 
 \emph{M. sinensis} sequencing data available at
-\url{https://www.ncbi.nlm.nih.gov//bioproject/PRJNA207721}.
+\url{https://www.ncbi.nlm.nih.gov//bioproject/PRJNA207721}, with full genotype
+calls at \url{https://doi.org/10.13012/B2IDB-1402948_V1}.
 }
 
 \examples{
