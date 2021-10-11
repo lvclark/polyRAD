@@ -20,19 +20,20 @@ genotype likelihood should have already been added.
 Potential future arguments (none currently in use).
 }
 }
-\details{
-If \code{\link{AddPriorTimesLikelihood}} has not already been run on the
-object, it will be run by \code{AddGenotypePosteriorProb} in order to
-perform the necessary calculations.
-}
+%\details{
+%If \code{\link{AddPriorTimesLikelihood}} has not already been run on the
+%object, it will be run by \code{AddGenotypePosteriorProb} in order to
+%perform the necessary calculations.
+%}
 \value{
 A \code{"RADdata"} object identical to that passed to the function, but 
-with a list added to the \code{$posteriorProb} slot.  Each item of the
-list is a three dimensional array, with allele copy number in the first
-dimension, taxa in the second dimension, and alleles in the third dimension.
-For each allele and taxa, posterior probabilities will sum to one across
-all potential allele copy numbers.  There will be one such array for each
-possible ploidy, corresponding to \code{object$priorProb}.
+with a two-dimensional list added to the \code{$posteriorProb} slot.  Rows of
+the list correspont to \code{object$possiblePloidies}, and columns to unique
+values in \code{object$taxaPloidy}, similarly to \code{object$priorProb}. Each
+item of the list is a three dimensional array, with allele copy number in the
+first dimension, taxa in the second dimension, and alleles in the third
+dimension. For each allele and taxa, posterior probabilities will sum to one
+across all potential allele copy numbers.
 }
 
 \author{
@@ -58,7 +59,7 @@ exampleRAD_mapping <- AddGenotypePriorProb_Mapping2Parents(exampleRAD_mapping,
 # estimate posterior probabilities
 exampleRAD_mapping <- AddGenotypePosteriorProb(exampleRAD_mapping)
 # examine the results
-exampleRAD_mapping$posteriorProb[[1]][,3,]
+exampleRAD_mapping$posteriorProb[[1,1]][,3,]
 }
 
 \keyword{ methods }

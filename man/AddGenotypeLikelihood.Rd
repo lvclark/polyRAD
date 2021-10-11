@@ -67,8 +67,10 @@ is calculated by \code{AddDepthSamplingPermutations}.
 \value{
 A \code{"RADdata"} object identical to that passed to the function, but with
 genotype likelihoods stored in \code{object$genotypeLikelihood}.  This item is a 
-list, with one item for each possible ploidy, ignoring differences between 
-autopolyploids and allopolyploids.  For each ploidy there is a three-dimensional 
+two dimensional list, with one row for each ploidy listed
+in \code{object$possiblePloidies}, ignoring differences between 
+autopolyploids and allopolyploids, and one column for each ploidy listed in
+\code{object$taxaPloidy}.  Each item in the list is a three-dimensional 
 array with number of allele copies in the first dimension, taxa in the second dimension,
 and alleles in the third dimension.
 }

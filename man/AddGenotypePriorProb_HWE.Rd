@@ -54,7 +54,9 @@ of progeny after self-fertilization (each column summing to one).
 A \dQuote{RADdata} object identical that passed to the function, but with
 data stored in two new slots:
 
-\item{priorProb }{A list of matrices, with one matrix per possible ploidy.  
+\item{priorProb }{A two-dimensional list of matrices, with rows corresponding to
+\code{object$possiblePloidies} and columns corresponding to unique values in
+\code{object$taxaPloidy}. Each item in the list is a matrix.  
 For each matrix, allele copy number (from zero to the total
 ploidy) is in rows, and alleles are in columns.  Each value is the probability
 of sampling an individual with that allele copy number from the population.}
