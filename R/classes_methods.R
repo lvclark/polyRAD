@@ -1211,93 +1211,107 @@ AddGenotypePriorProb_LD.RADdata <- function(object, type, ...){
   if(!type %in% c("mapping", "hwe", "popstruct")){
     stop("type must be 'mapping', 'hwe', or 'popstruct'.")
   }
+
   # Set up list of arrays to contain prior probabilities based on linked
   # loci alone.
-  nPld <- length(object$posteriorProb)
-  object$priorProbLD <- list()
-  length(object$priorProbLD) <- nPld
+  nPld <- nrow(object$posteriorProb)
+  object$priorProbLD <- array(list(), dim = dim(object$posteriorProb),
+                              dimnames = dimnames(object$posteriorProb))
   # Find parents, to exclude from correlations in mapping populations
   if(type == "mapping"){
     parents <- c(GetDonorParent(object), GetRecurrentParent(object))
-    progeny <- which(!GetTaxa(object) %in% parents)
+    progeny <- setdiff(GetTaxa(object), c(parents, GetBlankTaxa(object)))
+    if(length(unique(GetTaxaPloidies(object)[progeny])) > 1){
+      stop("Only one progeny ploidy allowed for mapping populations.")
+    }
   }
   
   # Loop through the possible ploidies
-  for(pldIndex in 1:nPld){
-    # set up array to be put into priorProbLD slot.
-    # (Setting up the array *in* the slot caused a mysterious problem
-    # where object would get copied to a new memory address on each
-    # iteration through the alleles, but only when the Rcpp function
-    # ThirdDimProd was used instead of apply.)
-    thisarr <- 
-      array(dim = dim(object$posteriorProb[[pldIndex]]),
-            dimnames = dimnames(object$posteriorProb[[pldIndex]]))
-    # number of possible genotypes
-    ngen <- dim(object$posteriorProb[[pldIndex]])[1]
-    # Loop through alleles
-    for(a in 1:nAlleles(object)){
-      atab <- object$alleleLinkages[[a]]
-      if(length(atab$allele) == 0){ # no linked alleles
-        thisarr[,,a] <- 1/ngen
-      } else {             # linked alleles exist
-        # get posterior probabilities for linked alleles
-        thispost <- object$posteriorProb[[pldIndex]][,, atab$allele, drop = FALSE]
-        
-        # in a mapping population, make sure we are considering genotypes that are possible
-        if(type == "mapping"){
-          # genotypes possible for this allele
-          possibleThisAllele <- which(object$priorProb[[pldIndex]][,a] > 0)
-          # array to hold new probabilities for getting priors
-          newpost <- array(0, dim = dim(thispost))
-          for(a2 in atab$allele){
-            # genotypes possible for this linked allele
-            possibleLinked <- which(object$priorProb[[pldIndex]][,a2] > 0)
-            i <- match(a2, atab$allele)
-            if(length(possibleThisAllele) == 2 && length(possibleLinked) == 2){
-              # If there are only two possible genotypes for each, we know that all
-              # copies of alleles are linked and can treat them that way.
-              newpost[possibleThisAllele,progeny,i] <- 
-                thispost[possibleLinked,progeny,i] * atab$corr[i]^2 +
-                0.5 * (1 - atab$corr[i]^2)
-            } else {
-              # If any allele has more than two genotypes, we aren't sure of
-              # complete phasing.
-              # regress posterior probs for each allele copy number on all posterior probs
-              for(j in possibleThisAllele){
-                thisX <- thispost[possibleLinked[-1],, i]
-                if(is.vector(thisX)){
-                  thisX <- matrix(thisX, nrow = length(thisX), ncol = 1)
-                } else {
-                  thisX <- t(thisX)
+  for(pldIndex in seq_len(nPld)){
+    for(h in seq_len(ncol(object$priorProbLD))){
+      # number of possible genotypes
+      ngen <- dim(object$posteriorProb[[pldIndex,h]])[1]
+      # set up array to be put into priorProbLD slot.
+      # (Setting up the array *in* the slot caused a mysterious problem
+      # where object would get copied to a new memory address on each
+      # iteration through the alleles, but only when the Rcpp function
+      # ThirdDimProd was used instead of apply.)
+      thisarr <- 
+        array(1 / ngen, dim = dim(object$posteriorProb[[pldIndex,h]]),
+              dimnames = dimnames(object$posteriorProb[[pldIndex,h]]))
+      
+      # skip if this is a mapping pop and this taxaploidy doesn't have progeny
+      if(type == "mapping" && !all(progeny %in% dimnames(thisarr)[[2]])){
+        object$priorProbLD[[pldIndex,h]] <- thisarr
+        next
+      }
+      
+      # Loop through alleles
+      for(a in 1:nAlleles(object)){
+        atab <- object$alleleLinkages[[a]]
+        if(length(atab$allele) == 0){ # no linked alleles
+          thisarr[,,a] <- 1/ngen
+        } else {             # linked alleles exist
+          # get posterior probabilities for linked alleles
+          thispost <- object$posteriorProb[[pldIndex,h]][,, atab$allele, drop = FALSE]
+          
+          # in a mapping population, make sure we are considering genotypes that are possible
+          if(type == "mapping"){
+            # genotypes possible for this allele
+            possibleThisAllele <- which(object$priorProb[[pldIndex,h]][,a] > 0)
+            # array to hold new probabilities for getting priors
+            newpost <- array(0, dim = dim(thispost),
+                             dimnames = dimnames(thispost))
+            for(a2 in atab$allele){
+              # genotypes possible for this linked allele
+              possibleLinked <- which(object$priorProb[[pldIndex,h]][,a2] > 0)
+              i <- match(a2, atab$allele)
+              if(length(possibleThisAllele) == 2 && length(possibleLinked) == 2){
+                # If there are only two possible genotypes for each, we know that all
+                # copies of alleles are linked and can treat them that way.
+                newpost[possibleThisAllele,progeny,i] <- 
+                  thispost[possibleLinked,progeny,i] * atab$corr[i]^2 +
+                  0.5 * (1 - atab$corr[i]^2)
+              } else {
+                # If any allele has more than two genotypes, we aren't sure of
+                # complete phasing.
+                # regress posterior probs for each allele copy number on all posterior probs
+                for(j in possibleThisAllele){
+                  thisX <- thispost[possibleLinked[-1],, i]
+                  if(is.vector(thisX)){
+                    thisX <- matrix(thisX, nrow = length(thisX), ncol = 1)
+                  } else {
+                    thisX <- t(thisX)
+                  }
+                  thislm <- lm.fit(x = cbind(rep(1, length(progeny)), thisX[progeny,, drop=FALSE]),
+                                   y = object$posteriorProb[[pldIndex,h]][j, progeny, a])
+                  newpost[j,progeny,i] <- thislm$fitted.values
                 }
-                thislm <- lm.fit(x = cbind(rep(1, length(progeny)), thisX[progeny,, drop=FALSE]),
-                                 y = object$posteriorProb[[pldIndex]][j, progeny, a])
-                newpost[j,progeny,i] <- thislm$fitted.values
               }
             }
+            newpost[newpost < 0] <- 0
+            newpost[newpost > 1] <- 1
+            thispost <- newpost
+          } else { # for hwe or pop structure situations
+            # multiply by correlation coefficient
+            thispost <- sweep(thispost, 3, atab$corr^2, "*")
+            # add even priors for the remainder of the coefficient
+            thispost <- sweep(thispost, 3, (1 - atab$corr^2)/ngen, "+")
           }
-          newpost[newpost < 0] <- 0
-          newpost[newpost > 1] <- 1
-          thispost <- newpost
-        } else { # for hwe or pop structure situations
-          # multiply by correlation coefficient
-          thispost <- sweep(thispost, 3, atab$corr^2, "*")
-          # add even priors for the remainder of the coefficient
-          thispost <- sweep(thispost, 3, (1 - atab$corr^2)/ngen, "+")
-        }
-        
-        # multiply across alleles to get priors
-        if(length(atab$allele) == 1){
-          thisarr[,,a] <- thispost[,, 1]
-        } else {
-#          thisLDprior <- apply(thispost, c(1, 2), prod) # non-compiled version
-          thisLDprior <- ThirdDimProd(thispost, ngen, nTaxa(object)) # Rcpp function
-          thisLDprior <- sweep(thisLDprior, 2, colSums(thisLDprior), "/")
-          thisarr[,,a] <- thisLDprior
-        }
-      } # end of chunk for if there are linked alleles
-    } # end of loop through alleles
-    object$priorProbLD[[pldIndex]] <- thisarr
+          
+          # multiply across alleles to get priors
+          if(length(atab$allele) == 1){
+            thisarr[,,a] <- thispost[,, 1]
+          } else {
+            #          thisLDprior <- apply(thispost, c(1, 2), prod) # non-compiled version
+            thisLDprior <- ThirdDimProd(thispost, ngen, dim(thispost)[2]) # Rcpp function
+            thisLDprior <- sweep(thisLDprior, 2, colSums(thisLDprior), "/")
+            thisarr[,,a] <- thisLDprior
+          }
+        } # end of chunk for if there are linked alleles
+      } # end of loop through alleles
+      object$priorProbLD[[pldIndex,h]] <- thisarr
+    } # end of loop through taxa ploidies
   } # end of loop through ploidies
   
   return(object)
