@@ -2,8 +2,7 @@
 
 # RADdata class constructor ####
 RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies, 
-                    contamRate, alleleNucleotides,
-                    taxaPloidy = 2L){
+                    contamRate, alleleNucleotides, taxaPloidy){
   if(!is.integer(alleleDepth)){
     stop("alleleDepth must be in integer format.")
   }
