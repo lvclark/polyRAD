@@ -1,3 +1,9 @@
+## Changes in v2.0 ##
+
+Multiploid populations are now supported.
+
+The AddPloidyTimesLikelihood function has been removed.
+
 ## Changes in v1.6 ##
 
 TestOverdispersion now prints a helpful suggestion for which overdispersion

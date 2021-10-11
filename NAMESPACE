@@ -6,7 +6,7 @@ AddGenotypePosteriorProb,  AddGenotypePriorProb_ByTaxa,
 AddGenotypePriorProb_Even,
 AddGenotypePriorProb_HWE, AddGenotypePriorProb_LD,
 AddGenotypePriorProb_Mapping2Parents, AddPCA,
-AddPloidyChiSq, AddPloidyLikelihood, AddPriorTimesLikelihood,
+AddPloidyChiSq, AddPloidyLikelihood,
 CanDoGetWeightedMeanGeno, EstimateContaminationRate, 
 EstimateParentalGenotypes, ExpectedHindHe, ExpectedHindHeMapping,
 Export_adegenet_genind, ExportGAPIT, Export_GWASpoly,
@@ -55,7 +55,6 @@ S3method(AddGenotypePriorProb_Mapping2Parents, RADdata)
 S3method(AddPCA, RADdata)
 S3method(AddPloidyChiSq, RADdata)
 S3method(AddPloidyLikelihood, RADdata)
-S3method(AddPriorTimesLikelihood, RADdata)
 S3method(CanDoGetWeightedMeanGeno, RADdata)
 S3method(EstimateContaminationRate, RADdata)
 S3method(EstimateParentalGenotypes, RADdata)

@@ -839,25 +839,11 @@ AddPloidyChiSq.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object),
   return(object)
 }
 
-AddPriorTimesLikelihood <- function(object, ...){
-  UseMethod("AddPriorTimesLikelihood", object)
-}
-AddPriorTimesLikelihood.RADdata <- function(object, ...){
-  results <- .priorTimesLikelihood(object)
-  
-  object$priorTimesLikelihood <- results
-  return(object)
-}
-
 AddGenotypePosteriorProb <- function(object, ...){
   UseMethod("AddGenotypePosteriorProb", object)
 }
 AddGenotypePosteriorProb.RADdata <- function(object, ...){
-  if(is.null(object$priorTimesLikelihood)){
-    PTL <- .priorTimesLikelihood(object)
-  } else {
-    PTL <- object$priorTimesLikelihood
-  }
+  PTL <- .priorTimesLikelihood(object)
   object$posteriorProb <- array(list(),
                                 dim = dim(PTL),
                                 dimnames = dimnames(PTL))
