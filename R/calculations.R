@@ -92,7 +92,7 @@
         # expand priors out by individuals
         thispriorarr <- array(object$priorProb[[i,h]], 
                               dim = c(dim(object$priorProb[[i,h]])[1], 1, 
-                                      dim(object$priorProb[[i,h]])[2]))[,rep(1, length(thesetaxa)),]
+                                      dim(object$priorProb[[i,h]])[2]))[,rep(1, length(thesetaxa)),, drop = FALSE]
         dimnames(thispriorarr) <- dimnames(object$genotypeLikelihoods[[j,h]])
       } else {
         thispriorarr <- object$priorProb[[i,h]]
