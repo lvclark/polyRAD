@@ -1853,7 +1853,7 @@ SubsetByPloidy.RADdata <- function(object, ploidies, ...){
   ploidies <- lapply(ploidies, as.integer)
   object$possiblePloidies <- ploidies
   # don't need to subset much if genotype calling not done
-  if(is.null(object$priorProbPloidies)){
+  if(is.null(object$priorProb)){
     return(object)
   }
   
