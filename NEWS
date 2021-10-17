@@ -2,7 +2,7 @@
 
 Multiploid populations are now supported.
 
-The AddPloidyTimesLikelihood function has been removed.
+The AddPriorTimesLikelihood function has been removed.
 
 ## Changes in v1.6 ##
 
