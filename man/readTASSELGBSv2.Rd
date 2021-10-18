@@ -13,7 +13,7 @@ DiscoverySNPCallerPluginV2 or the ProductionSNPCallerPluginV2, since
 \usage{
 readTASSELGBSv2(tagtaxadistFile, samFile, min.ind.with.reads = 200, 
                 min.ind.with.minor.allele = 10, possiblePloidies = list(2),
-                contamRate = 0.001, chromosomes = NULL)
+                taxaPloidy = 2L, contamRate = 0.001, chromosomes = NULL)
 }
 \arguments{
   \item{tagtaxadistFile}{
@@ -38,6 +38,10 @@ This value is also passed to the \code{min.ind.with.haplotype} argument of
   \item{possiblePloidies}{
 A list indicating inheritance modes that might be encountered in the 
 dataset.  See \code{\link{RADdata}}.
+}
+  \item{taxaPloidy}{
+A single integer, or an integer vector with one value per taxon, indicating
+ploidy.  See \code{\link{RADdata}}.
 }
   \item{contamRate}{
 A number indicating the expected sample cross-contamination rate.  See

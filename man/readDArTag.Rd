@@ -20,7 +20,7 @@ readDArTag(file, botloci = NULL, blastfile = NULL, excludeHaps = NULL,
            includeHaps = NULL, n.header.rows = 7, sample.name.row = 7,
            trim.sample.names = "_[^_]+_[ABCDEFGH][[:digit:]][012]?$",
            sep.counts = ",", sep.blast = "\t", possiblePloidies = list(2),
-           contamRate = 0.001)
+           taxaPloidy = 2L, contamRate = 0.001)
 }
 \arguments{
   \item{file}{
@@ -69,6 +69,10 @@ tab-delimited.
 }
   \item{possiblePloidies}{
 A list indicating possible inheritance modes.  See \code{\link{RADdata}}.
+}
+  \item{taxaPloidy}{
+A single integer, or an integer vector with one value per taxon, indicating
+ploidy.  See \code{\link{RADdata}}.
 }
   \item{contamRate}{
 Expected sample cross-contamination rate. See \code{\link{RADdata}}.

@@ -13,7 +13,8 @@ slot of the \code{"RADdata"} object.
 }
 \usage{
 readTagDigger(countfile, includeLoci = NULL, 
-              possiblePloidies = list(2), contamRate = 0.001,
+              possiblePloidies = list(2), taxaPloidy = 2L,
+              contamRate = 0.001,
               dbfile = NULL, dbColumnsToKeep = NULL, 
               dbChrCol = "Chr", dbPosCol = "Pos", 
               dbNameCol = "Marker name")
@@ -29,6 +30,10 @@ the output.
   \item{possiblePloidies}{
 A list of numeric vectors indicating potential inheritance modes of SNPs in the
 dataset.  See \code{\link{RADdata}}.
+}
+  \item{taxaPloidy}{
+A single integer, or an integer vector with one value per taxon, indicating
+ploidy.  See \code{\link{RADdata}}.
 }
   \item{contamRate}{
 A number ranging from zero to one (typically small) indicating the expected 

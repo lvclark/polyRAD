@@ -10,7 +10,7 @@ files output by the UNEAK pipeline and uses the data to generate a
 }
 \usage{
 readHMC(file, includeLoci = NULL, shortIndNames = TRUE, 
-        possiblePloidies = list(2), contamRate = 0.001, 
+        possiblePloidies = list(2), taxaPloidy = 2L, contamRate = 0.001,
         fastafile = sub("hmc.txt", "fas.txt", file, fixed = TRUE))
 }
 \arguments{
@@ -27,6 +27,10 @@ file, eliminating all text after and including the first underscore.
   \item{possiblePloidies}{
 A list of numeric vectors indicating potential inheritance modes of SNPs in the
 dataset.  See \code{\link{RADdata}}.
+}
+  \item{taxaPloidy}{
+A single integer, or an integer vector with one value per taxon, indicating
+ploidy.  See \code{\link{RADdata}}.
 }
   \item{contamRate}{
 A number ranging from zero to one (typically small) indicating the expected 

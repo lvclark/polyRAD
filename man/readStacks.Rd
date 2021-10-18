@@ -13,7 +13,7 @@ readStacks(allelesFile, matchesFolder, version = 2,
            min.ind.with.reads = 200,
            min.ind.with.minor.allele = 10, readAlignmentData = FALSE, 
            sumstatsFile = "populations.sumstats.tsv",
-           possiblePloidies = list(2), contamRate = 0.001)
+           possiblePloidies = list(2), taxaPloidy = 2L, contamRate = 0.001)
 }
 \arguments{
   \item{allelesFile}{
@@ -52,6 +52,10 @@ unless \code{version = 2} and \code{readAlignmentData = TRUE}.
   \item{possiblePloidies}{
 A list indicating possible inheritance modes in the dataset.
 See \code{\link{RADdata}}.
+}
+  \item{taxaPloidy}{
+A single integer, or an integer vector with one value per taxon, indicating
+ploidy.  See \code{\link{RADdata}}.
 }
   \item{contamRate}{
 A number from 0 to 1 (generally very small) indicating the expected rate of
