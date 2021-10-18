@@ -290,7 +290,9 @@ Export_MAPpoly <- function(object, file, pheno = NULL, ploidyIndex = 1,
 
 Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE, postmean = TRUE, digits = 3){
   if(postmean){
-    mygeno <- t(GetWeightedMeanGenotypes(object, maxval = max(sapply(object$possiblePloidies, sum)),
+    mygeno <- t(GetWeightedMeanGenotypes(object,
+                                         maxval = max(sapply(object$possiblePloidies, sum)) *
+                                           max(GetTaxaPloidy(object)) / 2L,
                                          omit1allelePerLocus = TRUE,
                                          omitCommonAllele = TRUE,
                                          naIfZeroReads = naIfZeroReads))
