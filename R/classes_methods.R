@@ -996,7 +996,7 @@ GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
       thispld <- dim(object$posteriorProb[[p,h]])[1] - 1L
       thesetaxa <- dimnames(object$posteriorProb[[p,h]])[[2]]
       outmat[thesetaxa,thesealleles] <-
-        BestGenos(object$posteriorProb[[p,h]][,thesetaxa,allelesToExport[thesealleles]],
+        BestGenos(object$posteriorProb[[p,h]][,thesetaxa,allelesToExport[thesealleles], drop = FALSE],
                   thispld, length(thesetaxa), length(thesealleles)) # Rcpp function
       # correct or delete genotypes that don't sum to ploidy
       if(multiallelic %in% c("na", "correct")){
@@ -1007,7 +1007,7 @@ GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
         # run the Rcpp function do to the correction
         outmat[thesetaxa,thesealleles] <- 
           CorrectGenos(outmat[thesetaxa,thesealleles], 
-                       object$posteriorProb[[p,h]][,thesetaxa,allelesToExport[thesealleles]],
+                       object$posteriorProb[[p,h]][,thesetaxa,allelesToExport[thesealleles], drop = FALSE],
                        thisA2L, length(thesetaxa), thispld, length(thesealleles),
                        length(theseLoci), multiallelic == "correct")
       }
