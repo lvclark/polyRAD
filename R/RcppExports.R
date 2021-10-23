@@ -49,12 +49,12 @@ Hap2Hap <- function(haps, refhap, pos) {
     .Call('_polyRAD_Hap2Hap', PACKAGE = 'polyRAD', haps, refhap, pos)
 }
 
-MakeGTstrings <- function(genotypes, ploidy) {
-    .Call('_polyRAD_MakeGTstrings', PACKAGE = 'polyRAD', genotypes, ploidy)
+MakeGTstring <- function(genotype, ploidy) {
+    .Call('_polyRAD_MakeGTstring', PACKAGE = 'polyRAD', genotype, ploidy)
 }
 
-PrepVCFexport <- function(genotypes, alleles2loc, alleleDepth, alleleNucleotides, locTable, ploidy, asSNPs) {
-    .Call('_polyRAD_PrepVCFexport', PACKAGE = 'polyRAD', genotypes, alleles2loc, alleleDepth, alleleNucleotides, locTable, ploidy, asSNPs)
+PrepVCFexport <- function(genotypes, alleles2loc, alleleDepth, alleleNucleotides, locTable, ploidy, taxaPloidy, asSNPs) {
+    .Call('_polyRAD_PrepVCFexport', PACKAGE = 'polyRAD', genotypes, alleles2loc, alleleDepth, alleleNucleotides, locTable, ploidy, taxaPloidy, asSNPs)
 }
 
 simGeno <- function(alleleFreq, alleles2loc, nsam, inbreeding, ploidy) {

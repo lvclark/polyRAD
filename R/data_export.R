@@ -366,7 +366,7 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE,
   # Process data with internal RCpp function
   temp <- PrepVCFexport(geno, object$alleles2loc, object$alleleDepth,
                         object$alleleNucleotides, object$locTable, pld_per_loc,
-                        asSNPs)
+                        GetTaxaPloidy(object), asSNPs)
   REF <- Biostrings::DNAStringSet(temp$REF)
   ALT <- Biostrings::DNAStringSetList(temp$ALT)
   CHROM <- as.character(object$locTable$Chr)[temp$Lookup]
@@ -374,10 +374,11 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE,
                 IRanges::IRanges(start = temp$POS, 
                                  width = BiocGenerics::width(REF)))
   fixed <- DataFrame(REF = REF, ALT = ALT)
-  cd <- DataFrame(row.names = GetTaxa(object))
+  cd <- DataFrame(row.names = GetTaxa(object),
+                  Ploidy = GetTaxaPloidy(object) * min(pld_per_loc) / 2L)
   if(ncol(sampleinfo) > 0){
     cd <- cbind(cd, sampleinfo[GetTaxa(object),])
-    colnames(cd) <- colnames(sampleinfo)
+    colnames(cd)[-1] <- colnames(sampleinfo)
   }
   DP <- t(object$locDepth[,as.character(temp$Lookup)])
   rownames(DP) <- NULL
