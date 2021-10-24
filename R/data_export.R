@@ -514,9 +514,11 @@ Export_adegenet_genind <- function(object, ploidyIndex = 1){
                               multiallelic = "correct")$genotypes
   colnames(tab) <- paste(sub("\\.", "_", GetLoci(object)[object$alleles2loc]),
                          object$alleleNucleotides, sep = ".")
+  pldT2 <- sum(object$priorProbPloidies[[1]]) * GetTaxaPloidy(object)
+  stopifnot(all(pldT2 %% 2L == 0L))
   
   out <- methods::new("genind", tab = tab,
-             ploidy = sum(object$priorProbPloidies[[1]]),
+             ploidy = pldT2 %/% 2L,
              type = "codom")
 
   return(out)
