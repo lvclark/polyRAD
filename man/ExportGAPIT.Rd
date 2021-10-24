@@ -196,7 +196,8 @@ write files but do not return
 an object.  Files output by \code{Export_GWASpoly} are comma delimited and
 in numeric format.  Sample and locus names are included in the file output
 by \code{Export_Structure}, and the number of rows for each sample is
-equal to the highest ploidy output by \code{GetProbableGenotypes}.
+equal to the highest ploidy as determined by the \code{taxaPloidy} slot and the
+output of \code{GetProbableGenotypes}.
 }
 \references{
 \bold{GAPIT and FarmCPU:}

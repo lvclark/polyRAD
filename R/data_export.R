@@ -456,7 +456,7 @@ Export_Structure <- function(object, file, includeDistances = FALSE,
   # get ploidy
   pind <- unique(geno$ploidy_index)
   ploidies <- sapply(object$priorProbPloidies[pind], sum)
-  ploidy <- max(ploidies)
+  ploidy <- max(ploidies) * max(GetTaxaPloidy(object)) / 2L
   stopifnot(all(geno$genotypes <= ploidy, na.rm = TRUE))
   # put data into Structure format (Rcpp function)
   strdata <- FormatStructure(geno$genotypes, object$alleles2loc, ploidy)
