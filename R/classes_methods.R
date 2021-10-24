@@ -74,6 +74,9 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
     }
     taxaPloidy <- taxaPloidy[rownames(alleleDepth)]
   }
+  if(!(all(unlist(possiblePloidies) %% 2L == 0L) || all(taxaPloidy %% 2L == 0L))){
+    stop("Either possiblePloidies or taxaPloidy must consist entirely of even numbers.")
+  }
   
   taxa <- dimnames(alleleDepth)[[1]]
   names(taxaPloidy) <- taxa
@@ -1483,6 +1486,10 @@ SetTaxaPloidy.RADdata <- function(object, value, ...){
   }
   if(any(value < 1)){
     stop("taxaPloidy must be positive integer.")
+  }
+  if(!(all(unlist(object$possiblePloidies) %% 2L == 0L) ||
+       all(value %% 2L == 0L))){
+    stop("Either possiblePloidies or taxaPloidy must consist entirely of even numbers.")
   }
   if(!is.null(names(value))){
     if(!setequal(names(value), GetTaxa(object))){
