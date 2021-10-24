@@ -303,6 +303,9 @@ Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE, postmean = TRUE,
                                      omit1allelePerLocus = TRUE,
                                      omitCommonAllele = TRUE,
                                      naIfZeroReads = naIfZeroReads)$genotypes)
+    if(length(unique(GetTaxaPloidy(object))) > 1){
+      warning("Individuals in dataset vary in ploidy, and genotypes are expressed as allele copy numbers.  GWASpoly assumptions may be violated.")
+    }
   }
   
   # get loci to correspond to these alleles
