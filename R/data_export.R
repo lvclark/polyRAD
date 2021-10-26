@@ -289,9 +289,13 @@ Export_MAPpoly <- function(object, file, pheno = NULL, ploidyIndex = 1,
 }
 
 Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE, postmean = TRUE, digits = 3){
+  pldsums <- sapply(object$possiblePloidies, sum)
+  if(length(unique(pldsums)) > 1){
+    stop("Multiple ploidies possible for loci, but only one ploidy allowed by GWASpoly. Use SubsetByPloidy first.")
+  }
   if(postmean){
     mygeno <- t(GetWeightedMeanGenotypes(object,
-                                         maxval = max(sapply(object$possiblePloidies, sum)) *
+                                         maxval = max(pldsums) *
                                            max(GetTaxaPloidy(object)) / 2L,
                                          omit1allelePerLocus = TRUE,
                                          omitCommonAllele = TRUE,
