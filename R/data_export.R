@@ -288,27 +288,57 @@ Export_MAPpoly <- function(object, file, pheno = NULL, ploidyIndex = 1,
               col.names = FALSE, row.names = FALSE)
 }
 
-Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE, postmean = TRUE, digits = 3){
+Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE, postmean = TRUE,
+                            digits = 3, splitByPloidy = TRUE){
   pldsums <- sapply(object$possiblePloidies, sum)
   if(length(unique(pldsums)) > 1){
     stop("Multiple ploidies possible for loci, but only one ploidy allowed by GWASpoly. Use SubsetByPloidy first.")
   }
+  # only split files by ploidy if there are multiple ploidies
+  txpld <- sort(unique(GetTaxaPloidy(object)))
+  splitByPloidy <- splitByPloidy && length(txpld) > 1
+  
   if(postmean){
-    mygeno <- t(GetWeightedMeanGenotypes(object,
-                                         maxval = max(pldsums) *
-                                           max(GetTaxaPloidy(object)) / 2L,
-                                         omit1allelePerLocus = TRUE,
-                                         omitCommonAllele = TRUE,
-                                         naIfZeroReads = naIfZeroReads))
-    mygeno <- round(mygeno, digits = digits)
+    if(splitByPloidy){
+      mygeno <- sapply(txpld,
+                       function(x){
+                         thesetaxa <- GetTaxaByPloidy(object, x)
+                         mat <- GetWeightedMeanGenotypes(SubsetByTaxon(object, thesetaxa),
+                                                  maxval = max(pldsums) * x / 2L,
+                                                  omit1allelePerLocus = TRUE,
+                                                  omitCommonAllele = TRUE,
+                                                  naIfZeroReads = naIfZeroReads)
+                         return(round(t(mat), digits = digits))
+                       },
+                       simplify = FALSE)
+      names(mygeno) <- as.character(txpld)
+    } else {
+      mygeno <- t(GetWeightedMeanGenotypes(object,
+                                           maxval = max(pldsums) *
+                                             max(GetTaxaPloidy(object)) / 2L,
+                                           omit1allelePerLocus = TRUE,
+                                           omitCommonAllele = TRUE,
+                                           naIfZeroReads = naIfZeroReads))
+      mygeno <- round(mygeno, digits = digits)
+    }
   } else {
     # matrix of discrete genotypes
     mygeno <- t(GetProbableGenotypes(object,
                                      omit1allelePerLocus = TRUE,
                                      omitCommonAllele = TRUE,
                                      naIfZeroReads = naIfZeroReads)$genotypes)
-    if(length(unique(GetTaxaPloidy(object))) > 1){
-      warning("Individuals in dataset vary in ploidy, and genotypes are expressed as allele copy numbers.  GWASpoly assumptions may be violated.")
+    if(splitByPloidy){
+      mygeno <- sapply(txpld,
+                       function(x){
+                         thesetaxa <- GetTaxaByPloidy(object, x)
+                         return(mygeno[,thesetaxa])
+                       },
+                       simplify = FALSE)
+      names(mygeno) <- as.character(txpld)
+    } else {
+      if(length(unique(GetTaxaPloidy(object))) > 1){
+        warning("Individuals in dataset vary in ploidy, and genotypes are expressed as allele copy numbers.  GWASpoly assumptions may be violated.")
+      }
     }
   }
   
@@ -324,14 +354,28 @@ Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE, postmean = TRUE,
   }
   
   # data frame for export
-  outdata <- data.frame(Marker = rownames(mygeno),
-                        Chrom = .chromosome_to_integer(loctable$Chr[locindex]),
-                        Position = loctable$Pos[locindex],
-                        mygeno,
-                        check.names = FALSE)
-  
-  # export
-  write.csv(outdata, file = file, row.names = FALSE, quote = FALSE)
+  if(splitByPloidy){
+    for(x in txpld){
+      xC <- as.character(x)
+      outdata <- data.frame(Marker = rownames(mygeno[[xC]]),
+                            Chrom = .chromosome_to_integer(loctable$Chr[locindex]),
+                            Position = loctable$Pos[locindex],
+                            mygeno[[xC]],
+                            check.names = FALSE)
+      write.csv(outdata,
+                file = sub("(\\.csv)?$", paste0("_", x, ".csv"), file),
+                row.names = FALSE, quote = FALSE)
+    }
+  } else {
+    outdata <- data.frame(Marker = rownames(mygeno),
+                          Chrom = .chromosome_to_integer(loctable$Chr[locindex]),
+                          Position = loctable$Pos[locindex],
+                          mygeno,
+                          check.names = FALSE)
+    
+    # export
+    write.csv(outdata, file = file, row.names = FALSE, quote = FALSE)
+  }
 }
 
 RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE,

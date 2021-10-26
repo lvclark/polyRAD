@@ -52,7 +52,8 @@ Export_MAPpoly(object, file, pheno = NULL, ploidyIndex = 1,
                    GetBlankTaxa(object))],
                digits = 3)
 
-Export_GWASpoly(object, file, naIfZeroReads = TRUE, postmean = TRUE, digits = 3)
+Export_GWASpoly(object, file, naIfZeroReads = TRUE, postmean = TRUE, digits = 3,
+                splitByPloidy = TRUE)
 
 Export_Structure(object, file, includeDistances = FALSE, extraCols = NULL,
                  missingIfZeroReads = TRUE)
@@ -113,6 +114,10 @@ mean genotypes in the output file.
 \item{postmean}{
 Logical. If \code{TRUE}, posterior mean genotypes will be output.  If
 \code{FALSE}, discrete genotypes will be output.
+}
+\item{splitByPloidy}{
+Logical. If \code{TRUE} and there are multiple \code{taxaPloidy} values in the
+dataset, multiple files are written, one per ploidy.
 }
 \item{includeDistances}{
 Logical. If \code{TRUE}, the second row of the Structure file will contain
@@ -340,7 +345,7 @@ Export_MAPpoly(exampleRAD_mapping, file = outfile2, pheno = mypheno)
 
 # export to GWASpoly
 outfile3 <- tempfile() # temporary file for example
-Export_GWASpoly(exampleRAD, outfile3)
+Export_GWASpoly(SubsetByPloidy(exampleRAD, list(2)), outfile3)
 
 # export to Structure
 outfile4 <- tempfile() # temporary file for example
