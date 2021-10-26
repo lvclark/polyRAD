@@ -318,7 +318,8 @@ Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE, postmean = TRUE,
   outdata <- data.frame(Marker = rownames(mygeno),
                         Chrom = .chromosome_to_integer(loctable$Chr[locindex]),
                         Position = loctable$Pos[locindex],
-                        mygeno)
+                        mygeno,
+                        check.names = FALSE)
   
   # export
   write.csv(outdata, file = file, row.names = FALSE, quote = FALSE)
