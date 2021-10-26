@@ -47,10 +47,14 @@ This test is performed for each overdispersion value provided in
 \code{to_test}.
 }
 \value{
-A list of the same length as \code{to_test}.  The names of the list are
+A list of the same length as \code{to_test} plus one.  The names of the list are
 \code{to_test} converted to a character vector.  Each item in the list is a
 vector of p-values, one per examined genotype, of the read depth ratio for
-that genotype to deviate that much from the expected ratio.
+that genotype to deviate that much from the expected ratio.  The last item,
+named "optimal", is a single number indicating the optimal value for the
+overdispersion parameter based on the p-value distributions.  If the optimal
+value was the minimum or maximum tested, \code{NA} is returned in the
+\code{"optimal"} slot to encourage the user to test other values.
 }
 
 \author{
@@ -64,11 +68,9 @@ data(Msi01genes)
 # test several values for the overdispersion parameter
 myP <- TestOverdispersion(Msi01genes, to_test = 8:10)
 
-# visualize results with QQ plots
-require(qqman)
-qq(myP[["8"]])  # over-fit; too much overdispersion in model
-qq(myP[["9"]])  # fairly close to expected; good value to use
-qq(myP[["10"]]) # slightly under-fit; not enough overdispersion
+# view results as quantiles
+sapply(myP[names(myP) != "optimal"],
+       quantile, probs = c(0.01, 0.25, 0.5, 0.75, 0.99))
 }
 
 \keyword{ distribution }

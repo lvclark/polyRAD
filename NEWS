@@ -7,7 +7,11 @@ The AddPriorTimesLikelihood function has been removed.
 ## Changes in v1.6 ##
 
 TestOverdispersion now prints a helpful suggestion for which overdispersion
-parameter to use.  The use of qqman has been eliminated from the vignettes.
+parameter to use, as well as returning that value in its output.
+The use of qqman has been eliminated from the vignettes.
+
+A bug has been fixed in Export_GWASpoly so that special characters in sample
+names are not converted to periods.
 
 ## Changes in v1.5 ##
 
