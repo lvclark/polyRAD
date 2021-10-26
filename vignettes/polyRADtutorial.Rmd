@@ -260,7 +260,8 @@ deviate from what would be expected under binomial distibution?  The
 ```{r}
 overdispersionP <- TestOverdispersion(mydata2, to_test = 8:15)
 
-sapply(overdispersionP, quantile, probs = c(0.01, 0.25, 0.5, 0.75, 0.99))
+sapply(overdispersionP[names(overdispersionP) != "optimal"],
+       quantile, probs = c(0.01, 0.25, 0.5, 0.75, 0.99))
 ```
 
 It looks like `12` follows the expected distribution of p-values most
@@ -268,6 +269,10 @@ closely, both from the automated output of `TestOverdispersion` and from
 examining the quantiles of p-values.  In the matrix of quantiles, we are
 looking for columns where the 25th percentile is about 0.25, the 50th
 percentile is about 0.5, etc.
+
+```{r}
+my_ovdisp <- overdispersionP$optimal
+```
 
 Next we can check for markers that are behaving in a non-Mendelian fashion.
 If we are expecting diploid segregation, all markers should show a
@@ -287,7 +292,7 @@ I recommend using the default value of `reps`.
 
 ```{r}
 set.seed(720)
-ExpectedHindHeMapping(mydata, ploidy = 2, overdispersion = 12, reps = 2)
+ExpectedHindHeMapping(mydata, ploidy = 2, overdispersion = my_ovdisp, reps = 2)
 ```
 
 Comparing the observed distribution to the expected distribution, we may want
@@ -305,7 +310,7 @@ genotypes.
 ```{r}
 mydata <- PipelineMapping2Parents(mydata, 
                                   freqAllowedDeviation = 0.06,
-                                  useLinkage = TRUE, overdispersion = 12,
+                                  useLinkage = TRUE, overdispersion = my_ovdisp,
                                   minLikelihoodRatio = 2)
 ```
 
@@ -508,12 +513,17 @@ before performing any genotype calling.
 ```{r}
 overdispersionP <- TestOverdispersion(mydata, to_test = 8:14)
 
-sapply(overdispersionP, quantile, probs = c(0.01, 0.25, 0.5, 0.75, 0.99))
+sapply(overdispersionP[names(overdispersionP) != "optimal"],
+       quantile, probs = c(0.01, 0.25, 0.5, 0.75, 0.99))
 ```
 
 In this case, ten looks like a good value.  In the matrix of quantiles, we are
 looking for columns where the 25th percentile is about 0.25, the 50th
 percentile is about 0.5, etc.
+
+```{r}
+my_ovdisp <- overdispersionP$optimal
+```
 
 Before we perform genotype calling, we can also test for Mendelian segregation at
 each marker using the $H_{ind}/H_E$ statistic.
@@ -549,7 +559,7 @@ data is is probably best to leave it at the default.  You do not need to use
 
 ```{r}
 set.seed(803)
-ExpectedHindHe(mydata, inbreeding = 0.25, ploidy = 2, overdispersion = 10,
+ExpectedHindHe(mydata, inbreeding = 0.25, ploidy = 2, overdispersion = my_ovdisp,
                reps = 10)
 ```
 

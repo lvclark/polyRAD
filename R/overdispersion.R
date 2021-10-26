@@ -87,10 +87,12 @@ TestOverdispersion.RADdata <- function(object, to_test = seq(6, 20, by = 2),
   cat(paste0("Optimal value is ", best, "."), sep = "\n")
   if(best == min(to_test)){
     cat("Consider testing lower values.", sep = "\n")
+    best <- NA
   }
   if(best == max(to_test)){
     cat("Consider testing higher values.", sep = "\n")
+    best <- NA
   }
   
-  return(outlist)
+  return(c(outlist, list(optimal = best)))
 }

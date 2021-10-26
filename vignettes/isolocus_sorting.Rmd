@@ -295,7 +295,8 @@ percentile is about 0.5, etc.
 ```{r eval = FALSE}
 overdispersionP <- TestOverdispersion(myRADprelim, to_test = 9:14)
 
-sapply(overdispersionP, quantile, probs = c(0.01, 0.25, 0.5, 0.75, 0.99))
+sapply(overdispersionP[names(overdispersionP) != "optimal"],
+       quantile, probs = c(0.01, 0.25, 0.5, 0.75, 0.99))
 ```
 
 ```{r echo = FALSE}
