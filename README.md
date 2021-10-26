@@ -124,6 +124,11 @@ A tutorial on [using polyRAD for population genetics](https://lvclark.r-universe
 is also available.  If you would like to have the dataset to follow along with that tutorial, run
 `install.packages("polyRADtutorials", repos = "https://lvclark.r-universe.dev")`.
 
+Note that the tutorials hosted on R-universe are derived from the development
+version of polyRAD.  If you installed from CRAN and something from an R-universe
+tutorial isn't working, check the tutorial that came with your installation using
+`browseVignettes("polyRAD")`.
+
 ## <a name="citation"></a>Citation
 
 If you use polyRAD, please cite this manuscript:
