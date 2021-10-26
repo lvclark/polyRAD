@@ -1712,7 +1712,8 @@ SubsetByTaxon.RADdata <- function(object, taxa, ...){
       splitRADdata$priorProb <- 
         subset2D3D(object$priorProb)
     } else {
-      splitRADdata$priorProb <- object$priorProb[,as.character(tx_pld_unique)]
+      splitRADdata$priorProb <- object$priorProb[,as.character(tx_pld_unique),
+                                                 drop = FALSE]
     }
   }
   if(!is.null(object$priorProbPloidies)){
