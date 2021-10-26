@@ -37,6 +37,7 @@ TestOverdispersion.RADdata <- function(object, to_test = seq(6, 20, by = 2),
   names(outlist) <- as.character(to_test)
   
   for(h in seq_len(ncol(object$priorProb))){
+    if(samprobs[h] == 1) next # only get NaN values for haploid genos
     # samples with this ploidy
     thesesam <- dimnames(object$posteriorProb[[pldindex,h]])[[2]]
     # get allele counts for these genotypes
@@ -87,10 +88,11 @@ TestOverdispersion.RADdata <- function(object, to_test = seq(6, 20, by = 2),
   
   # print out suggestion for best value to use; determine which follows
   # expected values most closely.
-  expP <- ppoints(length(outlist[[1]]))
   odscores <- sapply(outlist,
                      function(x){
-                       sqrt(mean((sort(x) - expP) ^ 2))
+                       x1 <- sort(x)
+                       expP <- ppoints(length(x1))
+                       sqrt(mean((x1 - expP) ^ 2))
                      })
   best <- as.numeric(names(odscores)[which.min(odscores)])
   cat(paste0("Optimal value is ", best, "."), sep = "\n")
