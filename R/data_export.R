@@ -363,7 +363,7 @@ Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE, postmean = TRUE,
                             mygeno[[xC]],
                             check.names = FALSE)
       write.csv(outdata,
-                file = sub("(\\.csv)?$", paste0("_", x, ".csv"), file),
+                file = sub("(\\.csv)?$", paste0("_", x, "x.csv"), file),
                 row.names = FALSE, quote = FALSE)
     }
   } else {
