@@ -67,14 +67,23 @@ ExpectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
   
   for(i in seq_len(reps)){
     if(!quiet && i %% 10 == 1) message(paste("Simulating rep", i))
-    geno <- SimGenotypes(object$alleleFreq, object$alleles2loc, nTaxa(object),
-                         inbreeding, ploidy)
+    geno <- matrix(NA_integer_, nrow = nTaxa(object), ncol = nAlleles(object),
+                   dimnames = list(GetTaxa(object), GetAlleleNames(object)))
+    for(h in unique(GetTaxaPloidy(object))){
+      if((ploidy * h) %% 2L != 0){
+        stop("Either ploidy or all taxa ploidies must be even")
+      }
+      thesesam <- which(GetTaxaPloidy(object) == h)
+      geno[thesesam,] <- SimGenotypes(object$alleleFreq, object$alleles2loc,
+                                      length(thesesam),
+                                      inbreeding, (ploidy * h) %/% 2L)
+    }
     depths <- SimAlleleDepth(object$locDepth, geno, object$alleles2loc,
                              overdispersion)
     rownames(depths) <- GetTaxa(object)
     simrad <- RADdata(depths, object$alleles2loc, object$locTable,
                       object$possiblePloidies, GetContamRate(object),
-                      object$alleleNucleotides)
+                      object$alleleNucleotides, GetTaxaPloidy(object))
     out[,i] <- colMeans(HindHe(simrad), na.rm = TRUE)
   }
   

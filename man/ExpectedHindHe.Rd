@@ -47,6 +47,9 @@ A \code{RADdata} object.
 }
   \item{ploidy}{
 A single integer indicating the ploidy to use for genotype simulation.
+For \code{ExpectedHindHe},
+this number will be multiplied by the values in \code{GetTaxaPloidy(object)}
+then divided by two to determine the ploidy of each individual for simulation.
 }
   \item{inbreeding}{
 A number ranging from 0 to 1 indicating the amount of inbreeding (\eqn{F}).
