@@ -352,7 +352,7 @@ GetLikelyGen.RADdata <- function(object, taxon, minLikelihoodRatio = 10){
     cat("Genotype likelihoods not found.  Estimating.", sep = "\n")
     object <- AddGenotypeLikelihood(object)
   }
-  npld <- dim(object$genotypeLikelihood)[1]
+  npld <- nrow(object$genotypeLikelihood)
   txpld <- GetTaxaPloidy(object)[taxon]
   txpldchr <- as.character(txpld)
   ploidies <- sapply(object$genotypeLikelihood[,txpldchr], function(x) dim(x)[1] - 1)
@@ -392,15 +392,9 @@ EstimateParentalGenotypes.RADdata <-
            donorParent = GetDonorParent(object), 
            recurrentParent = GetRecurrentParent(object), n.gen.backcrossing = 0,
            n.gen.intermating = 0,
-           n.gen.selfing = 0, donorParentPloidies = object$possiblePloidies,
-           recurrentParentPloidies = object$possiblePloidies,
+           n.gen.selfing = 0,
            minLikelihoodRatio = 10, ...){
-    if(any(!donorParentPloidies %in% object$possiblePloidies) ||
-       any(!recurrentParentPloidies %in% object$possiblePloidies)){
-      # make sure we have all parental ploidies so we can get likelihoods 
-      ### change this? ploidy by individual in future?
-      stop("All parent ploidies must be in the possible ploidies for the object")
-    }
+
     if(is.null(object$alleleFreq) || attr(object,"alleleFreqType") != "mapping"){
       message("Allele frequencies for mapping population not found.  Estimating.")
       allelesin <- max(sapply(donorParentPloidies, sum)) + 
@@ -415,80 +409,68 @@ EstimateParentalGenotypes.RADdata <-
       object <- AddGenotypeLikelihood(object)
     }
     
-    pldtot <- sapply(object$genotypeLikelihood, function(x) dim(x)[1] - 1)
-    pldtot.don <- pldtot[pldtot %in% sapply(donorParentPloidies, sum)]
-    pldtot.rec <- pldtot[pldtot %in% sapply(recurrentParentPloidies, sum)]
+    pld.don <- GetTaxaPloidy(object)[donorParent]
+    pld.rec <- GetTaxaPloidy(object)[recurrentParent]
+
     likelyGen.don <- GetLikelyGen(object, donorParent, 
-                                  minLikelihoodRatio = minLikelihoodRatio)[as.character(pldtot.don),,drop = FALSE]
+                                  minLikelihoodRatio = minLikelihoodRatio)
     likelyGen.rec <- GetLikelyGen(object, recurrentParent,
-                                  minLikelihoodRatio = minLikelihoodRatio)[as.character(pldtot.rec),,drop = FALSE]
-    # combinations of parent ploidies that match list of progeny ploidies
-    pldcombos <- matrix(NA, nrow = 0, ncol = 2, 
-                        dimnames = list(NULL,c("donor","recurrent")))
+                                  minLikelihoodRatio = minLikelihoodRatio)
+
     # matrix of expected allele frequencies for all possible genotypes and ploidies
-    expfreq_byPloidy <- list()
-    # find possible combinations of parent ploidies, and possible expected allele frequencies
-    for(pl.d in pldtot.don){
-      for(pl.r in pldtot.rec){
-        if((pl.d/2 + pl.r/2) %in% pldtot && (n.gen.backcrossing == 0 || pl.d == pl.r)){
-          pldcombos <- rbind(pldcombos, matrix(c(pl.d, pl.r), nrow = 1, ncol = 2))
-          
-          expfreq_byPloidy[[length(expfreq_byPloidy) + 1]] <- matrix(nrow = pl.d+1, ncol = pl.r+1)
-          for(gen.d in 0:pl.d){
-            for(gen.r in 0:pl.r){
-              expfreq_byPloidy[[length(expfreq_byPloidy)]][gen.d + 1, gen.r + 1] <- 
-                (gen.d * 0.5^n.gen.backcrossing + gen.r * (2 - 0.5^n.gen.backcrossing))/
-                (pl.d + pl.r)
-            }
-          }
+    npld <- nrow(object$genotypeLikelihood)
+    expfreq_byPloidy <- vector(mode = "list", length = npld)
+    # do allele frequencies match parent genotypes?
+    freqMatchGen <- matrix(FALSE, nrow = npld, ncol = nAlleles(object))
+    # find possible expected allele frequencies, see where they match parental genos
+    for(i in seq_len(npld)){
+      pl.d <- dim(object$genotypeLikelihood[[i,as.character(pld.don)]])[1] - 1L
+      pl.r <- dim(object$genotypeLikelihood[[i,as.character(pld.rec)]])[1] - 1L
+      expfreq_byPloidy[[i]] <- matrix(nrow = pl.d+1, ncol = pl.r+1)
+      for(gen.d in 0:pl.d){
+        for(gen.r in 0:pl.r){
+          expfreq_byPloidy[[i]][gen.d + 1, gen.r + 1] <-
+            (gen.d * 0.5^n.gen.backcrossing + gen.r * (2 - 0.5^n.gen.backcrossing))/
+            (pl.d + pl.r)
         }
       }
-    }
-    
-    # do allele frequencies match parent genotypes?
-    freqMatchGen <- matrix(FALSE, nrow = dim(pldcombos)[1], ncol = nAlleles(object))
-    for(i in 1:dim(pldcombos)[1]){
-      thisgen.don <- likelyGen.don[as.character(pldcombos[i,"donor"]),]
-      thisgen.rec <- likelyGen.rec[as.character(pldcombos[i,"recurrent"]),]
+      
+      thisgen.don <- likelyGen.don[i,]
+      thisgen.rec <- likelyGen.rec[i,]
+      
       expfreq <- (thisgen.don * 0.5^n.gen.backcrossing + 
-                    thisgen.rec * (2 - 0.5^n.gen.backcrossing))/(pldcombos[i,"donor"] + 
-                                                                   pldcombos[i,"recurrent"])
+                    thisgen.rec * (2 - 0.5^n.gen.backcrossing))/(pl.d + pl.r)
+      
       freqMatchGen[i,] <- expfreq == object$alleleFreq
     }
+
     freqMatchGen[is.na(freqMatchGen)] <- FALSE
     allelesToFix <- which(colSums(freqMatchGen) == 0)
     # correct parental genotypes where appropriate, using rounded allele frequencies
     for(a in allelesToFix){
       thisfreq <- object$alleleFreq[a]
-      for(i in 1:dim(pldcombos)[1]){
+      for(i in seq_len(npld)){
         poss_matches <- which(expfreq_byPloidy[[i]] == thisfreq, arr.ind = TRUE) - 1
         if(nrow(poss_matches) == 0) next
         if(nrow(poss_matches) == 1){
           # only one possible match (i.e. when there is backcrossing)
-          likelyGen.don[as.character(pldcombos[i,"donor"]),a] <- 
-            unname(poss_matches[,1])
-          likelyGen.rec[as.character(pldcombos[i,"recurrent"]),a] <- 
-            unname(poss_matches[,2])
+          likelyGen.don[i,a] <- unname(poss_matches[,1])
+          likelyGen.rec[i,a] <- unname(poss_matches[,2])
         } else { # multiple possible matches
           # vector to contain genotype combo likelihoods
           thislikeli <- numeric(nrow(poss_matches)) 
-          # indices for current ploidies
-          plind.d <- which(pldtot == pldcombos[i,"donor"])
-          plind.r <- which(pldtot == pldcombos[i,"recurrent"])
           for(m in 1:nrow(poss_matches)){
             gen.d <- poss_matches[m,1]
             gen.r <- poss_matches[m,2]
             
             thislikeli[m] <- 
-              object$genotypeLikelihood[[plind.d]][gen.d + 1, donorParent, a] *
-              object$genotypeLikelihood[[plind.r]][gen.r + 1, recurrentParent, a]
+              object$genotypeLikelihood[[i,as.character(pld.don)]][gen.d + 1, donorParent, a] *
+              object$genotypeLikelihood[[i,as.character(pld.rec)]][gen.r + 1, recurrentParent, a]
           }
           bestcombo <- which(thislikeli == max(thislikeli))
           if(length(bestcombo) == 1){
-            likelyGen.don[as.character(pldcombos[i,"donor"]),a] <- 
-              unname(poss_matches[bestcombo, 1])
-            likelyGen.rec[as.character(pldcombos[i,"recurrent"]),a] <- 
-              unname(poss_matches[bestcombo, 2])
+            likelyGen.don[i,a] <- unname(poss_matches[bestcombo, 1])
+            likelyGen.rec[i,a] <- unname(poss_matches[bestcombo, 2])
           }
         }
       }
@@ -497,7 +479,6 @@ EstimateParentalGenotypes.RADdata <-
     # save corrected parental genotypes to object
     object$likelyGeno_donor <- likelyGen.don
     object$likelyGeno_recurrent <- likelyGen.rec
-    object$pldcombos <- pldcombos # this is needed to add genotype prior prob
     return(object)
 }
 # for a mapping population with two parents, get prior genotype probabilities
