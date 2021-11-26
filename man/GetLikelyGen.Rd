@@ -52,7 +52,7 @@ exampleRAD <- AddGenotypeLikelihood(exampleRAD)
 
 # get most likely genotypes
 GetLikelyGen(exampleRAD, "sample001")
-GetLikelyGen(exampleRAD, "sample002")
+GetLikelyGen(exampleRAD, "sample082")
 
 # try different filtering
 GetLikelyGen(exampleRAD, "sample001", minLikelihoodRatio = 1)

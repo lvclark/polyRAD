@@ -338,8 +338,7 @@ GetLikelyGen.RADdata <- function(object, taxon, minLikelihoodRatio = 10){
   if(length(taxon) != 1){
     stop("Only one taxon can be passed to GetLikelyGen.")
   }
-  taxind <- match(taxon, GetTaxa(object))
-  if(is.na(taxind)){
+  if(!taxon %in% GetTaxa(object)){
     stop("taxon not found in object.")
   }
   if(length(minLikelihoodRatio) != 1 || is.na(minLikelihoodRatio) ||
@@ -353,23 +352,25 @@ GetLikelyGen.RADdata <- function(object, taxon, minLikelihoodRatio = 10){
     cat("Genotype likelihoods not found.  Estimating.", sep = "\n")
     object <- AddGenotypeLikelihood(object)
   }
-  npld <- length(object$genotypeLikelihood)
-  ploidies <- sapply(object$genotypeLikelihood, function(x) dim(x)[1] - 1)
+  npld <- dim(object$genotypeLikelihood)[1]
+  txpld <- GetTaxaPloidy(object)[taxon]
+  txpldchr <- as.character(txpld)
+  ploidies <- sapply(object$genotypeLikelihood[,txpldchr], function(x) dim(x)[1] - 1)
   nAllele <- nAlleles(object)
   
   outmat <- matrix(NA_integer_, nrow = npld, ncol = nAllele,
                    dimnames = list(as.character(ploidies), 
                                    GetAlleleNames(object)))
   for(i in 1:npld){
-    nonNaAlleles <- which(!is.na(object$genotypeLikelihood[[i]][1,taxind,]))
+    nonNaAlleles <- which(!is.na(object$genotypeLikelihood[[i,txpldchr]][1,taxon,]))
     # get the most likely genotype
-#    outmat[i,nonNaAlleles] <- apply(object$genotypeLikelihood[[i]][,taxind,nonNaAlleles], 2, which.max) - 1 # R version
-    outmat[i,nonNaAlleles] <- BestGenos(object$genotypeLikelihood[[i]][,taxind,nonNaAlleles],
+#    outmat[i,nonNaAlleles] <- apply(object$genotypeLikelihood[[i,txpldchr]][,taxon,nonNaAlleles], 2, which.max) - 1 # R version
+    outmat[i,nonNaAlleles] <- BestGenos(object$genotypeLikelihood[[i,txpldchr]][,taxon,nonNaAlleles],
                                         ploidies[i], 1, length(nonNaAlleles)) # Rcpp function
     # remove genotypes that don't meet the likelihood ratio threshold
     if(minLikelihoodRatio > 1){
       # get likelihood ratios
-      myrat <- apply(object$genotypeLikelihood[[i]][,taxind,nonNaAlleles], 2, 
+      myrat <- apply(object$genotypeLikelihood[[i,txpldchr]][,taxon,nonNaAlleles], 2, 
                      function(x){
                        xmxind <- which.max(x)
                        xsecond <- max(x[-xmxind])
