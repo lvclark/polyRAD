@@ -292,7 +292,8 @@ I recommend using the default value of `reps`.
 
 ```{r}
 set.seed(720)
-ExpectedHindHeMapping(mydata, ploidy = 2, overdispersion = my_ovdisp, reps = 2)
+ExpectedHindHeMapping(mydata, ploidy = 2, overdispersion = my_ovdisp, reps = 2,
+                      contamRate = 0.001)
 ```
 
 Comparing the observed distribution to the expected distribution, we may want
@@ -560,7 +561,7 @@ data is is probably best to leave it at the default.  You do not need to use
 ```{r}
 set.seed(803)
 ExpectedHindHe(mydata, inbreeding = 0.25, ploidy = 2, overdispersion = my_ovdisp,
-               reps = 10)
+               reps = 10, contamRate = 0.001)
 ```
 
 According to these results, good quality markers can be expected to have

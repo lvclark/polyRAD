@@ -4,6 +4,10 @@ TestOverdispersion now prints a helpful suggestion for which overdispersion
 parameter to use, as well as returning that value in its output.
 The use of qqman has been eliminated from the vignettes.
 
+ExpectedHindHe, ExpectedHindHeMapping, and SimAlleleDepth now have a contamRate
+parameter to simulate sample cross contamination when sampling allelic read
+depth.
+
 A bug has been fixed in Export_GWASpoly so that special characters in sample
 names are not converted to periods.
 
