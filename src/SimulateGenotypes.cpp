@@ -141,7 +141,8 @@ NumericMatrix simGenoMapping(NumericVector donorGeno, NumericVector recurGeno, N
 // [[Rcpp::export]]
 IntegerMatrix simAD(IntegerMatrix locDepth, NumericMatrix genotypes,
                     IntegerVector alleles2loc, double overdispersion,
-                    double contamRate, NumericVector alleleFreq){
+                    double contamRate, NumericVector alleleFreq,
+                    double errorRate){
   int nsam = genotypes.rows();
   int nal = alleles2loc.size();
   int nloc = locDepth.cols();
@@ -152,6 +153,9 @@ IntegerMatrix simAD(IntegerMatrix locDepth, NumericMatrix genotypes,
   NumericVector thesecontam;
   NumericVector thisgeno;
   NumericVector theseprobs;
+  NumericVector newprobs;
+  double evendist;
+  double toadd;
   IntegerVector thesedepths;
   IntegerMatrix out(nsam, nal);
   
@@ -168,8 +172,22 @@ IntegerMatrix simAD(IntegerMatrix locDepth, NumericMatrix genotypes,
       }
       // Get allele sampling probabilities
       theseprobs = thisgeno / sum(thisgeno) * (1 - contamRate) + thesecontam;
+      newprobs = theseprobs * (1 - errorRate);
+      if(errorRate > 0){
+        // Probability of sampling some other allele with error
+        evendist = 1.0 / (thisnal - 1.0) * errorRate;
+        for(int a = 0; a < thisnal; a++){
+          // Prob. that a was the true allele but b was detected due to error
+          toadd = evendist * theseprobs[a];
+          for(int b = 0; b < thisnal; b++){
+            if(b != a){
+              newprobs[b] += toadd;
+            }
+          }
+        }
+      }
       // Simulate depths and add to matrix
-      thesedepths = sampleReads(theseprobs, locDepth(s, L - 1), overdispersion);
+      thesedepths = sampleReads(newprobs, locDepth(s, L - 1), overdispersion);
       for(int a = 0; a < thisnal; a++){
         out(s, thesecol[a]) = thesedepths[a];
       }

@@ -25,13 +25,13 @@ but are provided at the user level since they may be more broadly useful.
 }
 \usage{
 ExpectedHindHe(object, ploidy = object$possiblePloidies[[1]], inbreeding = 0,
-               overdispersion = 20, contamRate = 0,
+               overdispersion = 20, contamRate = 0, errorRate = 0,
                reps = ceiling(5000/nLoci(object)),
                quiet = FALSE, plot = TRUE)
 
 ExpectedHindHeMapping(object, ploidy = object$possiblePloidies[[1]],
                       n.gen.backcrossing = 0, n.gen.selfing = 0,
-                      overdispersion = 20, contamRate = 0,
+                      overdispersion = 20, contamRate = 0, errorRate = 0,
                       freqAllowedDeviation = 0.05, 
                       minLikelihoodRatio = 10, reps = ceiling(5000/nLoci(object)),
                       quiet = FALSE, plot = TRUE)
@@ -41,7 +41,8 @@ SimGenotypes(alleleFreq, alleles2loc, nsam, inbreeding, ploidy)
 SimGenotypesMapping(donorGen, recurGen, alleles2loc, nsam, ploidy,
                     n.gen.backcrossing, n.gen.selfing)
 
-SimAlleleDepth(locDepth, genotypes, alleles2loc, overdispersion = 20, contamRate = 0)
+SimAlleleDepth(locDepth, genotypes, alleles2loc, overdispersion = 20,
+               contamRate = 0, errorRate = 0)
 }
 \arguments{
   \item{object}{
@@ -63,6 +64,12 @@ expectations based on allele copy number.
   \item{contamRate}{
 Sample cross-contamination rate to simulate.  Although 0 is the default, 0.001
 is also reasonable.
+}
+  \item{errorRate}{
+Sequencing error rate to simulate. For Illumina reads, 0.001 is a reasonable
+value. An error is assumed to have an equal chance of converting an allele to
+any other allele at the locus, although this is somewhat of an
+oversimplification.
 }
   \item{reps}{
 The number of times to simulate the data and estimate \eqn{H_{ind}/H_E}{Hind/He}.

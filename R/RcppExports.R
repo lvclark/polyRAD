@@ -65,8 +65,8 @@ simGenoMapping <- function(donorGeno, recurGeno, progGeno, genoProbs, alleles2lo
     .Call('_polyRAD_simGenoMapping', PACKAGE = 'polyRAD', donorGeno, recurGeno, progGeno, genoProbs, alleles2loc, nsam, ploidy)
 }
 
-simAD <- function(locDepth, genotypes, alleles2loc, overdispersion, contamRate, alleleFreq) {
-    .Call('_polyRAD_simAD', PACKAGE = 'polyRAD', locDepth, genotypes, alleles2loc, overdispersion, contamRate, alleleFreq)
+simAD <- function(locDepth, genotypes, alleles2loc, overdispersion, contamRate, alleleFreq, errorRate) {
+    .Call('_polyRAD_simAD', PACKAGE = 'polyRAD', locDepth, genotypes, alleles2loc, overdispersion, contamRate, alleleFreq, errorRate)
 }
 
 ThirdDimProd <- function(probs, ngen, ntaxa) {
