@@ -25,13 +25,13 @@ but are provided at the user level since they may be more broadly useful.
 }
 \usage{
 ExpectedHindHe(object, ploidy = object$possiblePloidies[[1]], inbreeding = 0,
-               overdispersion = 20, contamRate = 0, errorRate = 0,
+               overdispersion = 20, contamRate = 0, errorRate = 0.001,
                reps = ceiling(5000/nLoci(object)),
                quiet = FALSE, plot = TRUE)
 
 ExpectedHindHeMapping(object, ploidy = object$possiblePloidies[[1]],
                       n.gen.backcrossing = 0, n.gen.selfing = 0,
-                      overdispersion = 20, contamRate = 0, errorRate = 0,
+                      overdispersion = 20, contamRate = 0, errorRate = 0.001,
                       freqAllowedDeviation = 0.05, 
                       minLikelihoodRatio = 10, reps = ceiling(5000/nLoci(object)),
                       quiet = FALSE, plot = TRUE)
@@ -42,7 +42,7 @@ SimGenotypesMapping(donorGen, recurGen, alleles2loc, nsam, ploidy,
                     n.gen.backcrossing, n.gen.selfing)
 
 SimAlleleDepth(locDepth, genotypes, alleles2loc, overdispersion = 20,
-               contamRate = 0, errorRate = 0)
+               contamRate = 0, errorRate = 0.001)
 }
 \arguments{
   \item{object}{
