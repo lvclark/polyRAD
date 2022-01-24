@@ -65,7 +65,16 @@ ExpectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
   if(is.null(object$alleleFreq)){
     object <- AddAlleleFreqHWE(object)
   }
-  ### Add something here to filter based on allele frequency or preliminary Hind/He
+  # Filter markers with very low allele frequency, as these have very high
+  # Hind/He if true alleles get swamped by errors.
+  if(errorRate > 0){
+    keepalleles <- which(object$alleleFreq >= errorRate * 5 & object$alleleFreq < 0.5)
+    keeploci <- unique(GetLoci(object)[object$alleles2loc[keepalleles]])
+    if(length(keeploci) == 0){
+      stop("Sequencing error rate is too high for the allele frequencies in this dataset.")
+    }
+    object <- SubsetByLocus(object, keeploci)
+  }
   
   # matrix of hind/he values for simulated loci
   out <- matrix(0, nrow = nLoci(object), ncol = reps,

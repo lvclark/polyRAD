@@ -126,9 +126,10 @@ A numeric matrix, formatted as the output of \code{\link{GetProbableGenotypes}}
 or \code{SimGenotypes}, indicating genotypes as allele copy number.
 }
 }
-%\details{
-%%  ~~ If necessary, more details than the description above ~~
-%}
+\details{
+To prevent highly inflated values in the output, \code{ExpectedHindHe} filters
+loci with minor allele frequencies below five times the sequencing error rate.
+}
 \value{
 \code{ExpectedHindHe} and \code{ExpectedHindHeMapping} invisibly return a
 matrix, with loci in rows and reps in
