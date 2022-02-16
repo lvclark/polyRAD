@@ -10,7 +10,8 @@
 # median(apply(test2, 1, dmultinom, prob = testprob))
 
 # Wrapper function to simulate an allele depth matrix, given locus depth and genotypes
-SimAlleleDepth <- function(locDepth, genotypes, alleles2loc, overdispersion = 20){
+SimAlleleDepth <- function(locDepth, genotypes, alleles2loc,
+                           overdispersion = 20, contamRate = 0, errorRate = 0.001){
   nsam <- nrow(genotypes)
   if(nrow(locDepth) != nsam) stop("genotypes and locDepth should have the same number of rows")
   if(length(alleles2loc) !=  ncol(genotypes)) stop("length of alleles2loc should match number of columns in genotypes.")
@@ -21,7 +22,11 @@ SimAlleleDepth <- function(locDepth, genotypes, alleles2loc, overdispersion = 20
   }
   locDepth <- locDepth[,locnames] # ensure correct order for Rcpp fn
   
-  alleleDepth <- simAD(locDepth, genotypes, alleles2loc, overdispersion) # Rcpp fn
+  ploidy <- sum(genotypes[1, alleles2loc == alleles2loc[1]])
+  alleleFreq <- colMeans(genotypes) / ploidy
+  
+  alleleDepth <- simAD(locDepth, genotypes, alleles2loc, overdispersion,
+                       contamRate, alleleFreq, errorRate) # Rcpp fn
   dimnames(alleleDepth) <- dimnames(genotypes)
   
   return(alleleDepth)
@@ -31,7 +36,7 @@ SimAlleleDepth <- function(locDepth, genotypes, alleles2loc, overdispersion = 20
 # exampleRAD <- IterateHWE(exampleRAD)
 # mygeno <- GetProbableGenotypes(exampleRAD, omit1allelePerLocus = FALSE)[[1]]
 # 
-# testdepth <- simAlleleDepth(exampleRAD$locDepth, mygeno, exampleRAD$alleles2loc)
+# testdepth <- SimAlleleDepth(exampleRAD$locDepth, mygeno, exampleRAD$alleles2loc, contamRate = 0.001)
 
 # Wrapper function to simulate genotype matrix
 SimGenotypes <- function(alleleFreq, alleles2loc, nsam, inbreeding, ploidy){
@@ -50,7 +55,8 @@ SimGenotypes <- function(alleleFreq, alleles2loc, nsam, inbreeding, ploidy){
 
 # Get expected Hind/He distribution based on depths and allele freqs in a RADdata object
 ExpectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
-                           inbreeding = 0, overdispersion = 20,
+                           inbreeding = 0, overdispersion = 20, contamRate = 0,
+                           errorRate = 0.001,
                            reps = ceiling(5000 / nLoci(object)),
                            quiet = FALSE, plot = TRUE){
   if(length(ploidy) != 1){
@@ -59,7 +65,16 @@ ExpectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
   if(is.null(object$alleleFreq)){
     object <- AddAlleleFreqHWE(object)
   }
-  ### Add something here to filter based on allele frequency or preliminary Hind/He
+  # Filter markers with very low allele frequency, as these have very high
+  # Hind/He if true alleles get swamped by errors.
+  if(errorRate > 0){
+    keepalleles <- which(object$alleleFreq >= errorRate * 5 & object$alleleFreq < 0.5)
+    keeploci <- unique(GetLoci(object)[object$alleles2loc[keepalleles]])
+    if(length(keeploci) == 0){
+      stop("Sequencing error rate is too high for the allele frequencies in this dataset.")
+    }
+    object <- SubsetByLocus(object, keeploci)
+  }
   
   # matrix of hind/he values for simulated loci
   out <- matrix(0, nrow = nLoci(object), ncol = reps,
@@ -79,7 +94,7 @@ ExpectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
                                       inbreeding, (ploidy * h) %/% 2L)
     }
     depths <- SimAlleleDepth(object$locDepth, geno, object$alleles2loc,
-                             overdispersion)
+                             overdispersion, contamRate, errorRate)
     rownames(depths) <- GetTaxa(object)
     simrad <- RADdata(depths, object$alleles2loc, object$locTable,
                       object$possiblePloidies, GetContamRate(object),
@@ -128,7 +143,8 @@ SimGenotypesMapping <- function(donorGen, recurGen, alleles2loc, nsam, ploidy,
 }
 
 ExpectedHindHeMapping <- function(object, ploidy = object$possiblePloidies[[1]],
-                           n.gen.backcrossing = 0, n.gen.selfing = 0, overdispersion = 20,
+                           n.gen.backcrossing = 0, n.gen.selfing = 0,
+                           overdispersion = 20, contamRate = 0, errorRate = 0.001,
                            freqAllowedDeviation = 0.05, minLikelihoodRatio = 10,
                            reps = ceiling(5000 / nLoci(object)),
                            quiet = FALSE, plot = TRUE){
@@ -165,7 +181,7 @@ ExpectedHindHeMapping <- function(object, ploidy = object$possiblePloidies[[1]],
                   geno)
     depths <- SimAlleleDepth(object$locDepth[c(donParent, recParent, progeny),],
                              geno, object$alleles2loc,
-                             overdispersion)
+                             overdispersion, contamRate, errorRate)
     rownames(depths) <- c(donParent, recParent, progeny)
     simrad <- RADdata(depths, object$alleles2loc, object$locTable,
                       object$possiblePloidies, GetContamRate(object),

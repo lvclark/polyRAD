@@ -234,8 +234,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // simAD
-IntegerMatrix simAD(IntegerMatrix locDepth, NumericMatrix genotypes, IntegerVector alleles2loc, double overdispersion);
-RcppExport SEXP _polyRAD_simAD(SEXP locDepthSEXP, SEXP genotypesSEXP, SEXP alleles2locSEXP, SEXP overdispersionSEXP) {
+IntegerMatrix simAD(IntegerMatrix locDepth, NumericMatrix genotypes, IntegerVector alleles2loc, double overdispersion, double contamRate, NumericVector alleleFreq, double errorRate);
+RcppExport SEXP _polyRAD_simAD(SEXP locDepthSEXP, SEXP genotypesSEXP, SEXP alleles2locSEXP, SEXP overdispersionSEXP, SEXP contamRateSEXP, SEXP alleleFreqSEXP, SEXP errorRateSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -243,7 +243,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericMatrix >::type genotypes(genotypesSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type alleles2loc(alleles2locSEXP);
     Rcpp::traits::input_parameter< double >::type overdispersion(overdispersionSEXP);
-    rcpp_result_gen = Rcpp::wrap(simAD(locDepth, genotypes, alleles2loc, overdispersion));
+    Rcpp::traits::input_parameter< double >::type contamRate(contamRateSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type alleleFreq(alleleFreqSEXP);
+    Rcpp::traits::input_parameter< double >::type errorRate(errorRateSEXP);
+    rcpp_result_gen = Rcpp::wrap(simAD(locDepth, genotypes, alleles2loc, overdispersion, contamRate, alleleFreq, errorRate));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -278,7 +281,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_polyRAD_PrepVCFexport", (DL_FUNC) &_polyRAD_PrepVCFexport, 8},
     {"_polyRAD_simGeno", (DL_FUNC) &_polyRAD_simGeno, 5},
     {"_polyRAD_simGenoMapping", (DL_FUNC) &_polyRAD_simGenoMapping, 7},
-    {"_polyRAD_simAD", (DL_FUNC) &_polyRAD_simAD, 4},
+    {"_polyRAD_simAD", (DL_FUNC) &_polyRAD_simAD, 7},
     {"_polyRAD_ThirdDimProd", (DL_FUNC) &_polyRAD_ThirdDimProd, 3},
     {NULL, NULL, 0}
 };

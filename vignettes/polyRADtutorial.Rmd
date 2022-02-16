@@ -292,15 +292,16 @@ I recommend using the default value of `reps`.
 
 ```{r}
 set.seed(720)
-ExpectedHindHeMapping(mydata, ploidy = 2, overdispersion = my_ovdisp, reps = 2)
+ExpectedHindHeMapping(mydata, ploidy = 2, overdispersion = my_ovdisp, reps = 2,
+                      contamRate = 0.001, errorRate = 0.001)
 ```
 
 Comparing the observed distribution to the expected distribution, we may want
 to filter some markers.
 
 ```{r}
-goodMarkers <- colnames(myhindhe)[which(colMeans(myhindhe, na.rm = TRUE) < 0.52 &
-                                          colMeans(myhindhe, na.rm = TRUE) > 0.41)]
+goodMarkers <- colnames(myhindhe)[which(colMeans(myhindhe, na.rm = TRUE) < 0.53 &
+                                          colMeans(myhindhe, na.rm = TRUE) > 0.43)]
 mydata <- SubsetByLocus(mydata, goodMarkers)
 ```
 
@@ -430,7 +431,7 @@ which can be changed with the `minval` and `maxval` arguments.
 
 ```{r}
 mywm <- GetWeightedMeanGenotypes(mydata)
-round(mywm[c(276, 277, 1:5), 10:13], 3)
+round(mywm[c(276, 277, 1:5), 9:12], 3)
 ```
 
 Note that the parent posterior mean genotypes were estimated using 
@@ -536,18 +537,33 @@ hist(myhindheByLoc, col = "lightgrey",
 abline(v = 0.5, col = "blue", lwd = 2)
 ```
 
-The peak below 0.5 indicates well-behaved diploid loci.  In a typical dataset
+The peak below 0.5 indicates well-behaved diploid loci.  For estimation of
+inbreeding, we'll just want to look at markers with a minor allele frequency of
+at least 0.05, since lower minor allele frequencies tend to have a lot of bias
+in $H_{ind}/H_E$ dependent on sample size.
+
+```{r}
+mydata <- AddAlleleFreqHWE(mydata)
+theseloci <- GetLoci(mydata)[mydata$alleles2loc[mydata$alleleFreq >= 0.05 & mydata$alleleFreq < 0.5]]
+theseloci <- unique(theseloci)
+hist(myhindheByLoc[theseloci], col = "lightgrey",
+     xlab = "Hind/He", main = "Histogram of Hind/He by locus, MAF >= 0.05")
+abline(v = 0.5, col = "blue", lwd = 2)
+```
+
+In a typical dataset
 with more markers, you can get more resolution on the histogram (see the `breaks`
 argument of `hist`), but let's say the peak is at 0.35. The graph below can be
 used to estimate inbreeding from $H_{ind}/H_E$ and overdispersion.  For
 a diploid with overdispersion of 10 and $H_{ind}/H_E$ of 0.35, inbreeding is
-about 0.25.
+about 0.25.  Note that the graph assumes a sequencing error rate of 0.001 and
+a minor allele frequency of at least 0.05.
 
 ![Estimation of inbreeding](overdispersion_inbreeding.png)
 
 There is also the `InbreedingFromHindHe` function for estimating inbreeding,
 but it is from an older version of polyRAD and does not account for
-overdispersion, leading to overestimates of inbreeding.
+overdispersion or sequencing error, leading to overestimates of inbreeding.
 
 With overdispersion and inbreeding estimated,
 we can simulate what the $H_{ind}/H_E$ distribution might look like
@@ -560,11 +576,11 @@ data is is probably best to leave it at the default.  You do not need to use
 ```{r}
 set.seed(803)
 ExpectedHindHe(mydata, inbreeding = 0.25, ploidy = 2, overdispersion = my_ovdisp,
-               reps = 10)
+               reps = 10, contamRate = 0.001, errorRate = 0.001)
 ```
 
 According to these results, good quality markers can be expected to have
-$H_{ind}/H_E$ values from about 0.24 to 0.47.  Values lower than that
+$H_{ind}/H_E$ values from about 0.26 to 0.45.  Values lower than that
 indicate technical problems such as restriction cut site polymorphisms,
 causing overdispersion in the data that could reduce genotyping quality.
 Values higher than that indicate paralogy or higher ploidy than expected.
@@ -573,8 +589,8 @@ only remove markers where $H_{ind}/H_E$ is too low (although you may
 consider filtering differently in your own dataset).
 
 ```{r}
-mean(myhindheByLoc < 0.24) # about 33% of markers would be removed
-keeploci <- names(myhindheByLoc)[myhindheByLoc >= 0.24]
+mean(myhindheByLoc < 0.26) # about 33% of markers would be removed
+keeploci <- names(myhindheByLoc)[myhindheByLoc >= 0.26]
 mydata <- SubsetByLocus(mydata, keeploci)
 ```
 

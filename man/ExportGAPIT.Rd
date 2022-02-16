@@ -207,13 +207,13 @@ output of \code{GetProbableGenotypes}.
 \references{
 \bold{GAPIT and FarmCPU:}
 
-\url{https://www.zzlab.net/GAPIT/}
+\url{https://zzlab.net/GAPIT/}
 
 Lipka, A. E., Tian, F., Wang, Q., Peiffer, J., Li, M., Bradbury, P. J., 
 Gore, M. A., Buckler, E. S. and Zhang, Z. (2012) GAPIT: genome association 
 and prediction integrated tool.  \emph{Bioinformatics} \bold{28}, 2397--2399.
 
-\url{https://www.zzlab.net/FarmCPU/}
+\url{https://zzlab.net/FarmCPU/}
 
 Liu, X., Huang, M., Fan, B., Buckler, E. S., Zhang, Z. (2016) Iterative usage
 of fixed and random effects models for powerful and efficient genome-wide

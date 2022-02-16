@@ -139,28 +139,55 @@ NumericMatrix simGenoMapping(NumericVector donorGeno, NumericVector recurGeno, N
 
 // simulate an allele depth matrix, given locus depth and genotypes
 // [[Rcpp::export]]
-IntegerMatrix simAD(IntegerMatrix locDepth, NumericMatrix genotypes, IntegerVector alleles2loc, double overdispersion){
+IntegerMatrix simAD(IntegerMatrix locDepth, NumericMatrix genotypes,
+                    IntegerVector alleles2loc, double overdispersion,
+                    double contamRate, NumericVector alleleFreq,
+                    double errorRate){
   int nsam = genotypes.rows();
   int nal = alleles2loc.size();
   int nloc = locDepth.cols();
   IntegerVector alleles = seq(0, nal - 1);
   IntegerVector thesecol;
   int thisnal;
+  NumericVector thesefreq;
+  NumericVector thesecontam;
   NumericVector thisgeno;
+  NumericVector theseprobs;
+  NumericVector newprobs;
+  double evendist;
+  double toadd;
   IntegerVector thesedepths;
   IntegerMatrix out(nsam, nal);
   
   for(int L = 1; L <= nloc; L++){
     thesecol = alleles[alleles2loc == L];
     thisnal = thesecol.size();
+    thesefreq = alleleFreq[thesecol];
+    thesecontam = thesefreq * contamRate;
     thisgeno = NumericVector(thisnal);
     for(int s = 0; s < nsam; s++){
       // Retrieve genotype
       for(int a = 0; a < thisnal; a++){
         thisgeno[a] = genotypes(s, thesecol[a]);
       }
+      // Get allele sampling probabilities
+      theseprobs = thisgeno / sum(thisgeno) * (1 - contamRate) + thesecontam;
+      newprobs = theseprobs * (1 - errorRate);
+      if(errorRate > 0){
+        // Probability of sampling some other allele with error
+        evendist = 1.0 / (thisnal - 1.0) * errorRate;
+        for(int a = 0; a < thisnal; a++){
+          // Prob. that a was the true allele but b was detected due to error
+          toadd = evendist * theseprobs[a];
+          for(int b = 0; b < thisnal; b++){
+            if(b != a){
+              newprobs[b] += toadd;
+            }
+          }
+        }
+      }
       // Simulate depths and add to matrix
-      thesedepths = sampleReads(thisgeno, locDepth(s, L - 1), overdispersion);
+      thesedepths = sampleReads(newprobs, locDepth(s, L - 1), overdispersion);
       for(int a = 0; a < thisnal; a++){
         out(s, thesecol[a]) = thesedepths[a];
       }
