@@ -394,11 +394,14 @@ EstimateParentalGenotypes.RADdata <-
            n.gen.intermating = 0,
            n.gen.selfing = 0,
            minLikelihoodRatio = 10, ...){
+    
+    pld.don <- GetTaxaPloidy(object)[donorParent]
+    pld.rec <- GetTaxaPloidy(object)[recurrentParent]
 
     if(is.null(object$alleleFreq) || attr(object,"alleleFreqType") != "mapping"){
       message("Allele frequencies for mapping population not found.  Estimating.")
-      allelesin <- max(sapply(donorParentPloidies, sum)) + 
-        max(sapply(recurrentParentPloidies, sum))
+      pld.max <- max(sapply(object$possiblePloidies, sum))
+      allelesin <- (pld.don + pld.rec) * pld.max / 2
       possfreq <- seq(0, 1, length.out = (n.gen.backcrossing + 1) * allelesin + 1)
       alldev <- (possfreq[2] - possfreq[1])/2
       object <- AddAlleleFreqMapping(object, allowedDeviation = alldev, 
@@ -408,9 +411,6 @@ EstimateParentalGenotypes.RADdata <-
       message("Genotype likelihoods not found.  Estimating.")
       object <- AddGenotypeLikelihood(object)
     }
-    
-    pld.don <- GetTaxaPloidy(object)[donorParent]
-    pld.rec <- GetTaxaPloidy(object)[recurrentParent]
 
     likelyGen.don <- GetLikelyGen(object, donorParent, 
                                   minLikelihoodRatio = minLikelihoodRatio)
