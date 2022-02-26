@@ -1149,7 +1149,7 @@ AddGenotypePriorProb_LD.RADdata <- function(object, type, ...){
   if(type == "mapping"){
     parents <- c(GetDonorParent(object), GetRecurrentParent(object))
     progeny <- setdiff(GetTaxa(object), c(parents, GetBlankTaxa(object)))
-    if(length(unique(GetTaxaPloidies(object)[progeny])) > 1){
+    if(length(unique(GetTaxaPloidy(object)[progeny])) > 1){
       stop("Only one progeny ploidy allowed for mapping populations.")
     }
   }
