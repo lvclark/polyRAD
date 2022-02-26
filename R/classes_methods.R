@@ -578,11 +578,13 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
                                      GetAlleleNames(object))
   }
   
-  ### Insert something here to get OutPriors into a 2d list, add back parents and blanks
-
-  object$priorProb <- OutPriors
+  # Add uniform priors for anything that's not progeny
+  object <- AddGenotypePriorProb_Even(object)
+  # Put progeny priors into the appropriate column
+  object$priorProb[,as.character(pld.prg)] <- OutPriors
+  
   object$priorProbPloidies <- object$possiblePloidies
-  attr(object, "priorType") <- "population" 
+  stopifnot(attr(object, "priorType") == "population")
   # --> indicates prior probs are estimated for whole pop, not by taxa
   return(object)
 }
