@@ -198,9 +198,7 @@ IteratePopStructLD <- function(object, selfing.rate = 0, tol = 1e-3,
 PipelineMapping2Parents <- function(object,
                                     n.gen.backcrossing = 0,
                                     n.gen.intermating = 0,
-                                    n.gen.selfing = 0, 
-                                    donorParentPloidies = object$possiblePloidies,
-                                    recurrentParentPloidies = object$possiblePloidies,
+                                    n.gen.selfing = 0,
                                     minLikelihoodRatio = 10,
                                     freqAllowedDeviation = 0.05,
                                     freqExcludeTaxa = c(GetDonorParent(object),
@@ -215,10 +213,12 @@ PipelineMapping2Parents <- function(object,
   }
   donorParent <- GetDonorParent(object)
   recurrentParent <- GetRecurrentParent(object)
+  pld.don <- GetTaxaPloidy(object)[donorParent]
+  pld.rec <- GetTaxaPloidy(object)[recurrentParent]
   # estimate possible allele frequencies
   message("Making initial parameter estimates...")
-  allelesin <- max(sapply(donorParentPloidies, sum)) + 
-    max(sapply(recurrentParentPloidies, sum))
+  pld.max <- max(sapply(object$possiblePloidies, sum))
+  allelesin <- (pld.don + pld.rec) * pld.max / 2
   possfreq <- seq(0, 1, length.out = (n.gen.backcrossing + 1) * allelesin + 1)
   
   object <- AddAlleleFreqMapping(object, expectedFreqs = possfreq,
@@ -231,8 +231,6 @@ PipelineMapping2Parents <- function(object,
                                                  n.gen.backcrossing = n.gen.backcrossing,
                                                  n.gen.intermating = n.gen.intermating,
                                                  n.gen.selfing = n.gen.selfing,
-                                                 donorParentPloidies = donorParentPloidies,
-                                                 recurrentParentPloidies = recurrentParentPloidies,
                                                  minLikelihoodRatio = minLikelihoodRatio)
   object <- AddPloidyChiSq(object, excludeTaxa = freqExcludeTaxa)
   object <- AddGenotypePosteriorProb(object)
