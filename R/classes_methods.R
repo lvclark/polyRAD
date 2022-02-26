@@ -959,9 +959,9 @@ GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
     # correct parent genotypes if this is a mapping population
     if(correctParentalGenos && !is.null(object$likelyGeno_donor) &&
        !is.null(object$likelyGeno_recurrent)){
-      ### Fix this section when working through mapping pipeline
-      pld.d <- sum(object$donorPloidies[[p]])
-      pld.r <- sum(object$recurrentPloidies[[p]])
+      mlt <- sum(object$possiblePloidies[[p]]) / 2
+      pld.d <- GetTaxaPloidy(object)[GetDonorParent(object)] * mlt
+      pld.r <- GetTaxaPloidy(object)[GetRecurrentParent(object)] * mlt
       outmat[GetDonorParent(object), thesealleles] <- 
         object$likelyGeno_donor[as.character(pld.d), allelesToExport[thesealleles]]
       outmat[GetRecurrentParent(object), thesealleles] <- 
