@@ -1858,11 +1858,13 @@ SubsetByPloidy.RADdata <- function(object, ploidies, ...){
     object$genotypeLikelihood <- object$genotypeLikelihood[likpld %in% pldsums,, drop = FALSE]
   }
   if(!is.null(object$likelyGeno_donor)){
-    keeprow <- as.integer(rownames(object$likelyGeno_donor)) %in% pldsums
+    pldsums.d <- GetTaxaPloidy(object)[GetDonorParent(object)] * pldsums / 2
+    keeprow <- as.integer(rownames(object$likelyGeno_donor)) %in% pldsums.d
     object$likelyGeno_donor <- object$likelyGeno_donor[keeprow,, drop = FALSE]
   }
   if(!is.null(object$likelyGeno_recurrent)){
-    keeprow <- as.integer(rownames(object$likelyGeno_recurrent)) %in% pldsums
+    pldsums.r <- GetTaxaPloidy(object)[GetRecurrentParent(object)] * pldsums / 2
+    keeprow <- as.integer(rownames(object$likelyGeno_recurrent)) %in% pldsums.r
     object$likelyGeno_recurrent <- 
       object$likelyGeno_recurrent[keeprow,, drop = FALSE]
   }
