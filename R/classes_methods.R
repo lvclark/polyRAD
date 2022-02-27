@@ -759,6 +759,8 @@ AddPloidyChiSq.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object),
                              thisploidy * as.integer(x) / 2L
                          })))
     for(h in seq_len(ncol(object$priorProb))){
+      # skip ploidies not examined in mapping pop
+      if(all(is.na(gental[[whichlik,h]]))) next
       # get priors
       if(attr(object, "priorType") == "population"){
         thesepriors <- object$priorProb[[i,h]]
