@@ -15,8 +15,6 @@ a mapping population.
 \usage{
 PipelineMapping2Parents(object, n.gen.backcrossing = 0,
                         n.gen.intermating = 0, n.gen.selfing = 0, 
-                        donorParentPloidies = object$possiblePloidies, 
-                        recurrentParentPloidies = object$possiblePloidies, 
                         minLikelihoodRatio = 10, freqAllowedDeviation = 0.05, 
                         freqExcludeTaxa = c(GetDonorParent(object), 
                                             GetRecurrentParent(object), 
@@ -39,17 +37,6 @@ intermating within the population were performed.
   \item{n.gen.selfing}{
 An integer, zero or greater, indicating how many generations of
 selfing were performed.
-}
-  \item{donorParentPloidies}{
-A list, where each item in the list is an integer vector indicating a
-potential inheritance mode that could be observed among loci in the 
-donor parent.  \code{2} indicates diploid, \code{4} indicates 
-autotetraploid, \code{c(2, 2)} indicates, allotetraploid, \emph{etc}.
-}
-  \item{recurrentParentPloidies}{
-A list in the same format as \code{donorParentPloidies} indicating
-inheritance modes that could be observed among loci in the recurrent
-parent.
 }
   \item{minLikelihoodRatio}{
 The minimum likelihood ratio for determining parental genotypes with
@@ -103,6 +90,9 @@ Lindsay V. Clark
 \seealso{
 \code{\link{SetDonorParent}} and \code{SetRecurrentParent} to indicate which
 individuals are the parents before running the function.
+
+\code{\link{AddGenotypePriorProb_Mapping2Parents}} for how ploidy of parents and
+progeny is interpreted.
 
 \code{\link{GetWeightedMeanGenotypes}} or \code{\link{Export_polymapR}} for
 exporting genotypes from the resulting object.

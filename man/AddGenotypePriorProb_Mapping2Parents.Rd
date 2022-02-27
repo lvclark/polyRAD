@@ -19,8 +19,6 @@ AddGenotypePriorProb_Mapping2Parents(object, ...)
     donorParent = GetDonorParent(object), 
     recurrentParent = GetRecurrentParent(object), 
     n.gen.backcrossing = 0, n.gen.intermating = 0, n.gen.selfing = 0,
-    donorParentPloidies = object$possiblePloidies,
-    recurrentParentPloidies = object$possiblePloidies,
     minLikelihoodRatio = 10, \dots)
     
 EstimateParentalGenotypes(object, ...)
@@ -28,8 +26,6 @@ EstimateParentalGenotypes(object, ...)
     donorParent = GetDonorParent(object), 
     recurrentParent = GetRecurrentParent(object), 
     n.gen.backcrossing = 0, n.gen.intermating = 0, n.gen.selfing = 0,
-    donorParentPloidies = object$possiblePloidies,
-    recurrentParentPloidies = object$possiblePloidies,
     minLikelihoodRatio = 10, \dots)
 }
 \arguments{
@@ -63,17 +59,6 @@ genetic drift or selection).
 An integer, zero or greater, indicating how many generations of selfing were
 performed.
 }
-\item{donorParentPloidies}{
-A list, where each item in the list is an integer vector indicating a 
-potential inheritance mode that could be observed among loci in the donor
-parent.  \code{2} indicates diploid, \code{4} indicates autotetraploid, 
-\code{c(2, 2)} indicates allotetraploid, \emph{etc.}
-}
-\item{recurrentParentPloidies}{
-A list in the same format as \code{donorParentPloidies} indicating 
-inheritance modes that could be observed among loci in the recurrent
-parent.
-}
 \item{minLikelihoodRatio}{
 The minimum likelihood ratio for determining parental genotypes with 
 confidence, to be passed to \code{\link{GetLikelyGen}} for both
@@ -81,12 +66,13 @@ parental taxa.
 }
 }
 \details{
-\code{AddGenotypePriorProb_Mapping2Parents} first calls
-\code{EstimateParentalGenotypes} internally to determine which combinations
-of inheritance modes from
-the two parents should be examined in the progeny.  The expected progeny
-ploidy must be in \code{object$possiblePloidies} for a given combination
-to be examined.
+\code{AddGenotypePriorProb_Mapping2Parents} examines the parental and progeny
+ploidies stored in \code{object$taxaPloidy} and throws an error if they do not
+meet expectations.  In particular, all progeny must be the same ploidy, and that
+must be the ploidy that would be expected if the parents produced normal gametes.
+For example in an F1 cross, if one parent was diploid and the other tetraploid,
+all progeny must be triploid.  If both parents are tetraploid, all progeny must
+be tetraploid.
 
 The most likely genotypes for the two parents are estimated by
 \code{EstimateParentalGenotypes} using
