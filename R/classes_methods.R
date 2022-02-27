@@ -921,15 +921,18 @@ GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
   } else {
     if(multiallelic == "ignore"){
       pldindex <- BestPloidies(object$ploidyChiSq[,allelesToExport,drop=FALSE]) # Rcpp function
+      pldindex[pldindex == 0] <- NA # 0 means missing from BestPloidies Rcpp fn
     } else {
       # If we are going to look at multiallelic genotypes, get the best ploidy
       # for each locus instead of each allele.
       locChiSq <- t(rowsum(t(object$ploidyChiSq), object$alleles2loc))
       pldindex_loc <- BestPloidies(locChiSq)
       names(pldindex_loc) <- colnames(locChiSq)
+      pldindex_loc[pldindex_loc == 0] <- NA
       pldindex <- unname(pldindex_loc[as.character(object$alleles2loc)])
     }
     ploidyindices <- sort(unique(pldindex))
+    ploidyindices <- ploidyindices[!is.na(ploidyindices)]
   }
   names(pldindex) <- GetAlleleNames(object)[allelesToExport]
   
@@ -951,7 +954,7 @@ GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
         thisA2L <- match(thisA2L, theseLoci)
         # run the Rcpp function do to the correction
         outmat[thesetaxa,thesealleles] <- 
-          CorrectGenos(outmat[thesetaxa,thesealleles], 
+          CorrectGenos(outmat[thesetaxa,thesealleles, drop = FALSE], 
                        object$posteriorProb[[p,h]][,thesetaxa,allelesToExport[thesealleles], drop = FALSE],
                        thisA2L, length(thesetaxa), thispld, length(thesealleles),
                        length(theseLoci), multiallelic == "correct")
