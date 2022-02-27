@@ -95,7 +95,7 @@ save(exampleRAD_mapping, file = "data/exampleRAD_mapping.RData")
 alleles2loc <- rep(1:4, each = 2)
 alNuc <- c("A", "G", "A", "C", "G", "T", "T", "A")
 taxa <- c("parent1", "parent2",
-          paste("progeny", formatC(1:100, format='d', width = 3, flag = '0'), sep = ""))
+          paste("progeny", formatC(1:300, format='d', width = 3, flag = '0'), sep = ""))
 loci <- paste("loc", 1:4, sep = "")
 depth <- matrix(NA_integer_, nrow = length(taxa), ncol = length(alleles2loc),
                 dimnames = list(taxa, paste(loci[alleles2loc], alNuc, sep = "_")))
@@ -145,17 +145,23 @@ for(L in 1:max(alleles2loc)){
 exampleRAD_mapping3x <- RADdata(depth, alleles2loc, 
                               data.frame(row.names = loci, Chr = c(1,4,6,9), 
                                          Pos = c(1111020, 33069, 2637920, 5549872)),
-                              list(2L, c(2L, 2L)), 0.001, alNuc, c(2L, 4L, rep(3L, 100)))
+                              list(2L, c(2L, 2L)), 0.001, alNuc, c(2L, 4L, rep(3L, 300)))
 # Diploid genome but allotetraploid in there as red herring
 
 # Testing 
 exampleRAD_mapping3x <- SetDonorParent(exampleRAD_mapping3x, "parent1")
 exampleRAD_mapping3x <- SetRecurrentParent(exampleRAD_mapping3x, "parent2")
-exampleRAD_mapping3x <- AddAlleleFreqMapping(exampleRAD_mapping3x,
-                                             expectedFreqs = seq(0, 1, length.out = 7),
-                                             allowedDeviation = 0.05)
-exampleRAD_mapping3x <- AddGenotypeLikelihood(exampleRAD_mapping3x)
-exampleRAD_mapping3x <- EstimateParentalGenotypes(exampleRAD_mapping3x)
+# exampleRAD_mapping3x <- AddAlleleFreqMapping(exampleRAD_mapping3x,
+#                                              expectedFreqs = seq(0, 1, length.out = 7),
+#                                              allowedDeviation = 0.05)
+# exampleRAD_mapping3x <- AddGenotypeLikelihood(exampleRAD_mapping3x)
+# exampleRAD_mapping3x <- EstimateParentalGenotypes(exampleRAD_mapping3x)
+
+exampleRAD_mapping3x <- PipelineMapping2Parents(exampleRAD_mapping3x,
+                                                freqAllowedDeviation = 0.02)
 
 exampleRAD_mapping3x$likelyGeno_donor
 exampleRAD_mapping3x$likelyGeno_recurrent
+
+GetWeightedMeanGenotypes(exampleRAD_mapping3x)
+GetProbableGenotypes(exampleRAD_mapping3x)
