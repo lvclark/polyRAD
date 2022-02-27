@@ -179,7 +179,7 @@ Export_polymapR <- function(object, naIfZeroReads = TRUE,
   if(!is(object, "RADdata")){
     stop("RADdata object needed")
   }
-  if(length(object$posteriorProb) > 1){
+  if(nrow(object$posteriorProb) > 1){
     stop("Only one ploidy allowed for Export_polymapR.")
   }
   
@@ -190,6 +190,8 @@ Export_polymapR <- function(object, naIfZeroReads = TRUE,
   don <- GetDonorParent(object)
   rec <- GetRecurrentParent(object)
   neworder <- c(don, rec, progeny)
+  
+  ### warning/error if parents differ in ploidy?
   
   return(out[, neworder])
 }
