@@ -182,6 +182,7 @@ Export_polymapR <- function(object, naIfZeroReads = TRUE,
   if(nrow(object$posteriorProb) > 1){
     stop("Only one ploidy allowed for Export_polymapR.")
   }
+  # Should support parents of different ploidy; see polymapR::checkF1 documentation
   
   out <- t(GetProbableGenotypes(object, naIfZeroReads = naIfZeroReads,
                                 correctParentalGenos = TRUE)[[1]])
@@ -190,10 +191,6 @@ Export_polymapR <- function(object, naIfZeroReads = TRUE,
   don <- GetDonorParent(object)
   rec <- GetRecurrentParent(object)
   neworder <- c(don, rec, progeny)
-  
-  if(object$taxaPloidy[don] != object$taxaPloidy[rec]){
-    warning("polymapR may not support populations in which parents differ in ploidy.")
-  }
   
   return(out[, neworder])
 }
