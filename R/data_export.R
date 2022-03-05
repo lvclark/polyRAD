@@ -592,22 +592,34 @@ Export_polymapR_probs <- function(object, maxPcutoff = 0.9,
   if(!is(object, "RADdata")){
     stop("RADdata object needed")
   }
-  if(length(object$posteriorProb) > 1){
+  if(nrow(object$posteriorProb) > 1){
     stop("Only one ploidy allowed for Export_polymapR_probs.")
   }
+  
   object <- RemoveUngenotypedLoci(object, removeNonvariant = TRUE)
-  p1 <- dim(object$posteriorProb[[1]])[1] # ploidy plus one
+  p1 <- max(sapply(object$posteriorProb[1,], function(x) dim(x)[1])) # ploidy plus one
   omitals <- OneAllelePerMarker(object, commonAllele = TRUE)
   keepals <- GetAlleleNames(object)[-omitals]
   
-  probmat <- matrix(object$posteriorProb[[1]][,,keepals],
+  probmat <- matrix(NA_real_,
                     nrow = nTaxa(object) * length(keepals),
                     ncol = p1,
-                    dimnames = list(NULL, paste0("P", seq_len(p1) - 1L)),
-                    byrow = TRUE)
+                    dimnames = list(NULL, paste0("P", seq_len(p1) - 1L)))
   out <- data.frame(SampleName = rep(GetTaxa(object), times = length(keepals)),
-                    MarkerName = rep(keepals, each = nTaxa(object)),
-                    probmat)
+                    MarkerName = rep(keepals, each = nTaxa(object)))
+  for(pld in colnames(object$posteriorProb)){
+    p1a <- dim(object$posteriorProb[[1,pld]])[1] # ploidy plus one for this set of taxa
+    thesetaxa <- dimnames(object$posteriorProb[[1,pld]])[[2]]
+    theserows <- out$SampleName %in% thesetaxa
+    stopifnot(identical(thesetaxa, unique(out$SampleName[theserows])))
+    probmat[theserows, 1:p1a] <-
+      matrix(object$posteriorProb[[1,pld]][,,keepals],
+             nrow = length(thesetaxa) * length(keepals),
+             ncol = p1a, byrow = TRUE)
+    # Note that .priorTimesLikelihood already uses even priors for the parents
+  }
+  out <- cbind(out, probmat)
+  
   genomat <- GetProbableGenotypes(object, omit1allelePerLocus = TRUE,
                                   omitCommonAllele = TRUE,
                                   correctParentalGenos = correctParentalGenos,
