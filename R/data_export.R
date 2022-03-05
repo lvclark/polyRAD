@@ -191,7 +191,9 @@ Export_polymapR <- function(object, naIfZeroReads = TRUE,
   rec <- GetRecurrentParent(object)
   neworder <- c(don, rec, progeny)
   
-  ### warning/error if parents differ in ploidy?
+  if(object$taxaPloidy[don] != object$taxaPloidy[rec]){
+    warning("polymapR may not support populations in which parents differ in ploidy.")
+  }
   
   return(out[, neworder])
 }
@@ -233,10 +235,19 @@ Export_MAPpoly <- function(object, file, pheno = NULL, ploidyIndex = 1,
   if(length(ploidy) != 1){
     stop("Export is for autopolyploids only.")
   }
+  pld.r <- object$taxaPloidy[GetRecurrentParent(object)] * ploidy / 2
+  pld.d <- object$taxaPloidy[GetDonorParent(object)] * ploidy / 2
+  pld.p <- unique(object$taxaPloidy[progeny]) * ploidy / 2
+  if(length(pld.p) > 1){
+    stop("All progeny must be same ploidy")
+  }
+  if(pld.r != pld.d){
+    warning("MAPpoly may not support populations in which parents differ in ploidy.")
+  }
   
   # Get parent genotypes
-  donorGen <- object$likelyGeno_donor[as.character(ploidy),]
-  recurGen <- object$likelyGeno_recurrent[as.character(ploidy),]
+  donorGen <- object$likelyGeno_donor[as.character(pld.d),]
+  recurGen <- object$likelyGeno_recurrent[as.character(pld.r),]
   
   # Identify markers to use
   keepal <- which(!is.na(donorGen) & !is.na(recurGen) & 
@@ -259,7 +270,7 @@ Export_MAPpoly <- function(object, file, pheno = NULL, ploidyIndex = 1,
   }
   
   # Write file header
-  cat(c(paste("ploidy", ploidy),
+  cat(c(paste("ploidy", pld.p),
         paste("nind", length(progeny)),
         paste("nmrk", length(keepal)),
         paste("mrknames", paste(GetAlleleNames(object)[keepal], collapse = " ")),
@@ -283,9 +294,9 @@ Export_MAPpoly <- function(object, file, pheno = NULL, ploidyIndex = 1,
   # Write genotype posterior probabilities
   genotab <- data.frame(rep(GetAlleleNames(object)[keepal], each = length(progeny)),
                         rep(progeny, times = length(keepal)),
-                        matrix(round(object$posteriorProb[[ploidyIndex]][, progeny, keepal], digits),
+                        matrix(round(object$posteriorProb[[ploidyIndex,as.character(pld.p)]][, progeny, keepal], digits),
                                byrow = TRUE, nrow = length(progeny) * length(keepal),
-                               ncol = ploidy + 1))
+                               ncol = pld.p + 1))
   write.table(genotab, file = file, append = TRUE, quote = FALSE,
               col.names = FALSE, row.names = FALSE)
 }

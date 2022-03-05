@@ -156,10 +156,9 @@ If the chromosomes in \code{object$locTable} are in character format,
 attempt to extract chromosome numbers.
 
 Because \pkg{polymapR} allows only one ploidy, there must only be one possible
-ploidy for the progeny in the \code{RADdata} object (possibly with different
-ploidies for the parents, \emph{e.g.} 4x x 2x = 3x).  \pkg{MAPpoly} also only
+inheritance mode across loci in the \code{RADdata} object.  \pkg{MAPpoly} also only
 allows one ploidy, but \code{Export_MAPpoly} allows the user to select which
-ploidy from the \code{RADdata} object to use.  (This is due to how internal
+inheritance mode from the \code{RADdata} object to use.  (This is due to how internal
 \pkg{polyRAD} functions are coded.)
 }
 \value{
@@ -340,8 +339,8 @@ mypheno <- matrix(rnorm(200), nrow = 100, ncol = 2,
 Export_MAPpoly(exampleRAD_mapping, file = outfile2, pheno = mypheno)
 
 # load data into MAPpoly
-# require(mappoly) # can uncomment once mappoly is on CRAN
-# mydata <- read_geno_dist(outfile2)
+# require(mappoly)
+# mydata <- read_geno_prob(outfile2)
 
 # export to GWASpoly
 outfile3 <- tempfile() # temporary file for example
