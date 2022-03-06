@@ -39,7 +39,9 @@ A \code{"\link{RADdata}"} object.
 }
 \item{selfing.rate}{
 A number ranging from zero to one indicating the frequency of
-self-fertilization in the species.
+self-fertilization in the species.  For individuals with odd ploidy
+(e.g. triploids), the selfing rate is always treated as zero and a warning is
+printed if a value above zero is provided.
 }
   \item{tol}{
 A number indicating when the iteration should end.  It indicates the maximum mean 

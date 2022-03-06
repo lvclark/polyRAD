@@ -70,10 +70,11 @@ exampleRAD$priorProb[[1,1]][,2,]
 exampleRAD$priorProb[[2,1]][,2,]
 exampleRAD$priorProb[[1,2]][,1,]
 
-# try it with inbreeding
-exampleRAD <- AddGenotypePriorProb_ByTaxa(exampleRAD, selfing.rate = 0.5)
+# try it with inbreeding, for diploid samples only
+exampleRAD2 <- SubsetByTaxon(exampleRAD, GetTaxa(exampleRAD)[exampleRAD$taxaPloidy == 2])
+exampleRAD2 <- AddGenotypePriorProb_ByTaxa(exampleRAD2, selfing.rate = 0.5)
 
-exampleRAD$priorProb[[1,1]][,1,]
+exampleRAD2$priorProb[[1,1]][,1,]
 }
 
 \keyword{ distribution }

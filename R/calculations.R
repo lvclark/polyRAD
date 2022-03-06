@@ -20,8 +20,11 @@
     for(i in 0:ploidy){
       priors[i+1,] <- choose(ploidy, i) * freqs ^ i * antifreqs ^ (ploidy - i)
     }
+    if(selfing.rate > 0 && selfing.rate < 1 && ploidy %% 2 != 0){
+      warning("Not simulating self-fertilization for individuals of odd ploidy.")
+    }
     # adjust for self fertilization if applicable
-    if(selfing.rate > 0 && selfing.rate < 1){
+    if(selfing.rate > 0 && selfing.rate < 1 && ploidy %% 2 == 0){
       sm <- .selfmat(ploidy)
       # Equation 6 from de Silva et al. 2005 (doi:10.1038/sj.hdy.6800728)
       priors <- (1 - selfing.rate) * 
