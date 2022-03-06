@@ -94,7 +94,7 @@ NumericVector HoOneParent(IntegerVector genotypes, IntegerVector alleles2loc,
 // [[Rcpp::export]]
 NumericVector HoTwoParents(IntegerVector genotypes1, IntegerVector genotypes2,
                            IntegerVector alleles2loc, IntegerVector keeploc,
-                           double ploidy){
+                           double ploidy1, double ploidy2){
   int nloc = keeploc.size();
   int L;
   IntegerVector thisgen1;
@@ -106,7 +106,7 @@ NumericVector HoTwoParents(IntegerVector genotypes1, IntegerVector genotypes2,
     thisgen1 = genotypes1[alleles2loc == L];
     thisgen2 = genotypes2[alleles2loc == L];
     for(int a = 0; a < thisgen1.size(); a++){
-      out[i] -= (thisgen1[a] / ploidy) * (thisgen2[a]/ploidy);
+      out[i] -= (thisgen1[a] / ploidy1) * (thisgen2[a]/ploidy2);
     }
   }
   

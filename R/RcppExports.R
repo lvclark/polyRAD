@@ -33,8 +33,8 @@ HoOneParent <- function(genotypes, alleles2loc, keeploc, ploidy) {
     .Call('_polyRAD_HoOneParent', PACKAGE = 'polyRAD', genotypes, alleles2loc, keeploc, ploidy)
 }
 
-HoTwoParents <- function(genotypes1, genotypes2, alleles2loc, keeploc, ploidy) {
-    .Call('_polyRAD_HoTwoParents', PACKAGE = 'polyRAD', genotypes1, genotypes2, alleles2loc, keeploc, ploidy)
+HoTwoParents <- function(genotypes1, genotypes2, alleles2loc, keeploc, ploidy1, ploidy2) {
+    .Call('_polyRAD_HoTwoParents', PACKAGE = 'polyRAD', genotypes1, genotypes2, alleles2loc, keeploc, ploidy1, ploidy2)
 }
 
 InitHapAssign <- function(NMmat) {
@@ -61,8 +61,8 @@ simGeno <- function(alleleFreq, alleles2loc, nsam, inbreeding, ploidy) {
     .Call('_polyRAD_simGeno', PACKAGE = 'polyRAD', alleleFreq, alleles2loc, nsam, inbreeding, ploidy)
 }
 
-simGenoMapping <- function(donorGeno, recurGeno, progGeno, genoProbs, alleles2loc, nsam, ploidy) {
-    .Call('_polyRAD_simGenoMapping', PACKAGE = 'polyRAD', donorGeno, recurGeno, progGeno, genoProbs, alleles2loc, nsam, ploidy)
+simGenoMapping <- function(donorGeno, recurGeno, progGeno, genoProbs, alleles2loc, nsam, ploidyDon, ploidyRec) {
+    .Call('_polyRAD_simGenoMapping', PACKAGE = 'polyRAD', donorGeno, recurGeno, progGeno, genoProbs, alleles2loc, nsam, ploidyDon, ploidyRec)
 }
 
 simAD <- function(locDepth, genotypes, alleles2loc, overdispersion, contamRate, alleleFreq, errorRate) {

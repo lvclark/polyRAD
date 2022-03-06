@@ -455,10 +455,10 @@ setMethod("reverseComplement", "character",
 }
 
 # Build progeny probability object for given mapping population properties
-.buildProgProb <- function(ploidy, gen_backcrossing, gen_selfing){
+.buildProgProb <- function(ploidy1, ploidy2, gen_backcrossing, gen_selfing){
   # set up parents; number indexes locus copy
-  p1 <- 1:ploidy
-  p2 <- p1 + ploidy
+  p1 <- 1:ploidy1
+  p2 <- (1:ploidy2) + ploidy1
   # create F1 progeny probabilities
   progprob <- .progenyProb2(.makeGametes2(p1), .makeGametes2(p2))
   # backcross
@@ -496,26 +496,27 @@ setMethod("reverseComplement", "character",
 # (No double reduction.)
 # Can take a few seconds to run if there are many generations, but it is only
 # intended to be run once for the whole dataset.
-.progAlProbs <- function(ploidy, gen_backcrossing, gen_selfing){
+.progAlProbs <- function(ploidy1, ploidy2, gen_backcrossing, gen_selfing){
   # set up parents; number indexes locus copy
-  p1 <- 1:ploidy
-  p2 <- p1 + ploidy
+  p1 <- 1:ploidy1
+  p2 <- (1:ploidy2) + ploidy1
   # probabilities of progeny genotypes
-  progprob <- .buildProgProb(ploidy, gen_backcrossing, gen_selfing)
+  progprob <- .buildProgProb(ploidy1, ploidy2, gen_backcrossing, gen_selfing)
+  ploidy.prog <- ncol(progprob[[1]])
   
   # total probability that (without replacement, from individual progeny):
   diffp1 <- 0 # two different locus copies, both from parent 1, are sampled
   diffp2 <- 0 # two different locus copies, both from parent 2, are sampled
   diff12 <- 0 # locus copies from two different parents are sampled
   
-  ncombo <- choose(ploidy, 2) # number of ways to choose 2 alleles from a genotype
+  ncombo <- choose(ploidy.prog, 2) # number of ways to choose 2 alleles from a genotype
   # examine each progeny genotype
   for(p in 1:nrow(progprob[[1]])){
     thisgen <- progprob[[1]][p,]
     thisprob <- progprob[[2]][p]
-    for(m in 1:(ploidy - 1)){
+    for(m in 1:(ploidy.prog - 1)){
       al1 <- thisgen[m]
-      for(n in (m + 1):ploidy){
+      for(n in (m + 1):ploidy.prog){
         al2 <- thisgen[n]
         if(al1 == al2) next
         if((al1 %in% p1) && (al2 %in% p1)){
