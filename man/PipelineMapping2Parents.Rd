@@ -77,9 +77,11 @@ rather than iteratively until convergence.
 }
 \value{
 A \code{"RADdata"} object identical to that passed to the function, with
-the following slots added: \code{$alleleFreq}, \code{$genotypeLikelihood},
-\code{$priorProb}, \code{$priorProbPloidies}, \code{$ploidyChiSq},
-\code{$ploidyChiSqP}, and \code{$posteriorProb}.  See the documentation
+the following slots added: \code{$alleleFreq}, \code{depthSamplingPermutations},
+\code{$genotypeLikelihood},
+\code{likelyGeno_donor}, \code{likelyGeno_recurrent}, \code{$priorProb},
+\code{$ploidyChiSq}, \code{$posteriorProb}, and if \code{useLinkage = TRUE},
+\code{$alleleLinkages} and \code{$priorProbLD}.  See the documentation
 for the functions listed in the description for more details on the
 data contained in these slots.
 }

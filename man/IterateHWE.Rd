@@ -111,7 +111,8 @@ allele frequencies.
 
 \value{
 A \code{"RADdata"} object identical to that passed to the function, but with
-\code{$alleleFreq}, \code{$priorProb}, \code{$genotypeLikelihood}, 
+\code{$alleleFreq}, \code{$priorProb}, \code{$depthSamplingPermutations},
+\code{$genotypeLikelihood}, 
 \code{$ploidyChiSq}, and \code{$posteriorProb} slots added.  
 For \code{IteratePopStruct} and \code{IteratePopStructLD}, 
 \code{$alleleFreqByTaxa} and \code{$PCA} are also added.  For 
