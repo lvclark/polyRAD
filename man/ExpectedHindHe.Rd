@@ -38,7 +38,8 @@ ExpectedHindHeMapping(object, ploidy = object$possiblePloidies[[1]],
 
 SimGenotypes(alleleFreq, alleles2loc, nsam, inbreeding, ploidy)
 
-SimGenotypesMapping(donorGen, recurGen, alleles2loc, nsam, ploidy,
+SimGenotypesMapping(donorGen, recurGen, alleles2loc, nsam,
+                    ploidy.don, ploidy.rec,
                     n.gen.backcrossing, n.gen.selfing)
 
 SimAlleleDepth(locDepth, genotypes, alleles2loc, overdispersion = 20,
@@ -50,7 +51,7 @@ A \code{RADdata} object.
 }
   \item{ploidy}{
 A single integer indicating the ploidy to use for genotype simulation.
-For \code{ExpectedHindHe},
+For \code{ExpectedHindHe} and \code{ExpectedHindHeMapping},
 this number will be multiplied by the values in \code{GetTaxaPloidy(object)}
 then divided by two to determine the ploidy of each individual for simulation.
 }
@@ -119,6 +120,12 @@ dataset, and numbers indicating the copy number of each allele.
 \item{recurGen}{
 A vector indicating genotypes of the recurrent parent, as with \code{donorGen}.
 }
+\item{ploidy.don}{
+A single integer indicating the ploidy of the donor parent.
+}
+\item{ploidy.rec}{
+A single integer indicating the ploidy of the recurrent parent.
+}
 \item{locDepth}{
 An integer matrix indicating read depth at each taxon and locus.  Formatted as
 the \code{$locDepth} slot of a \code{RADdata} object, notably with columns
@@ -185,7 +192,7 @@ exampleRAD_mapping <- EstimateParentalGenotypes(exampleRAD_mapping,
 simgenomap <- SimGenotypesMapping(exampleRAD_mapping$likelyGeno_donor[1,],
                                   exampleRAD_mapping$likelyGeno_recurrent[1,],
                                   exampleRAD_mapping$alleles2loc,
-                                  nsam = 10, ploidy = 2,
+                                  nsam = 10, ploidy.don = 2, ploidy.rec = 2,
                                   n.gen.backcrossing = 1,
                                   n.gen.selfing = 0)
                                   

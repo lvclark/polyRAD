@@ -155,8 +155,13 @@ If the chromosomes in \code{object$locTable} are in character format,
 \code{ExportGAPIT}, \code{Export_MAPpoly}, and \code{Export_GWASpoly} will
 attempt to extract chromosome numbers.
 
-Because \pkg{polymapR} allows only one ploidy, there must only be one possible
-inheritance mode across loci in the \code{RADdata} object.  \pkg{MAPpoly} also only
+For \pkg{polymapR} there must only be one possible inheritance mode across loci
+(one value in \code{object$possiblePloidies}) in the \code{RADdata} object, although
+triploid F1 populations derived from diploid and tetraploid parents are allowed.
+See \code{\link{SubsetByPloidy}} for help reducing a \code{RADdata} object to a
+single inheritance mode.
+
+\pkg{MAPpoly} only
 allows one ploidy, but \code{Export_MAPpoly} allows the user to select which
 inheritance mode from the \code{RADdata} object to use.  (This is due to how internal
 \pkg{polyRAD} functions are coded.)
