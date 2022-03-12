@@ -37,8 +37,7 @@ to a unique ploidy in \code{object$taxaPloidy}. Each item is a three-dimensional
 array with 
 allele copy number in the first dimension, taxa in the second dimension, and
 alleles in the third dimension.  The values in the array are prior genotype
-probabilities.  Additionally, \code{object$possiblePloidies} is copied to
-\code{object$priorProbPloidies}, and \code{"taxon"} is recorded in the 
+probabilities.  Additionally, \code{"taxon"} is recorded in the 
 \code{"priorType"} attribute.
 }
 

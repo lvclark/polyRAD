@@ -96,7 +96,7 @@ intermated to produce the F2, one would instead use
 }
 \value{
 A \code{"RADdata"} object identical to that passed to the function, but with
-data stored in six new slots:
+data stored in three new slots:
 
 \item{priorProb }{A two-dimensional list of matrices, with rows corresponding to
 \code{object$possiblePloidies} and columns corresponding to unique values in
@@ -105,9 +105,6 @@ For each matrix, allele copy number (from zero to the total
 ploidy) is in rows, and alleles are in columns.  Each value is the probability
 of sampling an individual with that allele copy number from the population.
 For any taxa ploidies other than the progeny ploidy, even priors are returned.}
-\item{priorProbPloidies }{A list identical to \code{object$possiblePloidies}.
-It is in the same order as \code{$priorProb}, with each item indicating the
-inheritance mode for the corresponding prior probability matrix.}
 \item{likelyGeno_donor }{A matrix of the donor parent genotypes that were
 used for estimating genotype prior probabilities.  Formatted like the
 output of \code{\link{GetLikelyGen}}.}

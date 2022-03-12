@@ -225,10 +225,10 @@ Export_MAPpoly <- function(object, file, pheno = NULL, ploidyIndex = 1,
     stop("Taxa names should not have spaces.")
   }
   # Determine the ploidy
-  if(ploidyIndex > length(object$priorProbPloidies)){
-    stop("ploidyIndex should be the index of the desired ploidy within object$priorProbPloidies (not the ploidy itself).")
+  if(ploidyIndex > length(object$possiblePloidies)){
+    stop("ploidyIndex should be the index of the desired ploidy within object$possiblePloidies (not the ploidy itself).")
   }
-  ploidy <- object$priorProbPloidies[[ploidyIndex]]
+  ploidy <- object$possiblePloidies[[ploidyIndex]]
   if(length(ploidy) != 1){
     stop("Export is for autopolyploids only.")
   }
@@ -423,7 +423,7 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE,
                return(as.integer(names(which.max(table(x)))))
              }
            })
-  pld_per_loc <- sapply(object$priorProbPloidies, sum)[pld_ind_per_loc]
+  pld_per_loc <- sapply(object$possiblePloidies, sum)[pld_ind_per_loc]
   
   # Process data with internal RCpp function
   temp <- PrepVCFexport(geno, object$alleles2loc, object$alleleDepth,
@@ -517,7 +517,7 @@ Export_Structure <- function(object, file, includeDistances = FALSE,
                                naIfZeroReads = missingIfZeroReads)
   # get ploidy
   pind <- unique(geno$ploidy_index)
-  ploidies <- sapply(object$priorProbPloidies[pind], sum)
+  ploidies <- sapply(object$possiblePloidies[pind], sum)
   ploidy <- max(ploidies) * max(GetTaxaPloidy(object)) / 2L
   stopifnot(all(geno$genotypes <= ploidy, na.rm = TRUE))
   # put data into Structure format (Rcpp function)
@@ -570,13 +570,13 @@ Export_Structure <- function(object, file, includeDistances = FALSE,
 }
 
 Export_adegenet_genind <- function(object, ploidyIndex = 1){
-  object <- SubsetByPloidy(object, ploidies = object$priorProbPloidies[ploidyIndex])
+  object <- SubsetByPloidy(object, ploidies = object$possiblePloidies[ploidyIndex])
   
   tab <- GetProbableGenotypes(object, omit1allelePerLocus = FALSE,
                               multiallelic = "correct")$genotypes
   colnames(tab) <- paste(sub("\\.", "_", GetLoci(object)[object$alleles2loc]),
                          object$alleleNucleotides, sep = ".")
-  pldT2 <- sum(object$priorProbPloidies[[1]]) * GetTaxaPloidy(object)
+  pldT2 <- sum(object$possiblePloidies[[1]]) * GetTaxaPloidy(object)
   stopifnot(all(pldT2 %% 2L == 0L))
   
   out <- methods::new("genind", tab = tab,

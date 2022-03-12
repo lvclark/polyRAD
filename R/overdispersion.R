@@ -29,7 +29,7 @@ TestOverdispersion.RADdata <- function(object, to_test = seq(6, 20, by = 2),
     stop("Genotype quality too low for this protocol.")
   }
   # get rough probability of sampling allele from this gen (1/ploidy)
-  samprobs <- 1 / sum(object$priorProbPloidies[[pldindex]]) /
+  samprobs <- 1 / sum(object$possiblePloidies[[pldindex]]) /
     as.integer(colnames(object$priorProb)) * 2
   
   # set up list for p-value output

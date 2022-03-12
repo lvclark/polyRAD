@@ -583,7 +583,6 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
   # Put progeny priors into the appropriate column
   object$priorProb[,as.character(pld.prg)] <- OutPriors
   
-  object$priorProbPloidies <- object$possiblePloidies
   stopifnot(attr(object, "priorType") == "population")
   # --> indicates prior probs are estimated for whole pop, not by taxa
   return(object)
@@ -614,7 +613,6 @@ AddGenotypePriorProb_HWE.RADdata <- function(object, selfing.rate = 0, ...){
   }
   
   object$priorProb <- priors
-  object$priorProbPloidies <- object$possiblePloidies
   attr(object, "priorType") <- "population"
   return(object)
 }
@@ -639,7 +637,6 @@ AddGenotypePriorProb_Even.RADdata <- function(object, ...){
     }
   }
   object$priorProb <- priors
-  object$priorProbPloidies <- object$possiblePloidies
   attr(object, "priorType") <- "population"
   return(object)
 }
@@ -745,7 +742,7 @@ AddPloidyChiSq.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object),
   
   # loop through ploidies
   for(i in seq_len(nrow(object$priorProb))){
-    thisploidy <- sum(object$priorProbPloidies[[i]])
+    thisploidy <- sum(object$possiblePloidies[[i]])
     whichlik <-
       which(sapply(object$genotypeLikelihood[,1], 
                    function(x){
@@ -1129,7 +1126,6 @@ AddGenotypePriorProb_ByTaxa.RADdata <- function(object, selfing.rate = 0, ...){
   }
   
   object$priorProb <- priors
-  object$priorProbPloidies <- object$possiblePloidies
   attr(object, "priorType") <- "taxon"
   return(object)
 }
@@ -1661,9 +1657,6 @@ SubsetByTaxon.RADdata <- function(object, taxa, ...){
                                                  drop = FALSE]
     }
   }
-  if(!is.null(object$priorProbPloidies)){
-    splitRADdata$priorProbPloidies <- object$priorProbPloidies
-  }
   if(!is.null(object$ploidyChiSq)){
     splitRADdata$ploidyChiSq <- object$ploidyChiSq
   }
@@ -1758,9 +1751,6 @@ SubsetByLocus.RADdata <- function(object, loci, ...){
               dimnames = dimnames(object$priorProb))
     }
   }
-  if(!is.null(object$priorProbPloidies)){
-    splitRADdata$priorProbPloidies <- object$priorProbPloidies
-  }
   if(!is.null(object$ploidyChiSq)){
     splitRADdata$ploidyChiSq <- object$ploidyChiSq[, thesealleles, drop = FALSE]
   }
@@ -1827,9 +1817,6 @@ SubsetByPloidy.RADdata <- function(object, ploidies, ...){
     }
   }
   
-  if(!is.null(object$priorProbPloidies)){ ## This slot to be removed in v2.0
-    object$priorProbPloidies <- ploidies
-  }
   if(!is.null(object$priorProb)){
     object$priorProb <- object$priorProb[pldindex,, drop = FALSE]
   }
@@ -1942,8 +1929,7 @@ StripDown.RADdata <- function(object,
                                                "priorProbLD"),
                               ...){
   always.keep <- c("alleles2loc", "alleleNucleotides", "locTable", 
-                   "priorProbPloidies", "possiblePloidies", "ploidyChiSq", 
-                   "posteriorProb")
+                   "possiblePloidies", "ploidyChiSq", "posteriorProb")
   if(any(always.keep %in% remove.slots)){
     ak <- always.keep[always.keep %in% remove.slots]
     stop(paste(c("Removal of the following would interfere with data export:", 

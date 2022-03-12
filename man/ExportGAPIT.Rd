@@ -89,7 +89,7 @@ A data frame or matrix of phenotypic values, with progeny in rows and traits
 in columns.  Columns should be named.
 }
 \item{ploidyIndex}{
-Index, within \code{object$priorProbPloidies}, of the ploidy to be exported.
+Index, within \code{object$possiblePloidies}, of the ploidy to be exported.
 }
 \item{progeny}{
 A character vector indicating which individuals to export as progeny of the

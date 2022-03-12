@@ -52,7 +52,7 @@ of progeny after self-fertilization (each column summing to one).
 
 \value{
 A \dQuote{RADdata} object identical that passed to the function, but with
-data stored in two new slots:
+data stored in one new slot:
 
 \item{priorProb }{A two-dimensional list of matrices, with rows corresponding to
 \code{object$possiblePloidies} and columns corresponding to unique values in
@@ -60,9 +60,6 @@ data stored in two new slots:
 For each matrix, allele copy number (from zero to the total
 ploidy) is in rows, and alleles are in columns.  Each value is the probability
 of sampling an individual with that allele copy number from the population.}
-\item{priorProbPloidies }{A list identical to \code{object$possiblePloidies}.
-It is in the same order as \code{$priorProb}, with each item indicating the
-inheritance mode for the corresponding prior probability matrix.}
 }
 
 \author{
