@@ -1208,7 +1208,8 @@ AddGenotypePriorProb_LD.RADdata <- function(object, type, ...){
                 for(j in possibleThisAllele){
                   thisX <- thispost[possibleLinked[-1],, i]
                   if(is.vector(thisX)){
-                    thisX <- matrix(thisX, nrow = length(thisX), ncol = 1)
+                    thisX <- matrix(thisX, nrow = length(thisX), ncol = 1,
+                                    dimnames = list(names(thisX), NULL))
                   } else {
                     thisX <- t(thisX)
                   }
