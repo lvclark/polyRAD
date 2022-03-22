@@ -873,7 +873,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <pre><code>## [1] 611</code></pre>
 <div class="sourceCode" id="cb121"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb121-1" title="1"><span class="kw">head</span>(goodLoci)</a></code></pre></div>
 <pre><code>## [1] &quot;S05_132813&quot;  &quot;S05_266733&quot;  &quot;S05_606899&quot;  &quot;S05_754184&quot;  &quot;S05_764224&quot;  &quot;S05_1643871&quot;</code></pre>
-<p>The <code>goodLoci</code> vector that we created here could then be used by <code>SubsetByLocus</code> to filter the dataset. Remember that you would also want to use <code>SubsetByTaxon</code> in this case to make sure that each <code>RADdata</code> object was uniform ploidy across individuals. The <code>ExpectedHindHe</code> function can also help with determining a good cutoff for filtering markers.</p>
+<p>The <code>goodLoci</code> vector that we created here could then be used by <code>SubsetByLocus</code> to filter the dataset. Remember that you would also want to set the <code>taxaPloidy</code> slot to indicate the ploidy of each individual. The <code>ExpectedHindHe</code> function can also help with determining a good cutoff for filtering markers.</p>
 </div>
 <div id="considerations-for-ram-and-processing-time" class="section level2">
 <h2>Considerations for RAM and processing time <a name="considerations"></a></h2>

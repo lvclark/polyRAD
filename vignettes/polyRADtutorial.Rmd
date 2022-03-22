@@ -833,9 +833,9 @@ head(goodLoci)
 ```
 
 The `goodLoci` vector that we created here could then be used by `SubsetByLocus`
-to filter the dataset.  Remember that you would also want to use `SubsetByTaxon`
-in this case to make sure that each `RADdata` object was uniform ploidy across
-individuals.  The `ExpectedHindHe` function can also help with determining a
+to filter the dataset.  Remember that you would also want to set the
+`taxaPloidy` slot to indicate the ploidy of each individual.
+The `ExpectedHindHe` function can also help with determining a
 good cutoff for filtering markers.
 
 ## Considerations for RAM and processing time <a name="considerations"></a>
