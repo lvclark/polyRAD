@@ -1044,10 +1044,11 @@ GD.all <- cbind(GAPITlist[[1]]$GD, GAPITlist[[2]]$GD[,-1],
 
 Clark LV, Lipka AE, and Sacks EJ (2019) polyRAD: Genotype calling with
 uncertainty from sequencing data in polyploids and diploids.  *G3* 9(3):663--673,
-[10.1534/g3.118.200913](https://doi.org/10.1534/g3.118.200913).
+[doi:10.1534/g3.118.200913](https://doi.org/10.1534/g3.118.200913).
 
 To cite the $H_{ind}/H_E$ statistic:
 
 Clark LV, Mays W, Lipka AE, and Sacks EJ (2022) A population-level statistic for
 assessing Mendelian behavior of genotyping-by-sequencing data from highly
-duplicated genomes. *BMC Bioinformatics* (in press).
+duplicated genomes. *BMC Bioinformatics* 23: 101,
+[doi:10.1186/s12859-022-04635-9](https://doi.org/10.1186/s12859-022-04635-9).

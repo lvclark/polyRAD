@@ -154,9 +154,12 @@ in rows and alleles in columns, similar to that produced by
 samples in rows and alleles in columns, similar to the \code{$alleleDepth}
 slot of a \code{RADdata} object.
 }
-%\references{
-%% ~put references to the literature/web site here ~
-%}
+\references{
+Clark, L. V., Mays, W., Lipka, A. E. and Sacks, E. J. (2022) A population-level
+statistic for assessing Mendelian behavior of genotyping-by-sequencing data
+from highly duplicated genomes. \emph{BMC Bioinformatics} \bold{23}, 101,
+doi:10.1186/s12859-022-04635-9.
+}
 \author{
 Lindsay V. Clark
 }
