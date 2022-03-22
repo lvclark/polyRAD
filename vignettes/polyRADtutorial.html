@@ -12,7 +12,7 @@
 
 <meta name="author" content="Lindsay V. Clark, University of Illinois, Urbana-Champaign" />
 
-<meta name="date" content="2022-03-21" />
+<meta name="date" content="2022-03-22" />
 
 <title>polyRAD Tutorial</title>
 
@@ -318,13 +318,14 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">polyRAD Tutorial</h1>
 <h4 class="author">Lindsay V. Clark, University of Illinois, Urbana-Champaign</h4>
-<h4 class="date">21 March 2022</h4>
+<h4 class="date">22 March 2022</h4>
 
 
 <div id="TOC">
 <ul>
 <li><a href="#introduction">Introduction <a name="introduction"></a></a></li>
 <li><a href="#summary-of-available-functions">Summary of available functions <a name="functions"></a></a></li>
+<li><a href="#considerations-for-genome-biology">Considerations for genome biology</a></li>
 <li><a href="#estimating-genotype-probabilities-in-a-mapping-population">Estimating genotype probabilities in a mapping population <a name="mapping"></a></a><ul>
 <li><a href="#data-import-example-with-uneak">Data import example with UNEAK</a></li>
 <li><a href="#quality-control-and-genotype-calling">Quality control and genotype calling</a></li>
@@ -411,6 +412,13 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <li><code>InbreedingFromHindHe</code></li>
 </ul>
 <p>See <code>?GetTaxa</code> for a list of accessor functions as well.</p>
+</div>
+<div id="considerations-for-genome-biology" class="section level2">
+<h2>Considerations for genome biology</h2>
+<p>Ploidy is represented in two dimensions in RADdata objects. The first dimension, indicating inheritance mode of loci with respect to the reference genome, is specified in the <code>possiblePloidies</code> slot. The second dimension, indicating additional genome duplication within individuals, is specified by the <code>taxaPloidy</code> slot. The product of <code>possiblePloidies</code> and <code>taxaPloidy</code>, divided by two, indicates the possible inheritance modes within each individual.</p>
+<p>If you expect each locus to align to a unique location within the reference genome, set <code>possiblePloidies = list(2)</code>. If you are working, for example, with an allotetraploid but are aligning to the genome of one diploid ancestor, set <code>possiblePloidies = list(c(2, 2))</code> to indicate that a single alignment location will represent two Mendelian loci. For example, if you are analysing allohexaploid winter wheat, if you are aligning to the allohexaploid reference you would set <code>possiblePloidies = list(2)</code>, but if you were aligning to the reference of a diploid ancestor you would set <code>possiblePloidies = list(c(2, 2, 2))</code>. In reality, the data may be messier than that, particularly if you are using a reference-free variant calling pipeline, and so you can for example set <code>possiblePloidies = list(2, c(2, 2), c(2, 2, 2))</code> to test each genomic location for whether it seems to consist of one, two, or three Mendelian loci. Another example case is an ancient tetraploid genome in which some regions have diploidized and others still segregate in an autotetraploid fashion, which could be coded as <code>possiblePloidies = list(2, 4)</code> or <code>possiblePloidies = list(2, 4, c(2, 2))</code>. Keep in mind that the memory footprint of polyRAD during and after genotyping will scale linearly with the number of inheritance modes tested, however.</p>
+<p>One situation you want to avoid is alleles from a single Mendelian locus aligning to multiple locations in the reference, as polyRAD will treat these as different loci. The reference genome used in variant calling should therefore be one in which none of the chromosomes are expected to pair with each other at meiosis. If you are studying a mixture of two species and their hybrids, I recommend performing variant calling and allelic read depth quantification against the reference genome of just one species (whichever has a better assembly and annotation available), then taking the set of RAD tags in which variants were called and aligning them to the reference genome of the other species, and filtering to retain only markers with alignment locations in both species.</p>
+<p>The <code>taxaPloidy</code> slot is a multiplier on top of the <code>possiblePloidies</code> slot. It has one value per individual (taxon) in the dataset, but when a RADdata object is created it is possible to just supply one value to assign all individuals the same <code>taxaPloidy</code>. For example, if you are studying autotetraploids, you can set <code>possiblePloidies = list(2)</code> and <code>taxaPloidy = 4</code>, although <code>possiblePloidies = list(4)</code> and <code>taxaPloidy = 2</code> will also work. An allotetraploid with a diploid reference would be <code>possiblePloidies = list(c(2,2))</code> and <code>taxaPloidy = 2</code>, and an allotetraploid with an allotetraploid reference would be <code>possiblePloidies = list(2)</code> and <code>taxaPloidy = 2</code>. If you have, for example, a mixture if diploids, triploids, and tetraploids, you should construct a named integer vector, where the values are the ploidies of the individuals, and the names are the sample names, then pass this vector to the <code>taxaPloidy</code> argument when making your RADdata object (see example in “Estimating genotype probabilities in a diversity panel” below). For mapping populations, it is possible for the parents to have different ploidies as long as all progeny are the ploidy expected from the cross (<em>e.g.</em> diploid x tetraploid = triploid).</p>
 </div>
 <div id="estimating-genotype-probabilities-in-a-mapping-population" class="section level2">
 <h2>Estimating genotype probabilities in a mapping population <a name="mapping"></a></h2>

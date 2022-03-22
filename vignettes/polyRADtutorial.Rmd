@@ -107,6 +107,64 @@ For identifying problematic loci and individuals:
 
 See `?GetTaxa` for a list of accessor functions as well.
 
+## Considerations for genome biology
+
+Ploidy is represented in two dimensions in RADdata objects. The first dimension,
+indicating inheritance mode of loci with respect to the reference genome, is
+specified in the `possiblePloidies` slot. The second dimension, indicating
+additional genome duplication within individuals, is specified by the
+`taxaPloidy` slot. The product of `possiblePloidies` and `taxaPloidy`, divided
+by two, indicates the possible inheritance modes within each individual.
+
+If you expect each locus to align to a unique location within the reference
+genome, set `possiblePloidies = list(2)`.  If you are working, for example, with
+an allotetraploid but are aligning to the genome of one diploid ancestor, set
+`possiblePloidies = list(c(2, 2))` to indicate that a single alignment location
+will represent two Mendelian loci. For example, if you are analysing
+allohexaploid winter wheat, if you are aligning to the allohexaploid reference
+you would set `possiblePloidies = list(2)`, but if you were aligning to the
+reference of a diploid ancestor you would set
+`possiblePloidies = list(c(2, 2, 2))`.  In reality, the data may be messier than
+that, particularly if you are using a reference-free variant calling pipeline,
+and so you can for example set `possiblePloidies = list(2, c(2, 2), c(2, 2, 2))`
+to test each genomic location for whether it seems to consist of one, two, or
+three Mendelian loci. Another example case is an ancient tetraploid genome in
+which some regions have diploidized and others still segregate in an
+autotetraploid fashion, which could be coded as
+`possiblePloidies = list(2, 4)` or `possiblePloidies = list(2, 4, c(2, 2))`.
+Keep in mind that the memory footprint of polyRAD during and after genotyping
+will scale linearly with the number of inheritance modes tested, however.
+
+One situation you want to avoid is alleles from a single Mendelian locus
+aligning to multiple locations in the reference, as polyRAD will treat these
+as different loci.  The reference genome used in variant calling should
+therefore be one in which none of the chromosomes are expected to pair with each
+other at meiosis.  If you are studying a mixture of two species and their
+hybrids, I recommend performing variant calling and allelic read depth
+quantification against the reference genome of just one species (whichever has a
+better assembly and annotation available), then taking the set of RAD tags in
+which variants were called and aligning them to the reference genome of the
+other species, and filtering to retain only markers with alignment locations in
+both species.
+
+The `taxaPloidy` slot is a multiplier on top of the `possiblePloidies` slot.
+It has one value per individual (taxon) in the dataset, but when a RADdata
+object is created it is possible to just supply one value to assign all
+individuals the same `taxaPloidy`. For example, if you are studying
+autotetraploids, you can set `possiblePloidies = list(2)` and `taxaPloidy = 4`,
+although `possiblePloidies = list(4)` and `taxaPloidy = 2` will also work.
+An allotetraploid with a diploid reference would be
+`possiblePloidies = list(c(2,2))` and `taxaPloidy = 2`, and an allotetraploid
+with an allotetraploid reference would be `possiblePloidies = list(2)` and
+`taxaPloidy = 2`. If you have, for example, a mixture if diploids, triploids,
+and tetraploids, you should construct a named integer vector, where the values
+are the ploidies of the individuals, and the names are the sample names, then
+pass this vector to the `taxaPloidy` argument when making your RADdata object
+(see example in "Estimating genotype probabilities in a diversity panel" below).
+For mapping populations, it is possible for the parents to have different
+ploidies as long as all progeny are the ploidy expected from the cross
+(_e.g._ diploid x tetraploid = triploid).
+
 ## Estimating genotype probabilities in a mapping population <a name="mapping"></a>
 
 ### Data import example with UNEAK
