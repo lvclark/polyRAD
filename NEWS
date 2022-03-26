@@ -17,6 +17,10 @@ in odd-ploidy individuals (i.e. using the selfing.rate argument in
 IterateHWE and related functions). The selfing rate is set to zero in these
 individuals to prevent an error.
 
+IteratePopStruct and IteratePopStructLD now have an argument called
+maxR2changeratio to allow more fine-tuning of the number of principal components
+used.
+
 ## Changes in v1.6 ##
 
 TestOverdispersion now prints a helpful suggestion for which overdispersion

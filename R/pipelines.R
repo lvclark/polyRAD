@@ -99,7 +99,7 @@ IteratePopStruct <- function(object, selfing.rate = 0, tol = 1e-3,
                 # (1 is a dummy value for while loop)
   
   message("Performing initial PCA and allele frequency estimation.")
-  object <- AddPCA(object, nPcsInit = nPcsInit)
+  object <- AddPCA(object, nPcsInit = nPcsInit, maxR2changeratio = maxR2changeratio)
   object <- AddAlleleFreqByTaxa(object)
   
   while(meanDiff > tol){
@@ -153,7 +153,7 @@ IteratePopStructLD <- function(object, selfing.rate = 0, tol = 1e-3,
   
   # Initialization before testing for LD
   message("Performing initial PCA and allele frequency estimation.")
-  object <- AddPCA(object, nPcsInit = nPcsInit)
+  object <- AddPCA(object, nPcsInit = nPcsInit, maxR2changeratio = maxR2changeratio)
   object <- AddAlleleFreqByTaxa(object)
   message("Performing preliminary genotype estimation.")
   object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
@@ -184,7 +184,8 @@ IteratePopStructLD <- function(object, selfing.rate = 0, tol = 1e-3,
     object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePosteriorProb(object)
     object <- AddPCA(object, nPcsInit = dim(object$PCA)[2] + 1,
-                     minPcsOut = dim(object$PCA)[2])
+                     minPcsOut = dim(object$PCA)[2],
+                     maxR2changeratio = maxR2changeratio)
     # -> reasoning for PC number constraints: 
     #     tend to get more accuracy with more PCs,
     #     number of PCs going up and down prevents convergence of algorithm
