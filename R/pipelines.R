@@ -83,7 +83,7 @@ IterateHWE_LD <- function(object, selfing.rate = 0, tol = 1e-5,
 IteratePopStruct <- function(object, selfing.rate = 0, tol = 1e-3, 
                              excludeTaxa = GetBlankTaxa(object),
                              nPcsInit = 10, minfreq = 0.0001,
-                             overdispersion = 9){
+                             overdispersion = 9, maxR2changeratio = 0.05){
   if(!"RADdata" %in% class(object)){
     stop("RADdata object needed.")
   }
@@ -112,7 +112,8 @@ IteratePopStruct <- function(object, selfing.rate = 0, tol = 1e-3,
     object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePosteriorProb(object)
     object <- AddPCA(object, nPcsInit = dim(object$PCA)[2] + 1,
-                     minPcsOut = dim(object$PCA)[2])
+                     minPcsOut = dim(object$PCA)[2],
+                     maxR2changeratio = maxR2changeratio)
       # -> reasoning for PC number constraints: 
       #     tend to get more accuracy with more PCs,
       #     number of PCs going up and down prevents convergence of algorithm
@@ -135,7 +136,7 @@ IteratePopStructLD <- function(object, selfing.rate = 0, tol = 1e-3,
                              excludeTaxa = GetBlankTaxa(object),
                              nPcsInit = 10, minfreq = 0.0001,
                              LDdist = 1e4, minLDcorr = 0.2,
-                             overdispersion = 9){
+                             overdispersion = 9, maxR2changeratio = 0.05){
   if(!"RADdata" %in% class(object)){
     stop("RADdata object needed.")
   }
@@ -161,7 +162,8 @@ IteratePopStructLD <- function(object, selfing.rate = 0, tol = 1e-3,
   object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
   object <- AddGenotypePosteriorProb(object)
   object <- AddPCA(object, nPcsInit = dim(object$PCA)[2] + 1,
-                   minPcsOut = dim(object$PCA)[2])
+                   minPcsOut = dim(object$PCA)[2],
+                   maxR2changeratio = maxR2changeratio)
   object <- AddAlleleFreqByTaxa(object, minfreq = minfreq)
   
   # Test for LD

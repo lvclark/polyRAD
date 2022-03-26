@@ -24,13 +24,13 @@ IterateHWE_LD(object, selfing.rate = 0, tol = 1e-05,
 IteratePopStruct(object, selfing.rate = 0, tol = 1e-03,
                  excludeTaxa = GetBlankTaxa(object),
                  nPcsInit = 10, minfreq = 0.0001,
-                 overdispersion = 9)
+                 overdispersion = 9, maxR2changeratio = 0.05)
 
 IteratePopStructLD(object, selfing.rate = 0, tol = 1e-03,
                    excludeTaxa = GetBlankTaxa(object),
                    nPcsInit = 10, minfreq = 0.0001, LDdist = 1e4, 
                    minLDcorr = 0.2,
-                   overdispersion = 9)
+                   overdispersion = 9, maxR2changeratio = 0.05)
 }
 
 \arguments{
@@ -71,6 +71,13 @@ for genotype estimation; see \code{\link{AddAlleleLinkages}}.
 }
 \item{overdispersion}{
 Overdispersion parameter; see \code{\link{AddGenotypeLikelihood}}.
+}
+\item{maxR2changeratio}{
+This number determines how many principal component axes are retained.  The 
+difference in \eqn{R^2}{R-squared} values between the first and second axes 
+is multiplied by \code{maxR2changeratio}.  The last axis retained is the first
+axis after which the \eqn{R^2}{R-squared} value changes by less than this value.
+Lower values of \code{maxR2changeratio} will result in more axes being retained.
 }
 }
 
