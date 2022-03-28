@@ -5,7 +5,8 @@
 Create a RADdata object with a Subset of Possible Ploidies
 }
 \description{
-This function is used for removing some of the ploidies (inheritance modes)
+This function is used for removing some of the ploidies (i.e. inheritance modes
+possible across loci)
 stored in a \code{\link{RADdata}} object.  If genotype calling has already
 been performed, all of the relevant slots will be subsetted to only keep the
 ploidies that the user indicates.
@@ -40,6 +41,13 @@ calling.  Otherwise, it may be advisable to
 \value{
 A \code{RADdata} object identical to \code{object}, but only containing data
 relevant to the inheritance modes listed in \code{ploidies}.
+}
+\note{
+If you only wish to retain taxa of a certain ploidy, instead do
+
+\code{object <- SubsetByTaxon(object, GetTaxaByPloidy(object, 4))}
+
+to, for example, only retain tetraploid taxa.
 }
 \author{
 Lindsay V. Clark

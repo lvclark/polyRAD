@@ -5,7 +5,8 @@
 # If shortIndNames is TRUE, just keep the part of the individual name before
 # the first underscore.
 readHMC <- function(file, includeLoci=NULL, shortIndNames=TRUE,
-                    possiblePloidies = list(2), contamRate = 0.001,
+                    possiblePloidies = list(2), taxaPloidy = 2L,
+                    contamRate = 0.001,
                     fastafile = sub("hmc.txt", "fas.txt", file, fixed = TRUE)){
   # read in file; not using read.table, to preserve indiv. names
   filelines <- strsplit(readLines(file), split="\t")
@@ -68,12 +69,14 @@ readHMC <- function(file, includeLoci=NULL, shortIndNames=TRUE,
                  locTable = data.frame(row.names = locnames), 
                  possiblePloidies = possiblePloidies,
                  contamRate = contamRate,
-                 alleleNucleotides = alleleNucleotides))
+                 alleleNucleotides = alleleNucleotides,
+                 taxaPloidy = taxaPloidy))
 }
 
 # function to import read counts from TagDigger
 readTagDigger <- function(countfile, includeLoci = NULL, 
-                          possiblePloidies = list(2), contamRate = 0.001, 
+                          possiblePloidies = list(2), taxaPloidy = 2L,
+                          contamRate = 0.001, 
                           dbfile = NULL, dbColumnsToKeep = NULL,
                           dbChrCol = "Chr", dbPosCol = "Pos",
                           dbNameCol = "Marker name"){
@@ -148,7 +151,7 @@ readTagDigger <- function(countfile, includeLoci = NULL,
   
   # make RADdata object
   return(RADdata(mycounts, alleles2loc, mydb, possiblePloidies, contamRate,
-                 myNT))
+                 myNT, taxaPloidy))
 }
 
 # Function to consolidate loci imported from VCF back into tags.
@@ -619,7 +622,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
                         tol = 0.01, al.depth.field = "AD", 
                         min.ind.with.reads = 200, 
                         min.ind.with.minor.allele = 10,
-                        possiblePloidies = list(2),
+                        possiblePloidies = list(2), taxaPloidy = 2L,
                         contamRate = 0.001,
                         samples = VariantAnnotation::samples(VariantAnnotation::scanVcfHeader(file)),
                         svparam = VariantAnnotation::ScanVcfParam(fixed = "ALT",
@@ -919,7 +922,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   # build RADdata object
   message("Building RADdata object...")
   radout <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
-                    contamRate, alleleNucleotides)
+                    contamRate, alleleNucleotides, taxaPloidy)
   message("Merging rare haplotypes...")
   radout <- MergeRareHaplotypes(radout, 
                                 min.ind.with.haplotype = min.ind.with.minor.allele)
@@ -937,7 +940,7 @@ readStacks <- function(allelesFile, matchesFolder, version = 2,
                        min.ind.with.minor.allele = 10,
                        readAlignmentData = FALSE,
                        sumstatsFile = "populations.sumstats.tsv",
-                       possiblePloidies = list(2),
+                       possiblePloidies = list(2), taxaPloidy = 2L,
                        contamRate = 0.001){
   # get columns depending on version number
   if(!version %in% c(1,2)){
@@ -1095,7 +1098,7 @@ readStacks <- function(allelesFile, matchesFolder, version = 2,
   
   # build RADdata object
   radout <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
-                    contamRate, alleleNucleotides)
+                    contamRate, alleleNucleotides, taxaPloidy)
   message("Merging rare haplotypes...")
   radout <- MergeRareHaplotypes(radout, 
                                 min.ind.with.haplotype = min.ind.with.minor.allele)
@@ -1107,8 +1110,8 @@ readStacks <- function(allelesFile, matchesFolder, version = 2,
 # Use counts matrix output by GetTagTaxaDistFromDBPlugin, plus SAM file.
 readTASSELGBSv2 <- function(tagtaxadistFile, samFile, min.ind.with.reads = 200,
                             min.ind.with.minor.allele = 10,
-                            possiblePloidies = list(2), contamRate = 0.001,
-                            chromosomes = NULL){
+                            possiblePloidies = list(2), taxaPloidy = 2L,
+                            contamRate = 0.001, chromosomes = NULL){
   # read the SAM file
   message("Reading SAM file...")
   samwhat <- list(NULL, 0L, "", 0L, NULL, NULL, NULL, NULL, NULL, "", NULL,
@@ -1246,7 +1249,7 @@ readTASSELGBSv2 <- function(tagtaxadistFile, samFile, min.ind.with.reads = 200,
   # build RADdata object
   message("Building RADdata object...")
   radout <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
-                    contamRate, samseq)
+                    contamRate, samseq, taxaPloidy)
   radout <- MergeRareHaplotypes(radout, 
                                 min.ind.with.haplotype = min.ind.with.minor.allele)
   radout <- RemoveMonomorphicLoci(radout)
@@ -1259,7 +1262,8 @@ readTASSELGBSv2 <- function(tagtaxadistFile, samFile, min.ind.with.reads = 200,
 # the isolocus_splitter script.
 readProcessSamMulti <- function(alignfile, depthfile = sub("align", "depth", alignfile),
                                 expectedLoci = 1000, min.ind.with.reads = 200,
-                                min.ind.with.minor.allele = 10, possiblePloidies = list(2),
+                                min.ind.with.minor.allele = 10,
+                                possiblePloidies = list(2), taxaPloidy = 2L,
                                 contamRate = 0.001, expectedAlleles = expectedLoci * 15,
                                 maxLoci = expectedLoci){
   # read file headers
@@ -1402,7 +1406,7 @@ readProcessSamMulti <- function(alignfile, depthfile = sub("align", "depth", ali
   rownames(locTable) <- locnames
   colnames(alleleDepth) <- allelenames
   out <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
-                 contamRate, alleleNucleotides)
+                 contamRate, alleleNucleotides, taxaPloidy)
 #  out <- MergeRareHaplotypes(out, min.ind.with.haplotype = min.ind.with.minor.allele)
 #  out <- RemoveMonomorphicLoci(out)
   return(out)
@@ -1411,8 +1415,8 @@ readProcessSamMulti <- function(alignfile, depthfile = sub("align", "depth", ali
 readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
                                min.ind.with.minor.allele = 10,
                                min.median.read.depth = 10,
-                               possiblePloidies = list(2), contamRate = 0.001,
-                               nameFromTagStart = TRUE,
+                               possiblePloidies = list(2), taxaPloidy = 2L,
+                               contamRate = 0.001, nameFromTagStart = TRUE,
                                mergeRareHap = TRUE){
   message("Reading file...")
   incon <- file(sortedfile, open = "r")
@@ -1487,7 +1491,7 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   message("Building RADdata object...")
   attr(alleleNucleotides, "Variable_sites_only") <- FALSE
   radout <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
-                    contamRate, alleleNucleotides)
+                    contamRate, alleleNucleotides, taxaPloidy)
   radout <- MergeIdenticalHaplotypes(radout)
   if(mergeRareHap){
     radout <- MergeRareHaplotypes(radout, 
@@ -1498,11 +1502,12 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
 }
 
 readDArTag <- function(file, botloci = NULL, blastfile = NULL,
-                        excludeHaps = NULL, includeHaps = NULL,
-                        n.header.rows = 7, sample.name.row = 7, 
-                        trim.sample.names = "_[^_]+_[ABCDEFGH][[:digit:]][012]?$",
-                        sep.counts = ",", sep.blast = "\t",
-                        possiblePloidies = list(2), contamRate = 0.001){
+                       excludeHaps = NULL, includeHaps = NULL,
+                       n.header.rows = 7, sample.name.row = 7, 
+                       trim.sample.names = "_[^_]+_[ABCDEFGH][[:digit:]][012]?$",
+                       sep.counts = ",", sep.blast = "\t",
+                       possiblePloidies = list(2), taxaPloidy = 2L,
+                       contamRate = 0.001){
   if(!is.null(excludeHaps) && !is.null(includeHaps)){
     stop("Only specify one of excludeHaps or includeHaps")
   }
@@ -1659,5 +1664,5 @@ readDArTag <- function(file, botloci = NULL, blastfile = NULL,
   
   message("Building RADdata object...")
   return(RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
-                 contamRate, alleleNucleotides))
+                 contamRate, alleleNucleotides, taxaPloidy))
 }

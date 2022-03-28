@@ -24,13 +24,13 @@ IterateHWE_LD(object, selfing.rate = 0, tol = 1e-05,
 IteratePopStruct(object, selfing.rate = 0, tol = 1e-03,
                  excludeTaxa = GetBlankTaxa(object),
                  nPcsInit = 10, minfreq = 0.0001,
-                 overdispersion = 9)
+                 overdispersion = 9, maxR2changeratio = 0.05)
 
 IteratePopStructLD(object, selfing.rate = 0, tol = 1e-03,
                    excludeTaxa = GetBlankTaxa(object),
                    nPcsInit = 10, minfreq = 0.0001, LDdist = 1e4, 
                    minLDcorr = 0.2,
-                   overdispersion = 9)
+                   overdispersion = 9, maxR2changeratio = 0.05)
 }
 
 \arguments{
@@ -39,7 +39,9 @@ A \code{"\link{RADdata}"} object.
 }
 \item{selfing.rate}{
 A number ranging from zero to one indicating the frequency of
-self-fertilization in the species.
+self-fertilization in the species.  For individuals with odd ploidy
+(e.g. triploids), the selfing rate is always treated as zero and a warning is
+printed if a value above zero is provided.
 }
   \item{tol}{
 A number indicating when the iteration should end.  It indicates the maximum mean 
@@ -69,6 +71,13 @@ for genotype estimation; see \code{\link{AddAlleleLinkages}}.
 }
 \item{overdispersion}{
 Overdispersion parameter; see \code{\link{AddGenotypeLikelihood}}.
+}
+\item{maxR2changeratio}{
+This number determines how many principal component axes are retained.  The 
+difference in \eqn{R^2}{R-squared} values between the first and second axes 
+is multiplied by \code{maxR2changeratio}.  The last axis retained is the first
+axis after which the \eqn{R^2}{R-squared} value changes by less than this value.
+Lower values of \code{maxR2changeratio} will result in more axes being retained.
 }
 }
 
@@ -109,7 +118,8 @@ allele frequencies.
 
 \value{
 A \code{"RADdata"} object identical to that passed to the function, but with
-\code{$alleleFreq}, \code{$priorProb}, \code{$genotypeLikelihood}, 
+\code{$alleleFreq}, \code{$priorProb}, \code{$depthSamplingPermutations},
+\code{$genotypeLikelihood}, 
 \code{$ploidyChiSq}, and \code{$posteriorProb} slots added.  
 For \code{IteratePopStruct} and \code{IteratePopStructLD}, 
 \code{$alleleFreqByTaxa} and \code{$PCA} are also added.  For 

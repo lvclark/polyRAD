@@ -107,6 +107,64 @@ For identifying problematic loci and individuals:
 
 See `?GetTaxa` for a list of accessor functions as well.
 
+## Considerations for genome biology
+
+Ploidy is represented in two dimensions in RADdata objects. The first dimension,
+indicating inheritance mode of loci with respect to the reference genome, is
+specified in the `possiblePloidies` slot. The second dimension, indicating
+additional genome duplication within individuals, is specified by the
+`taxaPloidy` slot. The product of `possiblePloidies` and `taxaPloidy`, divided
+by two, indicates the possible inheritance modes within each individual.
+
+If you expect each locus to align to a unique location within the reference
+genome, set `possiblePloidies = list(2)`.  If you are working, for example, with
+an allotetraploid but are aligning to the genome of one diploid ancestor, set
+`possiblePloidies = list(c(2, 2))` to indicate that a single alignment location
+will represent two Mendelian loci. For example, if you are analysing
+allohexaploid winter wheat, if you are aligning to the allohexaploid reference
+you would set `possiblePloidies = list(2)`, but if you were aligning to the
+reference of a diploid ancestor you would set
+`possiblePloidies = list(c(2, 2, 2))`.  In reality, the data may be messier than
+that, particularly if you are using a reference-free variant calling pipeline,
+and so you can for example set `possiblePloidies = list(2, c(2, 2), c(2, 2, 2))`
+to test each genomic location for whether it seems to consist of one, two, or
+three Mendelian loci. Another example case is an ancient tetraploid genome in
+which some regions have diploidized and others still segregate in an
+autotetraploid fashion, which could be coded as
+`possiblePloidies = list(2, 4)` or `possiblePloidies = list(2, 4, c(2, 2))`.
+Keep in mind that the memory footprint of polyRAD during and after genotyping
+will scale linearly with the number of inheritance modes tested, however.
+
+One situation you want to avoid is alleles from a single Mendelian locus
+aligning to multiple locations in the reference, as polyRAD will treat these
+as different loci.  The reference genome used in variant calling should
+therefore be one in which none of the chromosomes are expected to pair with each
+other at meiosis.  If you are studying a mixture of two species and their
+hybrids, I recommend performing variant calling and allelic read depth
+quantification against the reference genome of just one species (whichever has a
+better assembly and annotation available), then taking the set of RAD tags in
+which variants were called and aligning them to the reference genome of the
+other species, and filtering to retain only markers with alignment locations in
+both species.
+
+The `taxaPloidy` slot is a multiplier on top of the `possiblePloidies` slot.
+It has one value per individual (taxon) in the dataset, but when a RADdata
+object is created it is possible to just supply one value to assign all
+individuals the same `taxaPloidy`. For example, if you are studying
+autotetraploids, you can set `possiblePloidies = list(2)` and `taxaPloidy = 4`,
+although `possiblePloidies = list(4)` and `taxaPloidy = 2` will also work.
+An allotetraploid with a diploid reference would be
+`possiblePloidies = list(c(2,2))` and `taxaPloidy = 2`, and an allotetraploid
+with an allotetraploid reference would be `possiblePloidies = list(2)` and
+`taxaPloidy = 2`. If you have, for example, a mixture if diploids, triploids,
+and tetraploids, you should construct a named integer vector, where the values
+are the ploidies of the individuals, and the names are the sample names, then
+pass this vector to the `taxaPloidy` argument when making your RADdata object
+(see example in "Estimating genotype probabilities in a diversity panel" below).
+For mapping populations, it is possible for the parents to have different
+ploidies as long as all progeny are the ploidy expected from the cross
+(_e.g._ diploid x tetraploid = triploid).
+
 ## Estimating genotype probabilities in a mapping population <a name="mapping"></a>
 
 ### Data import example with UNEAK
@@ -126,6 +184,8 @@ fashion.
 We'll start by loading polyRAD and importing the data into a `RADdata`
 object.  The `possiblePloidies` argument indicates the expected
 inheritance modes: diploid (2) and allotetraploid (2 2).
+The `taxaPloidy` argument indicates that there is no further genome duplication
+beyond that indicated with `possiblePloidies`.
 
 With your own dataset, you will not need to use `system.file`.  Instead,
 directly create a text string indicating the name of your file (and its 
@@ -138,7 +198,8 @@ maphmcfile <- system.file("extdata", "ClareMap_HapMap.hmc.txt",
 maphmcfile
 
 mydata <- readHMC(maphmcfile,
-                  possiblePloidies = list(2, c(2, 2)))
+                  possiblePloidies = list(2, c(2, 2)),
+                  taxaPloidy = 2)
 mydata
 ```
 
@@ -149,7 +210,7 @@ GetTaxa(mydata)[c(1:10,293:299)]
 ```
 
 All names starting with "Map" are progeny.  "Kaskade-Justin" and
-"Zebrinus-Justin" are the parents.  "IGR-2011-001", "p196-150A-c"",
+"Zebrinus-Justin" are the parents.  "IGR-2011-001", "p196-150A-c",
 and "p877-348-b" aren't part of the population, but were doubled
 haploid lines that were used to screen for paralogous markers.  We can
 tell polyRAD which taxa are the parents; since this is an F1 population
@@ -158,6 +219,15 @@ it doesn't matter which is "donor" and which is "recurrent".
 ```{r}
 mydata <- SetDonorParent(mydata, "Kaskade-Justin")
 mydata <- SetRecurrentParent(mydata, "Zebrinus-Justin")
+```
+
+Although we will end up excluding the doubled haploid lines from analysis below,
+if we did want to retain them in the analysis and treat them as haploid for the
+purpose of genotyping, we could adjust `taxaPloidy` for just these samples:
+
+```{r}
+mydata$taxaPloidy[c("IGR-2011-001", "p196-150A-c", "p877-348-b")] <- 1L
+mydata
 ```
 
 The next thing we'll want to do is add our genomic alignment data.  For this
@@ -332,8 +402,8 @@ of seeing the observed distribution of reads.
 
 ```{r}
 mydata$alleleDepth["Map1-089",1:8]
-mydata$genotypeLikelihood[[1]][,"Map1-089",1:8]
-mydata$genotypeLikelihood[[2]][,"Map1-089",1:8]
+mydata$genotypeLikelihood[[1,"2"]][,"Map1-089",1:8]
+mydata$genotypeLikelihood[[2,"2"]][,"Map1-089",1:8]
 ```
 
 Above, for one individal (Map1-089), we see its read depth at
@@ -353,8 +423,8 @@ can be ignored by increasing the `minLikelihoodRatio` argument to
 `PipelineMapping2Parents`.
 
 ```{r}
-mydata$priorProb[[1]][,1:8]
-mydata$priorProb[[2]][,1:8]
+mydata$priorProb[[1,"2"]][,1:8]
+mydata$priorProb[[2,"2"]][,1:8]
 ```
 
 Here we see some pretty big differences under the diploid and
@@ -392,8 +462,8 @@ Now we'll examine the posterior genotype probabilities.  These are still
 estimated separately for each ploidy.
 
 ```{r}
-mydata$posteriorProb[[1]][,"Map1-089",1:8]
-mydata$posteriorProb[[2]][,"Map1-089",1:8]
+mydata$posteriorProb[[1,"2"]][,"Map1-089",1:8]
+mydata$posteriorProb[[2,"2"]][,"Map1-089",1:8]
 ```
 
 ### Results cleanup and export
@@ -489,6 +559,18 @@ mybg <- bgzip(myVCF)
 indexTabix(mybg, format = "vcf")
 ```
 
+This dataset is mostly diploid, but it contains a few haploid and triploid
+individuals.  We'll load a text file listing the ploidy of each individual.
+
+```{r}
+pldfile <- system.file("extdata", "Msi_ploidies.txt", package = "polyRAD")
+msi_ploidies <- read.table(pldfile, sep = "\t", header = FALSE)
+head(msi_ploidies)
+table(msi_ploidies$V2)
+pld_vect <- msi_ploidies$V2
+names(pld_vect) <- msi_ploidies$V1
+```
+
 Now we can make our `RADdata` object.  Because this is a small example
 dataset, we are setting `expectedLoci` and `expectedAlleles` to
 very low values; in a real dataset they should reflect how much data you are
@@ -497,7 +579,8 @@ alleles and loci.
 
 ```{r eval = haveVA}
 mydata <- VCF2RADdata(myVCF, possiblePloidies = list(2, c(2,2)),
-                      expectedLoci = 100, expectedAlleles = 500)
+                      expectedLoci = 100, expectedAlleles = 500,
+                      taxaPloidy = pld_vect)
 mydata
 ```
 
@@ -540,13 +623,15 @@ abline(v = 0.5, col = "blue", lwd = 2)
 The peak below 0.5 indicates well-behaved diploid loci.  For estimation of
 inbreeding, we'll just want to look at markers with a minor allele frequency of
 at least 0.05, since lower minor allele frequencies tend to have a lot of bias
-in $H_{ind}/H_E$ dependent on sample size.
+in $H_{ind}/H_E$ dependent on sample size. We will also just look at the
+predominant ploidy (diploid in this case) to estimate inbreeding.
 
 ```{r}
 mydata <- AddAlleleFreqHWE(mydata)
 theseloci <- GetLoci(mydata)[mydata$alleles2loc[mydata$alleleFreq >= 0.05 & mydata$alleleFreq < 0.5]]
 theseloci <- unique(theseloci)
-hist(myhindheByLoc[theseloci], col = "lightgrey",
+myhindheByLoc2 <- colMeans(myhindhe[mydata$taxaPloidy == 2L, theseloci], na.rm = TRUE)
+hist(myhindheByLoc2, col = "lightgrey",
      xlab = "Hind/He", main = "Histogram of Hind/He by locus, MAF >= 0.05")
 abline(v = 0.5, col = "blue", lwd = 2)
 ```
@@ -580,7 +665,7 @@ ExpectedHindHe(mydata, inbreeding = 0.25, ploidy = 2, overdispersion = my_ovdisp
 ```
 
 According to these results, good quality markers can be expected to have
-$H_{ind}/H_E$ values from about 0.26 to 0.45.  Values lower than that
+$H_{ind}/H_E$ values from about 0.25 to 0.47.  Values lower than that
 indicate technical problems such as restriction cut site polymorphisms,
 causing overdispersion in the data that could reduce genotyping quality.
 Values higher than that indicate paralogy or higher ploidy than expected.
@@ -589,7 +674,7 @@ only remove markers where $H_{ind}/H_E$ is too low (although you may
 consider filtering differently in your own dataset).
 
 ```{r}
-mean(myhindheByLoc < 0.26) # about 33% of markers would be removed
+mean(myhindheByLoc < 0.25) # about 33% of markers would be removed
 keeploci <- names(myhindheByLoc)[myhindheByLoc >= 0.26]
 mydata <- SubsetByLocus(mydata, keeploci)
 ```
@@ -806,9 +891,9 @@ head(goodLoci)
 ```
 
 The `goodLoci` vector that we created here could then be used by `SubsetByLocus`
-to filter the dataset.  Remember that you would also want to use `SubsetByTaxon`
-in this case to make sure that each `RADdata` object was uniform ploidy across
-individuals.  The `ExpectedHindHe` function can also help with determining a
+to filter the dataset.  Remember that you would also want to set the
+`taxaPloidy` slot to indicate the ploidy of each individual.
+The `ExpectedHindHe` function can also help with determining a
 good cutoff for filtering markers.
 
 ## Considerations for RAM and processing time <a name="considerations"></a>
@@ -959,4 +1044,11 @@ GD.all <- cbind(GAPITlist[[1]]$GD, GAPITlist[[2]]$GD[,-1],
 
 Clark LV, Lipka AE, and Sacks EJ (2019) polyRAD: Genotype calling with
 uncertainty from sequencing data in polyploids and diploids.  *G3* 9(3):663--673,
-[10.1534/g3.118.200913](https://doi.org/10.1534/g3.118.200913).
+[doi:10.1534/g3.118.200913](https://doi.org/10.1534/g3.118.200913).
+
+To cite the $H_{ind}/H_E$ statistic:
+
+Clark LV, Mays W, Lipka AE, and Sacks EJ (2022) A population-level statistic for
+assessing Mendelian behavior of genotyping-by-sequencing data from highly
+duplicated genomes. *BMC Bioinformatics* 23: 101,
+[doi:10.1186/s12859-022-04635-9](https://doi.org/10.1186/s12859-022-04635-9).

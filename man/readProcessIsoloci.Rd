@@ -12,7 +12,7 @@ resulting CSV to a \code{"\link{RADdata}"} object.
 readProcessIsoloci(sortedfile, min.ind.with.reads = 200,
                    min.ind.with.minor.allele = 10,
                    min.median.read.depth = 10,
-                   possiblePloidies = list(2),
+                   possiblePloidies = list(2), taxaPloidy = 2L,
                    contamRate = 0.001,
                    nameFromTagStart = TRUE, mergeRareHap = TRUE)
 }
@@ -33,6 +33,10 @@ needed to retain a locus.
 }
   \item{possiblePloidies}{
 A list indicating possible inheritance modes of loci.  See \code{\link{RADdata}}.
+}
+  \item{taxaPloidy}{
+A single integer, or an integer vector with one value per taxon, indicating
+ploidy.  See \code{\link{RADdata}}.
 }
   \item{contamRate}{
 Approximate rate of cross-contamination among samples.

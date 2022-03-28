@@ -78,7 +78,8 @@ NumericMatrix simGeno(NumericVector alleleFreq, IntegerVector alleles2loc, int n
 // progGeno and genoProbs come from .buildProgProb
 // [[Rcpp::export]]
 NumericMatrix simGenoMapping(NumericVector donorGeno, NumericVector recurGeno, NumericMatrix progGeno,
-                             NumericVector genoProbs, IntegerVector alleles2loc, int nsam, int ploidy){
+                             NumericVector genoProbs, IntegerVector alleles2loc, int nsam,
+                             int ploidyDon, int ploidyRec){
   int nal = alleles2loc.size();
   IntegerVector alleles = seq(0, nal - 1);
   IntegerVector thesecol;
@@ -92,6 +93,7 @@ NumericMatrix simGenoMapping(NumericVector donorGeno, NumericVector recurGeno, N
   int genoindex;
   int thisal1;
   int thisal2 = 0;
+  int ploidyProg = progGeno.ncol();
   
   for(int L = 1; L <= maxL; L++){
     thesecol = alleles[alleles2loc == L];
@@ -104,15 +106,14 @@ NumericMatrix simGenoMapping(NumericVector donorGeno, NumericVector recurGeno, N
     NumericVector thisRecurCum = cumsum(thisRecurGeno);
     for(int s = 0; s < nsam; s++){
       // Determine which genotype this sample has
-      // NEED TO FIX; always gives 0
       genoindex = sample(ngeno, 1, false, genoProbs, false)[0];
       // For each allele in the genotype, determine its index in the output matrix
-      for(int a = 0; a < ploidy; a++){
+      for(int a = 0; a < ploidyProg; a++){
         // Number from 1 to 2*ploidy, indicating parent and copy
         thisal1 = progGeno(genoindex, a);
         // Higher numbers are for donor parent
-        if(thisal1 > ploidy){
-          thisal1 -= ploidy;
+        if(thisal1 > ploidyRec){
+          thisal1 -= ploidyRec;
           for(int b = 0; b < thisnal; b++){
             if(thisDonorCum[b] >= thisal1){
               thisal2 = thesecol[b];

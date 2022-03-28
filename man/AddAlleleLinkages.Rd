@@ -117,7 +117,7 @@ Msi01genes <- AddAlleleLinkages(Msi01genes, "popstruct", 1e4, 0.05)
 Msi01genes <- AddGenotypePriorProb_LD(Msi01genes, "popstruct")
 
 # Preview results
-Msi01genes$priorProbLD[[1]][,1:10,1:10]
+Msi01genes$priorProbLD[[1,2]][,1:10,1:10]
 }
 \keyword{ array }
 \keyword{ regression }

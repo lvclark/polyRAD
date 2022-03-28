@@ -12,7 +12,7 @@ not already in a format supported by \pkg{polyRAD}.
 }
 \usage{
 RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies, contamRate,
-        alleleNucleotides)
+        alleleNucleotides, taxaPloidy)
         
 \method{plot}{RADdata}(x, \dots)
 }
@@ -40,7 +40,7 @@ to indicate the reference sequence.
   \item{possiblePloidies}{
 A list, where each item in the list is an integer vector (or a numeric vector
 that can be converted to integer).  Each vector indicates an inheritance 
-pattern that SNPs in the dataset might obey.  \code{2} indicates diploid,
+pattern that markers in the dataset might obey.  \code{2} indicates diploid,
 \code{4} indicates autotetraploid, \code{c(2, 2)} indicates allotetraploid,
 \emph{etc.}
 }
@@ -53,6 +53,14 @@ A character vector with one value for each column of
 \code{alleleDepth}, indicating the DNA sequence for that allele.  Typically 
 only the sequence at variable sites is provided, although intervening 
 non-variable sequence can also be provided.
+}
+  \item{taxaPloidy}{
+An integer vector indicating ploidies of taxa.  If a single value is provided,
+it will be assumed that all taxa are the same ploidy.  Otherwise, one value
+must be provided for each taxon.  If unnamed, it is assumed that taxa are in
+the same order as the rows of \code{alleleDepth}.  If named, names must match
+the row names of \code{alleleDepth} but do not need to be in the same order.
+This value is used as a multiplier with \code{possiblePloidies}; see Details.
 }
 \item{x}{
 A \dQuote{RADdata} object.
@@ -78,6 +86,18 @@ of a related species and not the actual study species.  For the
 indicates whether non-variable sequence in between variants is included; this
 needs to be \code{FALSE} for other functions to determine the position of each
 variant within the set of tags.
+
+Inheritance mode is determined by multiplying the values in
+\code{possiblePloidies} by the values in \code{taxaPloidy} and dividing by two.
+For example, if you wanted to assume autotetraploid inheritance across the
+entire dataset, you could set \code{possiblePloidies = list(4)} and
+\code{taxaPloidy = 2}, or alternatively \code{possiblePloidies = list(2)} and
+\code{taxaPloidy = 4}.  To indicate a mix of diploid and allotetraploid
+inheritance across loci, set \code{possiblePloidies = list(2, c(2, 2))} and
+\code{taxaPloidy = 2}.  If taxa themselves vary in ploidy, provide one
+value of \code{taxaPloidy} for each taxon.  All inheritance modes listed in
+\code{possiblePloidies} apply equally to all taxa, even when ploidy varies
+by taxon.
 }
 
 \value{
@@ -106,6 +126,8 @@ belong to that allele.  Calculated as \eqn{locDepth - alleleDepth}. Used for
 likelihood estimations by other \pkg{polyRAD} functions.}
 \item{alleleNucleotides }{Identical to the argument provided to the 
 function.}
+\item{taxaPloidy }{A named integer vector with one value per taxon, indicating
+the ploidy of taxa.}
 
 The object additionally has several attributes (see \code{\link{attr}}):
 
@@ -141,13 +163,14 @@ mydepth <- matrix(sample(100, 16), nrow = 4, ncol = 4,
 mydata <- RADdata(mydepth, c(1L,1L,2L,2L), 
                   data.frame(row.names = c("loc1", "loc2"), Chr = c(1,1),
                              Pos = c(2000456, 5479880)),
-                  list(2, c(2,2)), 0.001, c("A", "G", "G", "T"))
+                  list(2, c(2,2)), 0.001, c("A", "G", "G", "T"), 6)
 
 # inspect the dataset
 mydata
 mydata$alleleDepth
 mydata$locDepth
 mydata$depthRatio
+mydata$taxaPloidy
 
 # the S3 class structure is flexible; other data can be added
 mydata$GPS <- data.frame(row.names = attr(mydata, "taxa"),

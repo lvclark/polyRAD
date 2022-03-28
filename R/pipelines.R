@@ -83,7 +83,7 @@ IterateHWE_LD <- function(object, selfing.rate = 0, tol = 1e-5,
 IteratePopStruct <- function(object, selfing.rate = 0, tol = 1e-3, 
                              excludeTaxa = GetBlankTaxa(object),
                              nPcsInit = 10, minfreq = 0.0001,
-                             overdispersion = 9){
+                             overdispersion = 9, maxR2changeratio = 0.05){
   if(!"RADdata" %in% class(object)){
     stop("RADdata object needed.")
   }
@@ -99,7 +99,7 @@ IteratePopStruct <- function(object, selfing.rate = 0, tol = 1e-3,
                 # (1 is a dummy value for while loop)
   
   message("Performing initial PCA and allele frequency estimation.")
-  object <- AddPCA(object, nPcsInit = nPcsInit)
+  object <- AddPCA(object, nPcsInit = nPcsInit, maxR2changeratio = maxR2changeratio)
   object <- AddAlleleFreqByTaxa(object)
   
   while(meanDiff > tol){
@@ -112,7 +112,8 @@ IteratePopStruct <- function(object, selfing.rate = 0, tol = 1e-3,
     object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePosteriorProb(object)
     object <- AddPCA(object, nPcsInit = dim(object$PCA)[2] + 1,
-                     minPcsOut = dim(object$PCA)[2])
+                     minPcsOut = dim(object$PCA)[2],
+                     maxR2changeratio = maxR2changeratio)
       # -> reasoning for PC number constraints: 
       #     tend to get more accuracy with more PCs,
       #     number of PCs going up and down prevents convergence of algorithm
@@ -135,7 +136,7 @@ IteratePopStructLD <- function(object, selfing.rate = 0, tol = 1e-3,
                              excludeTaxa = GetBlankTaxa(object),
                              nPcsInit = 10, minfreq = 0.0001,
                              LDdist = 1e4, minLDcorr = 0.2,
-                             overdispersion = 9){
+                             overdispersion = 9, maxR2changeratio = 0.05){
   if(!"RADdata" %in% class(object)){
     stop("RADdata object needed.")
   }
@@ -152,7 +153,7 @@ IteratePopStructLD <- function(object, selfing.rate = 0, tol = 1e-3,
   
   # Initialization before testing for LD
   message("Performing initial PCA and allele frequency estimation.")
-  object <- AddPCA(object, nPcsInit = nPcsInit)
+  object <- AddPCA(object, nPcsInit = nPcsInit, maxR2changeratio = maxR2changeratio)
   object <- AddAlleleFreqByTaxa(object)
   message("Performing preliminary genotype estimation.")
   object <- AddAlleleFreqHWE(object, excludeTaxa = excludeTaxa)
@@ -161,7 +162,8 @@ IteratePopStructLD <- function(object, selfing.rate = 0, tol = 1e-3,
   object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
   object <- AddGenotypePosteriorProb(object)
   object <- AddPCA(object, nPcsInit = dim(object$PCA)[2] + 1,
-                   minPcsOut = dim(object$PCA)[2])
+                   minPcsOut = dim(object$PCA)[2],
+                   maxR2changeratio = maxR2changeratio)
   object <- AddAlleleFreqByTaxa(object, minfreq = minfreq)
   
   # Test for LD
@@ -182,7 +184,8 @@ IteratePopStructLD <- function(object, selfing.rate = 0, tol = 1e-3,
     object <- AddPloidyChiSq(object, excludeTaxa = excludeTaxa)
     object <- AddGenotypePosteriorProb(object)
     object <- AddPCA(object, nPcsInit = dim(object$PCA)[2] + 1,
-                     minPcsOut = dim(object$PCA)[2])
+                     minPcsOut = dim(object$PCA)[2],
+                     maxR2changeratio = maxR2changeratio)
     # -> reasoning for PC number constraints: 
     #     tend to get more accuracy with more PCs,
     #     number of PCs going up and down prevents convergence of algorithm
@@ -198,9 +201,7 @@ IteratePopStructLD <- function(object, selfing.rate = 0, tol = 1e-3,
 PipelineMapping2Parents <- function(object,
                                     n.gen.backcrossing = 0,
                                     n.gen.intermating = 0,
-                                    n.gen.selfing = 0, 
-                                    donorParentPloidies = object$possiblePloidies,
-                                    recurrentParentPloidies = object$possiblePloidies,
+                                    n.gen.selfing = 0,
                                     minLikelihoodRatio = 10,
                                     freqAllowedDeviation = 0.05,
                                     freqExcludeTaxa = c(GetDonorParent(object),
@@ -215,10 +216,12 @@ PipelineMapping2Parents <- function(object,
   }
   donorParent <- GetDonorParent(object)
   recurrentParent <- GetRecurrentParent(object)
+  pld.don <- GetTaxaPloidy(object)[donorParent]
+  pld.rec <- GetTaxaPloidy(object)[recurrentParent]
   # estimate possible allele frequencies
   message("Making initial parameter estimates...")
-  allelesin <- max(sapply(donorParentPloidies, sum)) + 
-    max(sapply(recurrentParentPloidies, sum))
+  pld.max <- max(sapply(object$possiblePloidies, sum))
+  allelesin <- (pld.don + pld.rec) * pld.max / 2
   possfreq <- seq(0, 1, length.out = (n.gen.backcrossing + 1) * allelesin + 1)
   
   object <- AddAlleleFreqMapping(object, expectedFreqs = possfreq,
@@ -231,8 +234,6 @@ PipelineMapping2Parents <- function(object,
                                                  n.gen.backcrossing = n.gen.backcrossing,
                                                  n.gen.intermating = n.gen.intermating,
                                                  n.gen.selfing = n.gen.selfing,
-                                                 donorParentPloidies = donorParentPloidies,
-                                                 recurrentParentPloidies = recurrentParentPloidies,
                                                  minLikelihoodRatio = minLikelihoodRatio)
   object <- AddPloidyChiSq(object, excludeTaxa = freqExcludeTaxa)
   object <- AddGenotypePosteriorProb(object)

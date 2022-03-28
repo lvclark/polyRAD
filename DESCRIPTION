@@ -1,6 +1,6 @@
 Package: polyRAD
-Version: 1.6
-Date: 2022-02-14
+Version: 1.6.0.9000
+Date: 2022-03-22
 Title: Genotype Calling with Uncertainty from Sequencing Data in Polyploids and Diploids
 Authors@R: c(person("Lindsay V.", "Clark", email = "lvclark@illinois.edu",
                     role = c("aut", "cre"), 
@@ -21,8 +21,9 @@ Description: Read depth data from genotyping-by-sequencing (GBS) or restriction
   probability estimates of genotypes in polyploids or diploids.  The genotype 
   probabilities, posterior mean genotypes, or most probable genotypes can then
   be exported for downstream analysis.  'polyRAD' is described by Clark et al.
-  (2019) <doi:10.1534/g3.118.200913>.  A variant calling pipeline for highly
-  duplicated genomes is also included and is described by Clark et al. (2020)
-  <doi:10.1101/2020.01.11.902890>.
+  (2019) <doi:10.1534/g3.118.200913>, and the Hind/He statistic for marker
+  filtering is described by Clark et al. (2022) <doi:10.1186/s12859-022-04635-9>.
+  A variant calling pipeline for highly duplicated genomes is also included and
+  is described by Clark et al. (2020, Version 1) <doi:10.1101/2020.01.11.902890>.
 License: GPL (>= 2)
 URL: https://github.com/lvclark/polyRAD

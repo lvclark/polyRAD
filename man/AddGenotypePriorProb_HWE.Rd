@@ -38,8 +38,8 @@ genotype prior probabilities are estimated as:
 where \eqn{k} is the ploidy, \eqn{i} is the copy number of a given allele,
 and \eqn{p} is the allele frequency in the population.
 
-If the selfing rate is above zero, genotype prior probabilities are adjusted
-according to Equation 6 of de Silva et al. (2005):
+If the selfing rate is above zero and ploidy is even, genotype prior
+probabilities are adjusted according to Equation 6 of de Silva et al. (2005):
 
 \deqn{P(G_{self}) = (1 - s)(I - sA)^{-1}P(G)}{P(G_{self}) = (1 - s) * (I - sA)^{-1}P(G)}
 
@@ -52,15 +52,14 @@ of progeny after self-fertilization (each column summing to one).
 
 \value{
 A \dQuote{RADdata} object identical that passed to the function, but with
-data stored in two new slots:
+data stored in one new slot:
 
-\item{priorProb }{A list of matrices, with one matrix per possible ploidy.  
+\item{priorProb }{A two-dimensional list of matrices, with rows corresponding to
+\code{object$possiblePloidies} and columns corresponding to unique values in
+\code{object$taxaPloidy}. Each item in the list is a matrix.  
 For each matrix, allele copy number (from zero to the total
 ploidy) is in rows, and alleles are in columns.  Each value is the probability
 of sampling an individual with that allele copy number from the population.}
-\item{priorProbPloidies }{A list identical to \code{object$possiblePloidies}.
-It is in the same order as \code{$priorProb}, with each item indicating the
-inheritance mode for the corresponding prior probability matrix.}
 }
 
 \author{
@@ -93,8 +92,9 @@ exampleRAD <- AddGenotypePriorProb_HWE(exampleRAD)
 exampleRAD$alleleFreq
 exampleRAD$priorProb
 
-# try it with inbreeding
-exampleRAD2 <- AddGenotypePriorProb_HWE(exampleRAD, selfing.rate = 0.5)
+# try it with inbreeding, for diploids only
+exampleRAD2 <- SubsetByTaxon(exampleRAD, GetTaxa(exampleRAD)[exampleRAD$taxaPloidy == 2])
+exampleRAD2 <- AddGenotypePriorProb_HWE(exampleRAD2, selfing.rate = 0.5)
 exampleRAD2$priorProb
 }
 

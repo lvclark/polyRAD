@@ -14,7 +14,7 @@ readProcessSamMulti(alignfile,
                     expectedLoci = 1000,
                     min.ind.with.reads = 200,
                     min.ind.with.minor.allele = 10,
-                    possiblePloidies = list(2),
+                    possiblePloidies = list(2), taxaPloidy = 2L,
                     contamRate = 0.001,
                     expectedAlleles = expectedLoci * 15,
                     maxLoci = expectedLoci)
@@ -43,6 +43,10 @@ locus to be retained in the output.
   \item{possiblePloidies}{
 A list indicating expected inheritance modes for markers.  See
 \code{\link{RADdata}}.
+}
+  \item{taxaPloidy}{
+A single integer, or an integer vector with one value per taxon, indicating
+ploidy.  See \code{\link{RADdata}}.
 }
   \item{contamRate}{
 A number ranging from zero to one (although in practice probably less than 0.01)

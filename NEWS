@@ -1,3 +1,26 @@
+## Changes in v2.0 ##
+
+Multiploid populations are now supported. This includes natural populations with
+variable ploidy, as well as better support for mapping populations such as
+triploid populations derived from diploid x tetraploid crosses. Internally,
+slots containing genotype prior probabilities, likelihoods, and posterior
+probabilities are now formatted as two-dimensional lists, with possible
+inheritance modes across loci in the first dimension and varying ploidy across
+taxa in the second dimension, whereas previously these were one-dimensional
+lists reflecting inheritance modes across loci only. The priorProbPloidies slot
+has been removed as it is no longer needed.
+
+The AddPriorTimesLikelihood function has been removed.
+
+A warning is now returned if the user attempts to simulate self-fertilization
+in odd-ploidy individuals (i.e. using the selfing.rate argument in
+IterateHWE and related functions). The selfing rate is set to zero in these
+individuals to prevent an error.
+
+IteratePopStruct and IteratePopStructLD now have an argument called
+maxR2changeratio to allow more fine-tuning of the number of principal components
+used.
+
 ## Changes in v1.6 ##
 
 TestOverdispersion now prints a helpful suggestion for which overdispersion

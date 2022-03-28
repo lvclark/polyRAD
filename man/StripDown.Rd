@@ -44,7 +44,6 @@ are needed for export and downstream analysis, including:
 \item alleles2loc
 \item alleleNucleotides
 \item locTable
-\item priorProbPloidies
 \item possiblePloidies
 \item ploidyChiSq
 \item posteriorProb

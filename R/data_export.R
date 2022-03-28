@@ -179,9 +179,10 @@ Export_polymapR <- function(object, naIfZeroReads = TRUE,
   if(!is(object, "RADdata")){
     stop("RADdata object needed")
   }
-  if(length(object$posteriorProb) > 1){
+  if(nrow(object$posteriorProb) > 1){
     stop("Only one ploidy allowed for Export_polymapR.")
   }
+  # Should support parents of different ploidy; see polymapR::checkF1 documentation
   
   out <- t(GetProbableGenotypes(object, naIfZeroReads = naIfZeroReads,
                                 correctParentalGenos = TRUE)[[1]])
@@ -224,17 +225,26 @@ Export_MAPpoly <- function(object, file, pheno = NULL, ploidyIndex = 1,
     stop("Taxa names should not have spaces.")
   }
   # Determine the ploidy
-  if(ploidyIndex > length(object$priorProbPloidies)){
-    stop("ploidyIndex should be the index of the desired ploidy within object$priorProbPloidies (not the ploidy itself).")
+  if(ploidyIndex > length(object$possiblePloidies)){
+    stop("ploidyIndex should be the index of the desired ploidy within object$possiblePloidies (not the ploidy itself).")
   }
-  ploidy <- object$priorProbPloidies[[ploidyIndex]]
+  ploidy <- object$possiblePloidies[[ploidyIndex]]
   if(length(ploidy) != 1){
     stop("Export is for autopolyploids only.")
   }
+  pld.r <- object$taxaPloidy[GetRecurrentParent(object)] * ploidy / 2
+  pld.d <- object$taxaPloidy[GetDonorParent(object)] * ploidy / 2
+  pld.p <- unique(object$taxaPloidy[progeny]) * ploidy / 2
+  if(length(pld.p) > 1){
+    stop("All progeny must be same ploidy")
+  }
+  if(pld.r != pld.d){
+    warning("MAPpoly may not support populations in which parents differ in ploidy.")
+  }
   
   # Get parent genotypes
-  donorGen <- object$likelyGeno_donor[as.character(ploidy),]
-  recurGen <- object$likelyGeno_recurrent[as.character(ploidy),]
+  donorGen <- object$likelyGeno_donor[as.character(pld.d),]
+  recurGen <- object$likelyGeno_recurrent[as.character(pld.r),]
   
   # Identify markers to use
   keepal <- which(!is.na(donorGen) & !is.na(recurGen) & 
@@ -257,7 +267,7 @@ Export_MAPpoly <- function(object, file, pheno = NULL, ploidyIndex = 1,
   }
   
   # Write file header
-  cat(c(paste("ploidy", ploidy),
+  cat(c(paste("ploidy", pld.p),
         paste("nind", length(progeny)),
         paste("nmrk", length(keepal)),
         paste("mrknames", paste(GetAlleleNames(object)[keepal], collapse = " ")),
@@ -281,26 +291,65 @@ Export_MAPpoly <- function(object, file, pheno = NULL, ploidyIndex = 1,
   # Write genotype posterior probabilities
   genotab <- data.frame(rep(GetAlleleNames(object)[keepal], each = length(progeny)),
                         rep(progeny, times = length(keepal)),
-                        matrix(round(object$posteriorProb[[ploidyIndex]][, progeny, keepal], digits),
+                        matrix(round(object$posteriorProb[[ploidyIndex,as.character(pld.p)]][, progeny, keepal], digits),
                                byrow = TRUE, nrow = length(progeny) * length(keepal),
-                               ncol = ploidy + 1))
+                               ncol = pld.p + 1))
   write.table(genotab, file = file, append = TRUE, quote = FALSE,
               col.names = FALSE, row.names = FALSE)
 }
 
-Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE, postmean = TRUE, digits = 3){
+Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE, postmean = TRUE,
+                            digits = 3, splitByPloidy = TRUE){
+  pldsums <- sapply(object$possiblePloidies, sum)
+  if(length(unique(pldsums)) > 1){
+    stop("Multiple ploidies possible for loci, but only one ploidy allowed by GWASpoly. Use SubsetByPloidy first.")
+  }
+  # only split files by ploidy if there are multiple ploidies
+  txpld <- sort(unique(GetTaxaPloidy(object)))
+  splitByPloidy <- splitByPloidy && length(txpld) > 1
+  
   if(postmean){
-    mygeno <- t(GetWeightedMeanGenotypes(object, maxval = max(sapply(object$possiblePloidies, sum)),
-                                         omit1allelePerLocus = TRUE,
-                                         omitCommonAllele = TRUE,
-                                         naIfZeroReads = naIfZeroReads))
-    mygeno <- round(mygeno, digits = digits)
+    if(splitByPloidy){
+      mygeno <- sapply(txpld,
+                       function(x){
+                         thesetaxa <- GetTaxaByPloidy(object, x)
+                         mat <- GetWeightedMeanGenotypes(SubsetByTaxon(object, thesetaxa),
+                                                  maxval = max(pldsums) * x / 2L,
+                                                  omit1allelePerLocus = TRUE,
+                                                  omitCommonAllele = TRUE,
+                                                  naIfZeroReads = naIfZeroReads)
+                         return(round(t(mat), digits = digits))
+                       },
+                       simplify = FALSE)
+      names(mygeno) <- as.character(txpld)
+    } else {
+      mygeno <- t(GetWeightedMeanGenotypes(object,
+                                           maxval = max(pldsums) *
+                                             max(GetTaxaPloidy(object)) / 2L,
+                                           omit1allelePerLocus = TRUE,
+                                           omitCommonAllele = TRUE,
+                                           naIfZeroReads = naIfZeroReads))
+      mygeno <- round(mygeno, digits = digits)
+    }
   } else {
     # matrix of discrete genotypes
     mygeno <- t(GetProbableGenotypes(object,
                                      omit1allelePerLocus = TRUE,
                                      omitCommonAllele = TRUE,
                                      naIfZeroReads = naIfZeroReads)$genotypes)
+    if(splitByPloidy){
+      mygeno <- sapply(txpld,
+                       function(x){
+                         thesetaxa <- GetTaxaByPloidy(object, x)
+                         return(mygeno[,thesetaxa])
+                       },
+                       simplify = FALSE)
+      names(mygeno) <- as.character(txpld)
+    } else {
+      if(length(unique(GetTaxaPloidy(object))) > 1){
+        warning("Individuals in dataset vary in ploidy, and genotypes are expressed as allele copy numbers.  GWASpoly assumptions may be violated.")
+      }
+    }
   }
   
   # get loci to correspond to these alleles
@@ -315,14 +364,28 @@ Export_GWASpoly <- function(object, file, naIfZeroReads = TRUE, postmean = TRUE,
   }
   
   # data frame for export
-  outdata <- data.frame(Marker = rownames(mygeno),
-                        Chrom = .chromosome_to_integer(loctable$Chr[locindex]),
-                        Position = loctable$Pos[locindex],
-                        mygeno,
-                        check.names = FALSE)
-  
-  # export
-  write.csv(outdata, file = file, row.names = FALSE, quote = FALSE)
+  if(splitByPloidy){
+    for(x in txpld){
+      xC <- as.character(x)
+      outdata <- data.frame(Marker = rownames(mygeno[[xC]]),
+                            Chrom = .chromosome_to_integer(loctable$Chr[locindex]),
+                            Position = loctable$Pos[locindex],
+                            mygeno[[xC]],
+                            check.names = FALSE)
+      write.csv(outdata,
+                file = sub("(\\.csv)?$", paste0("_", x, "x.csv"), file),
+                row.names = FALSE, quote = FALSE)
+    }
+  } else {
+    outdata <- data.frame(Marker = rownames(mygeno),
+                          Chrom = .chromosome_to_integer(loctable$Chr[locindex]),
+                          Position = loctable$Pos[locindex],
+                          mygeno,
+                          check.names = FALSE)
+    
+    # export
+    write.csv(outdata, file = file, row.names = FALSE, quote = FALSE)
+  }
 }
 
 RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE,
@@ -360,12 +423,12 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE,
                return(as.integer(names(which.max(table(x)))))
              }
            })
-  pld_per_loc <- sapply(object$priorProbPloidies, sum)[pld_ind_per_loc]
+  pld_per_loc <- sapply(object$possiblePloidies, sum)[pld_ind_per_loc]
   
   # Process data with internal RCpp function
   temp <- PrepVCFexport(geno, object$alleles2loc, object$alleleDepth,
                         object$alleleNucleotides, object$locTable, pld_per_loc,
-                        asSNPs)
+                        GetTaxaPloidy(object), asSNPs)
   REF <- Biostrings::DNAStringSet(temp$REF)
   ALT <- Biostrings::DNAStringSetList(temp$ALT)
   CHROM <- as.character(object$locTable$Chr)[temp$Lookup]
@@ -373,10 +436,11 @@ RADdata2VCF <- function(object, file = NULL, asSNPs = TRUE, hindhe = TRUE,
                 IRanges::IRanges(start = temp$POS, 
                                  width = BiocGenerics::width(REF)))
   fixed <- DataFrame(REF = REF, ALT = ALT)
-  cd <- DataFrame(row.names = GetTaxa(object))
+  cd <- DataFrame(row.names = GetTaxa(object),
+                  Ploidy = GetTaxaPloidy(object) * min(pld_per_loc) / 2L)
   if(ncol(sampleinfo) > 0){
     cd <- cbind(cd, sampleinfo[GetTaxa(object),])
-    colnames(cd) <- colnames(sampleinfo)
+    colnames(cd)[-1] <- colnames(sampleinfo)
   }
   DP <- t(object$locDepth[,as.character(temp$Lookup)])
   rownames(DP) <- NULL
@@ -453,8 +517,8 @@ Export_Structure <- function(object, file, includeDistances = FALSE,
                                naIfZeroReads = missingIfZeroReads)
   # get ploidy
   pind <- unique(geno$ploidy_index)
-  ploidies <- sapply(object$priorProbPloidies[pind], sum)
-  ploidy <- max(ploidies)
+  ploidies <- sapply(object$possiblePloidies[pind], sum)
+  ploidy <- max(ploidies) * max(GetTaxaPloidy(object)) / 2L
   stopifnot(all(geno$genotypes <= ploidy, na.rm = TRUE))
   # put data into Structure format (Rcpp function)
   strdata <- FormatStructure(geno$genotypes, object$alleles2loc, ploidy)
@@ -506,15 +570,17 @@ Export_Structure <- function(object, file, includeDistances = FALSE,
 }
 
 Export_adegenet_genind <- function(object, ploidyIndex = 1){
-  object <- SubsetByPloidy(object, ploidies = object$priorProbPloidies[ploidyIndex])
+  object <- SubsetByPloidy(object, ploidies = object$possiblePloidies[ploidyIndex])
   
   tab <- GetProbableGenotypes(object, omit1allelePerLocus = FALSE,
                               multiallelic = "correct")$genotypes
   colnames(tab) <- paste(sub("\\.", "_", GetLoci(object)[object$alleles2loc]),
                          object$alleleNucleotides, sep = ".")
+  pldT2 <- sum(object$possiblePloidies[[1]]) * GetTaxaPloidy(object)
+  stopifnot(all(pldT2 %% 2L == 0L))
   
   out <- methods::new("genind", tab = tab,
-             ploidy = sum(object$priorProbPloidies[[1]]),
+             ploidy = pldT2 %/% 2L,
              type = "codom")
 
   return(out)
@@ -526,22 +592,34 @@ Export_polymapR_probs <- function(object, maxPcutoff = 0.9,
   if(!is(object, "RADdata")){
     stop("RADdata object needed")
   }
-  if(length(object$posteriorProb) > 1){
+  if(nrow(object$posteriorProb) > 1){
     stop("Only one ploidy allowed for Export_polymapR_probs.")
   }
+  
   object <- RemoveUngenotypedLoci(object, removeNonvariant = TRUE)
-  p1 <- dim(object$posteriorProb[[1]])[1] # ploidy plus one
+  p1 <- max(sapply(object$posteriorProb[1,], function(x) dim(x)[1])) # ploidy plus one
   omitals <- OneAllelePerMarker(object, commonAllele = TRUE)
   keepals <- GetAlleleNames(object)[-omitals]
   
-  probmat <- matrix(object$posteriorProb[[1]][,,keepals],
+  probmat <- matrix(NA_real_,
                     nrow = nTaxa(object) * length(keepals),
                     ncol = p1,
-                    dimnames = list(NULL, paste0("P", seq_len(p1) - 1L)),
-                    byrow = TRUE)
+                    dimnames = list(NULL, paste0("P", seq_len(p1) - 1L)))
   out <- data.frame(SampleName = rep(GetTaxa(object), times = length(keepals)),
-                    MarkerName = rep(keepals, each = nTaxa(object)),
-                    probmat)
+                    MarkerName = rep(keepals, each = nTaxa(object)))
+  for(pld in colnames(object$posteriorProb)){
+    p1a <- dim(object$posteriorProb[[1,pld]])[1] # ploidy plus one for this set of taxa
+    thesetaxa <- dimnames(object$posteriorProb[[1,pld]])[[2]]
+    theserows <- out$SampleName %in% thesetaxa
+    stopifnot(identical(thesetaxa, unique(out$SampleName[theserows])))
+    probmat[theserows, 1:p1a] <-
+      matrix(object$posteriorProb[[1,pld]][,,keepals],
+             nrow = length(thesetaxa) * length(keepals),
+             ncol = p1a, byrow = TRUE)
+    # Note that .priorTimesLikelihood already uses even priors for the parents
+  }
+  out <- cbind(out, probmat)
+  
   genomat <- GetProbableGenotypes(object, omit1allelePerLocus = TRUE,
                                   omitCommonAllele = TRUE,
                                   correctParentalGenos = correctParentalGenos,

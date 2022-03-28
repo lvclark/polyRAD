@@ -52,7 +52,8 @@ Export_MAPpoly(object, file, pheno = NULL, ploidyIndex = 1,
                    GetBlankTaxa(object))],
                digits = 3)
 
-Export_GWASpoly(object, file, naIfZeroReads = TRUE, postmean = TRUE, digits = 3)
+Export_GWASpoly(object, file, naIfZeroReads = TRUE, postmean = TRUE, digits = 3,
+                splitByPloidy = TRUE)
 
 Export_Structure(object, file, includeDistances = FALSE, extraCols = NULL,
                  missingIfZeroReads = TRUE)
@@ -88,7 +89,7 @@ A data frame or matrix of phenotypic values, with progeny in rows and traits
 in columns.  Columns should be named.
 }
 \item{ploidyIndex}{
-Index, within \code{object$priorProbPloidies}, of the ploidy to be exported.
+Index, within \code{object$possiblePloidies}, of the ploidy to be exported.
 }
 \item{progeny}{
 A character vector indicating which individuals to export as progeny of the
@@ -113,6 +114,10 @@ mean genotypes in the output file.
 \item{postmean}{
 Logical. If \code{TRUE}, posterior mean genotypes will be output.  If
 \code{FALSE}, discrete genotypes will be output.
+}
+\item{splitByPloidy}{
+Logical. If \code{TRUE} and there are multiple \code{taxaPloidy} values in the
+dataset, multiple files are written, one per ploidy.
 }
 \item{includeDistances}{
 Logical. If \code{TRUE}, the second row of the Structure file will contain
@@ -150,11 +155,15 @@ If the chromosomes in \code{object$locTable} are in character format,
 \code{ExportGAPIT}, \code{Export_MAPpoly}, and \code{Export_GWASpoly} will
 attempt to extract chromosome numbers.
 
-Because \pkg{polymapR} allows only one ploidy, there must only be one possible
-ploidy for the progeny in the \code{RADdata} object (possibly with different
-ploidies for the parents, \emph{e.g.} 4x x 2x = 3x).  \pkg{MAPpoly} also only
+For \pkg{polymapR} there must only be one possible inheritance mode across loci
+(one value in \code{object$possiblePloidies}) in the \code{RADdata} object, although
+triploid F1 populations derived from diploid and tetraploid parents are allowed.
+See \code{\link{SubsetByPloidy}} for help reducing a \code{RADdata} object to a
+single inheritance mode.
+
+\pkg{MAPpoly} only
 allows one ploidy, but \code{Export_MAPpoly} allows the user to select which
-ploidy from the \code{RADdata} object to use.  (This is due to how internal
+inheritance mode from the \code{RADdata} object to use.  (This is due to how internal
 \pkg{polyRAD} functions are coded.)
 }
 \value{
@@ -196,7 +205,8 @@ write files but do not return
 an object.  Files output by \code{Export_GWASpoly} are comma delimited and
 in numeric format.  Sample and locus names are included in the file output
 by \code{Export_Structure}, and the number of rows for each sample is
-equal to the highest ploidy output by \code{GetProbableGenotypes}.
+equal to the highest ploidy as determined by the \code{taxaPloidy} slot and the
+output of \code{GetProbableGenotypes}.
 }
 \references{
 \bold{GAPIT and FarmCPU:}
@@ -334,12 +344,12 @@ mypheno <- matrix(rnorm(200), nrow = 100, ncol = 2,
 Export_MAPpoly(exampleRAD_mapping, file = outfile2, pheno = mypheno)
 
 # load data into MAPpoly
-# require(mappoly) # can uncomment once mappoly is on CRAN
-# mydata <- read_geno_dist(outfile2)
+# require(mappoly)
+# mydata <- read_geno_prob(outfile2)
 
 # export to GWASpoly
 outfile3 <- tempfile() # temporary file for example
-Export_GWASpoly(exampleRAD, outfile3)
+Export_GWASpoly(SubsetByPloidy(exampleRAD, list(2)), outfile3)
 
 # export to Structure
 outfile4 <- tempfile() # temporary file for example

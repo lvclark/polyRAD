@@ -198,35 +198,28 @@ List Hap2Hap(StringVector haps, std::string refhap, int pos){
 // Prepare GT strings for the VCF from a matrix of allele copy number.
 
 // [[Rcpp::export]]
-StringVector MakeGTstrings(IntegerMatrix genotypes, int ploidy) {
-  int nal = genotypes.ncol();
-  int nsam = genotypes.nrow();
-  IntegerVector thisgen(nal);
-  StringVector out(nsam);
+String MakeGTstring(IntegerVector genotype, int ploidy) {
+  int nal = genotype.size();
   int cp;
-  String thisstring;
+  String thisstring = "";
   
-  for(int s = 0; s < nsam; s++){
-    thisstring = "";
-    thisgen = genotypes(s, _);
-    if(any(is_na(thisgen))){
-      for(int k = 0; k < ploidy; k++){
-        thisstring += "./";
-      }
-    } else {
-      for(int a = 0; a < nal; a++){
-        cp = thisgen[a];
-        for(int c = 0; c < cp; c++){
-          thisstring += a;
-          thisstring += "/";
-        }
+  if(any(is_na(genotype))){
+    for(int k = 0; k < ploidy; k++){
+      thisstring += "./";
+    }
+  } else {
+    for(int a = 0; a < nal; a++){
+      cp = genotype[a];
+      for(int c = 0; c < cp; c++){
+        thisstring += a;
+        thisstring += "/";
       }
     }
-
-    thisstring.replace_last("/", "");
-    out[s] = thisstring;
   }
-  return out;
+  
+  thisstring.replace_last("/", "");
+
+  return thisstring;
 }
 
 // Make a faster lookup for allele indices, for when loci will be looped through
@@ -299,7 +292,8 @@ List FormatAD(IntegerMatrix depthmat){
 // [[Rcpp::export]]
 List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
                    IntegerMatrix alleleDepth, StringVector alleleNucleotides,
-                   DataFrame locTable, IntegerVector ploidy, bool asSNPs) {
+                   DataFrame locTable, IntegerVector ploidy,
+                   IntegerVector taxaPloidy, bool asSNPs) {
   int nloc = locTable.nrows();
   int nsam = genotypes.nrow();
   List alleleLookup = AlleleIndex(alleles2loc, nloc);
@@ -310,8 +304,8 @@ List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
   IntegerMatrix thesegeno;
   IntegerMatrix thesedepths;
   IntegerMatrix thesegeno1;
+  IntegerVector thisgeno;
   IntegerMatrix thesedepths1;
-  StringVector theseGT;
   List theseAD;
   int pos;
   int nsubloc;
@@ -324,6 +318,8 @@ List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
   List theseal;
   CharacterVector samplenames = rownames(genotypes);
   int pld;
+  int thispld;
+  std::string thisGT;
   
   // Convert haplotypes to SNPs and tally variants
   for(int L = 0; L < nloc; L++){
@@ -372,12 +368,15 @@ List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc,
       IntegerMatrix thismat = thesemats(i);
       thesegeno1 = ConvMatMult(thesegeno, thismat);
       thesedepths1 = ConvMatMult(thesedepths, thismat);
-      theseGT = MakeGTstrings(thesegeno1, pld);
       theseAD = FormatAD(thesedepths1);
-      outGT( _ , currsite) = theseGT;
       for(int s = 0; s < nsam; s++){
         IntegerVector theseAD1 = theseAD[s];
         outAD(currsite, s) = clone(theseAD1);
+        
+        thisgeno = thesegeno1(s, _);
+        thispld = pld * taxaPloidy[s] / 2;
+        thisGT = MakeGTstring(thisgeno, thispld);
+        outGT(s, currsite) = thisGT;
       }
       
       // Fill other data
@@ -409,7 +408,7 @@ alleles2loc <- c(1,1,1,2,2)
 genotypes <- matrix(c(2,0,2,0,4,
                       0,4,0,1,3,
                       1,1,2,2,2,
-                      4,0,0,4,0), nrow = 4, ncol = 5, byrow = TRUE)
+                      3,0,0,3,0), nrow = 4, ncol = 5, byrow = TRUE)
 depth <- matrix(sample(100, 20), nrow = 4, ncol = 5)
 depth[genotypes == 0] <- 0
 alnuc <- c("AA", "AG", "CA", "G", "T")
@@ -420,7 +419,7 @@ locTable <- data.frame(Chr = c("Chr01", "Chr03"),
                        Pos = c(101, 501),
                        Ref = c("AG", "G"),
                        stringsAsFactors = FALSE)
-out <- PrepVCFexport(genotypes, alleles2loc, depth, alnuc, locTable, c(4, 4), TRUE)
+out <- PrepVCFexport(genotypes, alleles2loc, depth, alnuc, locTable, c(2, 2), c(4, 4, 4, 3), TRUE)
 out
 */
 

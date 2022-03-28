@@ -2,7 +2,7 @@
 
 # RADdata class constructor ####
 RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies, 
-                    contamRate, alleleNucleotides){
+                    contamRate, alleleNucleotides, taxaPloidy){
   if(!is.integer(alleleDepth)){
     stop("alleleDepth must be in integer format.")
   }
@@ -52,8 +52,34 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   if(length(alleleNucleotides) != length(alleles2loc)){
     stop("Length of alleleNucleotides must be same as length of alleles2loc.")
   }
+  storage.mode(taxaPloidy) <- "integer"
+  if(length(taxaPloidy) == 1){
+    # repeat ploidy for all samples if only one is provided
+    taxaPloidy <- rep(taxaPloidy, times = nrow(alleleDepth))
+  }
+  if(length(taxaPloidy) != nrow(alleleDepth)){
+    stop("Need one ploidy for each taxon.")
+  }
+  if(any(is.na(taxaPloidy))){
+    stop("taxaPloidy must be integer.")
+  }
+  if(any(taxaPloidy < 1)){
+    stop("taxaPloidy must be positive integer.")
+  }
+  if(is.null(names(taxaPloidy))){
+    names(taxaPloidy) <- rownames(alleleDepth)
+  } else {
+    if(!setequal(names(taxaPloidy), rownames(alleleDepth))){
+      stop("Sample names must match between taxaPloidy and alleleDepth.")
+    }
+    taxaPloidy <- taxaPloidy[rownames(alleleDepth)]
+  }
+  if(!(all(unlist(possiblePloidies) %% 2L == 0L) || all(taxaPloidy %% 2L == 0L))){
+    stop("Either possiblePloidies or taxaPloidy must consist entirely of even numbers.")
+  }
   
   taxa <- dimnames(alleleDepth)[[1]]
+  names(taxaPloidy) <- taxa
   nTaxa <- dim(alleleDepth)[1]
   nLoci <- dim(locTable)[1]
   locDepth <- t(apply(alleleDepth, 1, function(x) tapply(x, alleles2loc, sum)))
@@ -75,7 +101,8 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
                         locTable = locTable, possiblePloidies = possiblePloidies,
                         locDepth = locDepth,
                         depthRatio = depthRatio, antiAlleleDepth = antiAlleleDepth,
-                        alleleNucleotides = alleleNucleotides), 
+                        alleleNucleotides = alleleNucleotides,
+                        taxaPloidy = taxaPloidy), 
                    class = "RADdata", taxa = taxa, nTaxa = nTaxa, nLoci = nLoci,
                    contamRate = contamRate))
 }
@@ -124,8 +151,11 @@ print.RADdata <- function(x, ...){
     }
     return(paste(prefix, suffix, "ploid (", paste(y, collapse = " "), ")", sep = ""))
   }
+  txp <- unique(x$taxaPloidy)
   for(pl in x$possiblePloidies){
-    cat(printPloidies(pl), sep = "\n")
+    for(tp in txp){
+      cat(printPloidies(pl * tp / 2L), sep = "\n")
+    }
   }
   if(!is.null(attr(x, "alleleFreqType"))){
     cat("", paste("Allele frequencies estimated for", attr(x, "alleleFreqType")),
@@ -240,49 +270,58 @@ AddGenotypeLikelihood.RADdata <- function(object, overdispersion = 9, ...){
   minfreq <- 1/nTaxa(object)/max(ploidies)
   alFreq[alFreq == 0] <- minfreq
   alFreq[alFreq == 1] <- 1 - minfreq
+  # get ploidies by taxa
+  tx_pld_unique <- sort(unique(GetTaxaPloidy(object)))
   
   # set up list for genotype likelihoods and loop through
-  object$genotypeLikelihood <- list()
-  length(object$genotypeLikelihood) <- length(ploidies)
+  object$genotypeLikelihood <- array(list(),
+                                     dim = c(length(ploidies),
+                                             length(tx_pld_unique)),
+                                     dimnames = list(NULL, as.character(tx_pld_unique)))
   # probability of getting each allele from contamination
   sampleContam <- attr(object, "contamRate") * alFreq
-  for(i in 1:length(ploidies)){
-    # get probability of sampling each allele from each possible genotype
-    sampleReal <- (0:ploidies[i])/ploidies[i] * (1 - attr(object, "contamRate"))
-    alleleProb <- matrix(0, nrow = length(sampleReal), 
-                         ncol = length(sampleContam))
-    for(j in 1:length(sampleReal)){
-      alleleProb[j,] <- sampleReal[j] + sampleContam
-    }
-    antiAlleleProb <- 1 - alleleProb
-    # multiply probabilities by overdispersion factor for betabinomial
-    alleleProb <- alleleProb * overdispersion
-    antiAlleleProb <- antiAlleleProb * overdispersion
-    
-    # get likelihoods
-    object$genotypeLikelihood[[i]] <- array(0, dim = c(ploidies[i]+1, 
-                                                  dim(object$alleleDepth)),
-                                       dimnames = list(as.character(0:ploidies[i]),
-                                                       GetTaxa(object),
-                                                       GetAlleleNames(object)))
-    for(j in 1:(ploidies[i]+1)){
-      # likelihoods under beta-binomial distribution
-      object$genotypeLikelihood[[i]][j,,] <- 
-        exp(object$depthSamplingPermutations +
-        sweep(lbeta(sweep(object$alleleDepth, 2, alleleProb[j,], "+"),
-                    sweep(object$antiAlleleDepth, 2, antiAlleleProb[j,], "+")),
-              2, lbeta(alleleProb[j,], antiAlleleProb[j,]), "-"))
-    }
-    # fix likelihoods where all are zero
-    totlik <- colSums(object$genotypeLikelihood[[i]])
-    toRecalculate <- which(totlik == 0, arr.ind = TRUE)
-    if(dim(toRecalculate)[1] > 0){
-      for(k in 1:dim(toRecalculate)[1]){
-        taxon <- toRecalculate[k,1]
-        allele <- toRecalculate[k,2]
-        # for rare cases where likelihood still not estimated, set to one
-        if(sum(object$genotypeLikelihood[[i]][, taxon, allele]) == 0){
-          object$genotypeLikelihood[[i]][, taxon, allele] <- 1
+  for(i in seq_along(ploidies)){
+    for(h in seq_along(tx_pld_unique)){
+      pldtot <- sum(object$possiblePloidies[[i]]) * tx_pld_unique[h] / 2L
+      # get probability of sampling each allele from each possible genotype
+      sampleReal <- (0:pldtot)/pldtot * (1 - attr(object, "contamRate"))
+      alleleProb <- matrix(0, nrow = length(sampleReal), 
+                           ncol = length(sampleContam))
+      for(j in seq_along(sampleReal)){
+        alleleProb[j,] <- sampleReal[j] + sampleContam
+      }
+      antiAlleleProb <- 1 - alleleProb
+      # multiply probabilities by overdispersion factor for betabinomial
+      alleleProb <- alleleProb * overdispersion
+      antiAlleleProb <- antiAlleleProb * overdispersion
+      
+      thesetaxa <- GetTaxaByPloidy(object, tx_pld_unique[h])
+      
+      # get likelihoods
+      object$genotypeLikelihood[[i,h]] <- array(0, dim = c(pldtot+1, 
+                                                         length(thesetaxa), nAlleles(object)),
+                                              dimnames = list(as.character(0:pldtot),
+                                                              thesetaxa,
+                                                              GetAlleleNames(object)))
+      for(j in 1:(pldtot+1)){
+        # likelihoods under beta-binomial distribution
+        object$genotypeLikelihood[[i,h]][j,,] <- 
+          exp(object$depthSamplingPermutations[thesetaxa,] +
+                sweep(lbeta(sweep(object$alleleDepth[thesetaxa,, drop = FALSE], 2, alleleProb[j,], "+"),
+                            sweep(object$antiAlleleDepth[thesetaxa,, drop = FALSE], 2, antiAlleleProb[j,], "+")),
+                      2, lbeta(alleleProb[j,], antiAlleleProb[j,]), "-"))
+      }
+      # fix likelihoods where all are zero
+      totlik <- colSums(object$genotypeLikelihood[[i,h]])
+      toRecalculate <- which(totlik == 0, arr.ind = TRUE)
+      if(dim(toRecalculate)[1] > 0){
+        for(k in 1:dim(toRecalculate)[1]){
+          taxon <- toRecalculate[k,1]
+          allele <- toRecalculate[k,2]
+          # for rare cases where likelihood still not estimated, set to one
+          if(sum(object$genotypeLikelihood[[i,h]][, taxon, allele]) == 0){
+            object$genotypeLikelihood[[i,h]][, taxon, allele] <- 1
+          }
         }
       }
     }
@@ -299,8 +338,7 @@ GetLikelyGen.RADdata <- function(object, taxon, minLikelihoodRatio = 10){
   if(length(taxon) != 1){
     stop("Only one taxon can be passed to GetLikelyGen.")
   }
-  taxind <- match(taxon, GetTaxa(object))
-  if(is.na(taxind)){
+  if(!taxon %in% GetTaxa(object)){
     stop("taxon not found in object.")
   }
   if(length(minLikelihoodRatio) != 1 || is.na(minLikelihoodRatio) ||
@@ -314,23 +352,25 @@ GetLikelyGen.RADdata <- function(object, taxon, minLikelihoodRatio = 10){
     cat("Genotype likelihoods not found.  Estimating.", sep = "\n")
     object <- AddGenotypeLikelihood(object)
   }
-  npld <- length(object$genotypeLikelihood)
-  ploidies <- sapply(object$genotypeLikelihood, function(x) dim(x)[1] - 1)
+  npld <- nrow(object$genotypeLikelihood)
+  txpld <- GetTaxaPloidy(object)[taxon]
+  txpldchr <- as.character(txpld)
+  ploidies <- sapply(object$genotypeLikelihood[,txpldchr], function(x) dim(x)[1] - 1)
   nAllele <- nAlleles(object)
   
   outmat <- matrix(NA_integer_, nrow = npld, ncol = nAllele,
                    dimnames = list(as.character(ploidies), 
                                    GetAlleleNames(object)))
   for(i in 1:npld){
-    nonNaAlleles <- which(!is.na(object$genotypeLikelihood[[i]][1,taxind,]))
+    nonNaAlleles <- which(!is.na(object$genotypeLikelihood[[i,txpldchr]][1,taxon,]))
     # get the most likely genotype
-#    outmat[i,nonNaAlleles] <- apply(object$genotypeLikelihood[[i]][,taxind,nonNaAlleles], 2, which.max) - 1 # R version
-    outmat[i,nonNaAlleles] <- BestGenos(object$genotypeLikelihood[[i]][,taxind,nonNaAlleles],
+#    outmat[i,nonNaAlleles] <- apply(object$genotypeLikelihood[[i,txpldchr]][,taxon,nonNaAlleles], 2, which.max) - 1 # R version
+    outmat[i,nonNaAlleles] <- BestGenos(object$genotypeLikelihood[[i,txpldchr]][,taxon,nonNaAlleles],
                                         ploidies[i], 1, length(nonNaAlleles)) # Rcpp function
     # remove genotypes that don't meet the likelihood ratio threshold
     if(minLikelihoodRatio > 1){
       # get likelihood ratios
-      myrat <- apply(object$genotypeLikelihood[[i]][,taxind,nonNaAlleles], 2, 
+      myrat <- apply(object$genotypeLikelihood[[i,txpldchr]][,taxon,nonNaAlleles], 2, 
                      function(x){
                        xmxind <- which.max(x)
                        xsecond <- max(x[-xmxind])
@@ -352,19 +392,16 @@ EstimateParentalGenotypes.RADdata <-
            donorParent = GetDonorParent(object), 
            recurrentParent = GetRecurrentParent(object), n.gen.backcrossing = 0,
            n.gen.intermating = 0,
-           n.gen.selfing = 0, donorParentPloidies = object$possiblePloidies,
-           recurrentParentPloidies = object$possiblePloidies,
+           n.gen.selfing = 0,
            minLikelihoodRatio = 10, ...){
-    if(any(!donorParentPloidies %in% object$possiblePloidies) ||
-       any(!recurrentParentPloidies %in% object$possiblePloidies)){
-      # make sure we have all parental ploidies so we can get likelihoods 
-      ### change this? ploidy by individual in future?
-      stop("All parent ploidies must be in the possible ploidies for the object")
-    }
+    
+    pld.don <- GetTaxaPloidy(object)[donorParent]
+    pld.rec <- GetTaxaPloidy(object)[recurrentParent]
+
     if(is.null(object$alleleFreq) || attr(object,"alleleFreqType") != "mapping"){
       message("Allele frequencies for mapping population not found.  Estimating.")
-      allelesin <- max(sapply(donorParentPloidies, sum)) + 
-        max(sapply(recurrentParentPloidies, sum))
+      pld.max <- max(sapply(object$possiblePloidies, sum))
+      allelesin <- (pld.don + pld.rec) * pld.max / 2
       possfreq <- seq(0, 1, length.out = (n.gen.backcrossing + 1) * allelesin + 1)
       alldev <- (possfreq[2] - possfreq[1])/2
       object <- AddAlleleFreqMapping(object, allowedDeviation = alldev, 
@@ -374,81 +411,66 @@ EstimateParentalGenotypes.RADdata <-
       message("Genotype likelihoods not found.  Estimating.")
       object <- AddGenotypeLikelihood(object)
     }
-    
-    pldtot <- sapply(object$genotypeLikelihood, function(x) dim(x)[1] - 1)
-    pldtot.don <- pldtot[pldtot %in% sapply(donorParentPloidies, sum)]
-    pldtot.rec <- pldtot[pldtot %in% sapply(recurrentParentPloidies, sum)]
+
     likelyGen.don <- GetLikelyGen(object, donorParent, 
-                                  minLikelihoodRatio = minLikelihoodRatio)[as.character(pldtot.don),,drop = FALSE]
+                                  minLikelihoodRatio = minLikelihoodRatio)
     likelyGen.rec <- GetLikelyGen(object, recurrentParent,
-                                  minLikelihoodRatio = minLikelihoodRatio)[as.character(pldtot.rec),,drop = FALSE]
-    # combinations of parent ploidies that match list of progeny ploidies
-    pldcombos <- matrix(NA, nrow = 0, ncol = 2, 
-                        dimnames = list(NULL,c("donor","recurrent")))
+                                  minLikelihoodRatio = minLikelihoodRatio)
+
     # matrix of expected allele frequencies for all possible genotypes and ploidies
-    expfreq_byPloidy <- list()
-    # find possible combinations of parent ploidies, and possible expected allele frequencies
-    for(pl.d in pldtot.don){
-      for(pl.r in pldtot.rec){
-        if((pl.d/2 + pl.r/2) %in% pldtot && (n.gen.backcrossing == 0 || pl.d == pl.r)){
-          pldcombos <- rbind(pldcombos, matrix(c(pl.d, pl.r), nrow = 1, ncol = 2))
-          
-          expfreq_byPloidy[[length(expfreq_byPloidy) + 1]] <- matrix(nrow = pl.d+1, ncol = pl.r+1)
-          for(gen.d in 0:pl.d){
-            for(gen.r in 0:pl.r){
-              expfreq_byPloidy[[length(expfreq_byPloidy)]][gen.d + 1, gen.r + 1] <- 
-                (gen.d * 0.5^n.gen.backcrossing + gen.r * (2 - 0.5^n.gen.backcrossing))/
-                (pl.d + pl.r)
-            }
-          }
+    npld <- nrow(object$genotypeLikelihood)
+    expfreq_byPloidy <- vector(mode = "list", length = npld)
+    # do allele frequencies match parent genotypes?
+    freqMatchGen <- matrix(FALSE, nrow = npld, ncol = nAlleles(object))
+    # find possible expected allele frequencies, see where they match parental genos
+    for(i in seq_len(npld)){
+      pl.d <- dim(object$genotypeLikelihood[[i,as.character(pld.don)]])[1] - 1L
+      pl.r <- dim(object$genotypeLikelihood[[i,as.character(pld.rec)]])[1] - 1L
+      expfreq_byPloidy[[i]] <- matrix(nrow = pl.d+1, ncol = pl.r+1)
+      for(gen.d in 0:pl.d){
+        for(gen.r in 0:pl.r){
+          expfreq_byPloidy[[i]][gen.d + 1, gen.r + 1] <-
+            (gen.d * 0.5^n.gen.backcrossing + gen.r * (2 - 0.5^n.gen.backcrossing))/
+            (pl.d + pl.r)
         }
       }
-    }
-    
-    # do allele frequencies match parent genotypes?
-    freqMatchGen <- matrix(FALSE, nrow = dim(pldcombos)[1], ncol = nAlleles(object))
-    for(i in 1:dim(pldcombos)[1]){
-      thisgen.don <- likelyGen.don[as.character(pldcombos[i,"donor"]),]
-      thisgen.rec <- likelyGen.rec[as.character(pldcombos[i,"recurrent"]),]
+      
+      thisgen.don <- likelyGen.don[i,]
+      thisgen.rec <- likelyGen.rec[i,]
+      
       expfreq <- (thisgen.don * 0.5^n.gen.backcrossing + 
-                    thisgen.rec * (2 - 0.5^n.gen.backcrossing))/(pldcombos[i,"donor"] + 
-                                                                   pldcombos[i,"recurrent"])
+                    thisgen.rec * (2 - 0.5^n.gen.backcrossing))/(pl.d + pl.r)
+      
       freqMatchGen[i,] <- expfreq == object$alleleFreq
     }
+
     freqMatchGen[is.na(freqMatchGen)] <- FALSE
     allelesToFix <- which(colSums(freqMatchGen) == 0)
     # correct parental genotypes where appropriate, using rounded allele frequencies
     for(a in allelesToFix){
       thisfreq <- object$alleleFreq[a]
-      for(i in 1:dim(pldcombos)[1]){
+      for(i in seq_len(npld)){
         poss_matches <- which(expfreq_byPloidy[[i]] == thisfreq, arr.ind = TRUE) - 1
         if(nrow(poss_matches) == 0) next
         if(nrow(poss_matches) == 1){
           # only one possible match (i.e. when there is backcrossing)
-          likelyGen.don[as.character(pldcombos[i,"donor"]),a] <- 
-            unname(poss_matches[,1])
-          likelyGen.rec[as.character(pldcombos[i,"recurrent"]),a] <- 
-            unname(poss_matches[,2])
+          likelyGen.don[i,a] <- unname(poss_matches[,1])
+          likelyGen.rec[i,a] <- unname(poss_matches[,2])
         } else { # multiple possible matches
           # vector to contain genotype combo likelihoods
           thislikeli <- numeric(nrow(poss_matches)) 
-          # indices for current ploidies
-          plind.d <- which(pldtot == pldcombos[i,"donor"])
-          plind.r <- which(pldtot == pldcombos[i,"recurrent"])
           for(m in 1:nrow(poss_matches)){
             gen.d <- poss_matches[m,1]
             gen.r <- poss_matches[m,2]
             
             thislikeli[m] <- 
-              object$genotypeLikelihood[[plind.d]][gen.d + 1, donorParent, a] *
-              object$genotypeLikelihood[[plind.r]][gen.r + 1, recurrentParent, a]
+              object$genotypeLikelihood[[i,as.character(pld.don)]][gen.d + 1, donorParent, a] *
+              object$genotypeLikelihood[[i,as.character(pld.rec)]][gen.r + 1, recurrentParent, a]
           }
           bestcombo <- which(thislikeli == max(thislikeli))
           if(length(bestcombo) == 1){
-            likelyGen.don[as.character(pldcombos[i,"donor"]),a] <- 
-              unname(poss_matches[bestcombo, 1])
-            likelyGen.rec[as.character(pldcombos[i,"recurrent"]),a] <- 
-              unname(poss_matches[bestcombo, 2])
+            likelyGen.don[i,a] <- unname(poss_matches[bestcombo, 1])
+            likelyGen.rec[i,a] <- unname(poss_matches[bestcombo, 2])
           }
         }
       }
@@ -457,7 +479,6 @@ EstimateParentalGenotypes.RADdata <-
     # save corrected parental genotypes to object
     object$likelyGeno_donor <- likelyGen.don
     object$likelyGeno_recurrent <- likelyGen.rec
-    object$pldcombos <- pldcombos # this is needed to add genotype prior prob
     return(object)
 }
 # for a mapping population with two parents, get prior genotype probabilities
@@ -469,76 +490,43 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     donorParent = GetDonorParent(object), 
     recurrentParent = GetRecurrentParent(object), n.gen.backcrossing = 0,
     n.gen.intermating = 0,
-    n.gen.selfing = 0, donorParentPloidies = object$possiblePloidies,
-    recurrentParentPloidies = object$possiblePloidies,
+    n.gen.selfing = 0,
     minLikelihoodRatio = 10, ...){
+  # Ploidy setup and error checking
+  pld.don <- GetTaxaPloidy(object)[donorParent]
+  pld.rec <- GetTaxaPloidy(object)[recurrentParent]
+  progeny <- setdiff(GetTaxa(object),
+                     c(donorParent, recurrentParent, GetBlankTaxa(object)))
+  pld.prg <- unique(GetTaxaPloidy(object)[progeny])
+  if(length(pld.prg) > 1){
+    stop("All progeny must be one ploidy.")
+  }
+  pld.exp <- (pld.don + pld.rec) / 2
+  for(i in seq_len(n.gen.backcrossing)){
+    pld.exp <- (pld.exp + pld.rec) / 2
+  }
+  if(pld.prg != pld.exp){
+    stop(paste("Progeny ploidy of", pld.prg, "specified but progeny ploidy of",
+               pld.exp, "expected."))
+  }
+  
   # get most likely genotype for the parents
   object <- EstimateParentalGenotypes(object, donorParent = donorParent, 
-                                      recurrentParent = recurrentParent, n.gen.backcrossing = n.gen.backcrossing,
+                                      recurrentParent = recurrentParent,
+                                      n.gen.backcrossing = n.gen.backcrossing,
                                       n.gen.intermating = n.gen.intermating,
-                                      n.gen.selfing = n.gen.selfing, donorParentPloidies = donorParentPloidies,
-                                      recurrentParentPloidies = recurrentParentPloidies,
+                                      n.gen.selfing = n.gen.selfing,
                                       minLikelihoodRatio = minLikelihoodRatio)
+  
   likelyGen.don <- object$likelyGeno_donor
   likelyGen.rec <- object$likelyGeno_recurrent
-  pldcombos <- object$pldcombos
-  
-  # function for deteriming ploidy of offspring (by index in possiblePloidies)
-  offspringPloidy <- function(pld1, pld2){ 
-    if(length(pld1) == length(pld2)){
-      newPld <- (pld1 + pld2)/2
-    } else {
-      newPld <- (sum(pld1) + sum(pld2))/2
-    }
-    newPld <- as.integer(newPld)
-    out <- which(sapply(object$possiblePloidies, function(x) identical(x, newPld)))
-    if(length(out) == 0){
-      out <- which(sapply(object$possiblePloidies, sum) == sum(newPld))
-    }
-    return(out)
-  }
-  
-  # expand ploidy combinations across allo and auto types, using index in possiblePloidies
-  pldtot2 <- sapply(object$possiblePloidies, sum)
-  if(n.gen.backcrossing == 0){
-    bcnames <- character(0)
-    bcloop <- integer(0)
-  } else {
-    bcloop <- 1:n.gen.backcrossing
-    bcnames <- paste("BC", bcloop, sep = "")
-  }
-  pldcombosExpand <- array(0L, dim = c(0, 4 + n.gen.backcrossing), 
-                           dimnames = list(NULL, c("donor","recurrent","F1",
-                                                   bcnames, "final")))
-  for(i in 1:dim(pldcombos)[1]){
-    thesepl.don <- which(pldtot2 == pldcombos[i,"donor"])
-    thesepl.rec <- which(pldtot2 == pldcombos[i,"recurrent"])
-    for(pl.d in thesepl.don){
-      for(pl.r in thesepl.rec){
-        pldcombosExpand <- rbind(pldcombosExpand, 
-                                 array(c(pl.d, pl.r, rep(NA, 2+n.gen.backcrossing)),
-                                       dim = c(1,4 + n.gen.backcrossing)))
-        newrow <- dim(pldcombosExpand)[1]
-        pldcombosExpand[newrow, "F1"] <- offspringPloidy(object$possiblePloidies[[pl.d]],
-                                                         object$possiblePloidies[[pl.r]])
-        thiscol <- 3
-        for(b in bcloop){
-          thiscol <- match(paste("BC", b, sep = ""), dimnames(pldcombosExpand)[[2]])
-          pldcombosExpand[newrow, thiscol] <-
-            offspringPloidy(object$possiblePloidies[[pl.r]], 
-                            object$possiblePloidies[[pldcombosExpand[newrow, thiscol - 1]]])
-        }
-        pldcombosExpand[newrow, "final"] <- pldcombosExpand[newrow, thiscol]
-      }
-    }
-  }
 
   # get prior genotype probabilities for F1
-  OutPriors <- list()
-  length(OutPriors) <- dim(pldcombosExpand)[1]
+  OutPriors <- vector(mode = "list", length = length(object$possiblePloidies))
   for(i in 1:length(OutPriors)){
-    donorPld <- object$possiblePloidies[[pldcombosExpand[i,"donor"]]]
-    recurPld <- object$possiblePloidies[[pldcombosExpand[i,"recurrent"]]]
+    thispld <- object$possiblePloidies[[i]]
+    donorPld <- thispld * pld.don / 2
+    recurPld <- thispld * pld.rec / 2
     theseDonorGen <- likelyGen.don[as.character(sum(donorPld)),]
     theseRecurGen <- likelyGen.rec[as.character(sum(recurPld)),]
     donorGamProb <- .gameteProb(.makeGametes(theseDonorGen, donorPld), donorPld)
@@ -546,52 +534,41 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     OutPriors[[i]] <- .progenyProb(donorGamProb, recurGamProb)
   }
   # backcross
-  for(gen in bcloop){
+  pld.cur <- (pld.don + pld.rec) / 2
+  for(gen in seq_len(n.gen.backcrossing)){
     # reestimate prior probs
     OutPriorsLastGen <- OutPriors
-    OutPriors <- list()
-    length(OutPriors) <- dim(pldcombosExpand)[1]
+    OutPriors <- vector(mode = "list", length = length(object$possiblePloidies))
     for(i in 1:length(OutPriors)){
       ### consider just estimating recurrent gametes once since this is repetitive
-      recurPld <- object$possiblePloidies[[pldcombosExpand[i,"recurrent"]]]
+      recurPld <- object$possiblePloidies[[i]] * pld.rec / 2
       theseRecurGen <- likelyGen.rec[as.character(sum(recurPld)),]
       recurGamProb <- .gameteProb(.makeGametes(theseRecurGen, recurPld), recurPld)
       # get gamete prob for current population
-      currPld <- object$possiblePloidies[[pldcombosExpand[i,paste("BC", gen, sep = "")]]]
+      currPld <- object$possiblePloidies[[i]] * pld.cur / 2
       currGamProb <- .gameteProbPop(OutPriorsLastGen[[i]], currPld)
       # update genotype priors
       OutPriors[[i]] <- .progenyProb(recurGamProb, currGamProb)
+      pld.cur <- (pld.cur + pld.rec) / 2
     }
   }
   # intermate (random mating within the population)
-  if(n.gen.intermating == 0){
-    mateloop <- integer(0)
-  } else {
-    mateloop <- 1:n.gen.intermating
-  }
-  for(gen in mateloop){
+  for(gen in seq_len(n.gen.intermating)){
     OutPriorsLastGen <- OutPriors
-    OutPriors <- list()
-    length(OutPriors) <- dim(pldcombosExpand)[1]
+    OutPriors <- vector(mode = "list", length = length(object$possiblePloidies))
     for(i in 1:length(OutPriors)){
-      currPld <- object$possiblePloidies[[pldcombosExpand[i,"final"]]]
+      currPld <- object$possiblePloidies[[i]] * pld.cur / 2
       currGamProb <- .gameteProbPop(OutPriorsLastGen[[i]], currPld)
       OutPriors[[i]] <- .progenyProb(currGamProb, currGamProb)
     }
   }
   # self (everything in population is self-fertilized)
-  if(n.gen.selfing == 0){
-    selfloop <- integer(0)
-  } else {
-    selfloop <- 1:n.gen.selfing
-  }
-  for(gen in selfloop){
+  for(gen in seq_len(n.gen.selfing)){
     # reestimate prior probs
     OutPriorsLastGen <- OutPriors
-    OutPriors <- list()
-    length(OutPriors) <- dim(pldcombosExpand)[1]
+    OutPriors <- vector(mode = "list", length = length(object$possiblePloidies))
     for(i in 1:length(OutPriors)){
-      currPld <- object$possiblePloidies[[pldcombosExpand[i,"final"]]]
+      currPld <- object$possiblePloidies[[i]] * pld.cur / 2
       OutPriors[[i]] <- .selfPop(OutPriorsLastGen[[i]], currPld)
     }
   }
@@ -600,12 +577,13 @@ AddGenotypePriorProb_Mapping2Parents.RADdata <- function(object,
     dimnames(OutPriors[[i]]) <- list(as.character(0:(dim(OutPriors[[i]])[1] - 1)),
                                      GetAlleleNames(object))
   }
-
-  object$priorProb <- OutPriors
-  object$priorProbPloidies <- object$possiblePloidies[pldcombosExpand[,"final"]]
-  object$donorPloidies <- object$possiblePloidies[pldcombosExpand[,"donor"]]
-  object$recurrentPloidies <- object$possiblePloidies[pldcombosExpand[,"recurrent"]]
-  attr(object, "priorType") <- "population" 
+  
+  # Add uniform priors for anything that's not progeny
+  object <- AddGenotypePriorProb_Even(object)
+  # Put progeny priors into the appropriate column
+  object$priorProb[,as.character(pld.prg)] <- OutPriors
+  
+  stopifnot(attr(object, "priorType") == "population")
   # --> indicates prior probs are estimated for whole pop, not by taxa
   return(object)
 }
@@ -617,16 +595,24 @@ AddGenotypePriorProb_HWE.RADdata <- function(object, selfing.rate = 0, ...){
   if(is.null(object$alleleFreq) || attr(object, "alleleFreqType") != "HWE"){
     stop("Allele frequencies not estimated under HWE.")
   }
-  priors <- list()
-  length(priors) <- length(object$possiblePloidies)
+
+  tx_pld_unique <- sort(unique(GetTaxaPloidy(object)))
+  # array of priors by marker, with marker inheritance patterns in rows and
+  # individual ploidies in columns.
+  priors <- array(list(),
+                  dim = c(length(object$possiblePloidies),
+                          length(tx_pld_unique)),
+                  dimnames = list(NULL, as.character(tx_pld_unique)))
   
-  for(i in 1:length(priors)){
-    priors[[i]] <- .HWEpriors(object$alleleFreq, object$possiblePloidies[[i]],
-                              selfing.rate)
+  for(i in seq_along(object$possiblePloidies)){
+    for(j in seq_along(tx_pld_unique)){
+      priors[[i, j]] <- .HWEpriors(object$alleleFreq,
+                                   object$possiblePloidies[[i]] * tx_pld_unique[j] / 2L,
+                                   selfing.rate)
+    }
   }
   
   object$priorProb <- priors
-  object$priorProbPloidies <- object$possiblePloidies
   attr(object, "priorType") <- "population"
   return(object)
 }
@@ -635,17 +621,22 @@ AddGenotypePriorProb_Even <- function(object, ...){
   UseMethod("AddGenotypePriorProb_Even", object)
 }
 AddGenotypePriorProb_Even.RADdata <- function(object, ...){
-  priors <- list()
-  length(priors) <- length(object$possiblePloidies)
-  for(i in 1:length(priors)){
-    thispld <- sum(object$possiblePloidies[[i]])
-    priors[[i]] <- matrix(1/(thispld + 1), nrow = thispld + 1, 
-                          ncol = nAlleles(object),
-                          dimnames = list(as.character(0:thispld),
-                                          GetAlleleNames(object)))
+  tx_pld_unique <- sort(unique(GetTaxaPloidy(object)))
+  priors <- array(list(),
+                  dim = c(length(object$possiblePloidies),
+                          length(tx_pld_unique)),
+                  dimnames = list(NULL, as.character(tx_pld_unique)))
+  
+  for(i in seq_along(object$possiblePloidies)){
+    for(j in seq_along(tx_pld_unique)){
+      thispld <- sum(object$possiblePloidies[[i]] * tx_pld_unique[j] / 2L)
+      priors[[i, j]] <- matrix(1/(thispld + 1), nrow = thispld + 1, 
+                            ncol = nAlleles(object),
+                            dimnames = list(as.character(0:thispld),
+                                            GetAlleleNames(object)))
+    }
   }
   object$priorProb <- priors
-  object$priorProbPloidies <- object$possiblePloidies
   attr(object, "priorType") <- "population"
   return(object)
 }
@@ -657,6 +648,9 @@ AddPloidyLikelihood.RADdata <- function(object, excludeTaxa = GetBlankTaxa(objec
                                         minLikelihoodRatio = 50, ...){
   if(attr(object, "priorType") != "population"){
     stop("AddPloidyLikelihood not yet defined for priors estimated on a per-taxon basis.")
+  }
+  if(ncol(object$priorProb) > 1){
+    stop("AddPloidyLikelihood not yet defined for multiploid populations.")
   }
   taxa <- GetTaxa(object)
   if(!is.null(attr(object, "donorParent"))){
@@ -675,8 +669,8 @@ AddPloidyLikelihood.RADdata <- function(object, excludeTaxa = GetBlankTaxa(objec
   object$ploidyLikelihood <- matrix(nrow = length(object$priorProb),
                                     ncol = nAlleles,
                                     dimnames = list(NULL, GetAlleleNames(object)))
-  for(i in 1:length(object$priorProb)){
-    thisploidy <- dim(object$priorProb[[i]])[1] - 1
+  for(i in 1:nrow(object$priorProb)){
+    thisploidy <- dim(object$priorProb[[i,1]])[1] - 1
     thesegen <- sapply(likgen, function(x) x[as.character(thisploidy),])
     countstable <- matrix(0L, nrow = thisploidy + 1, ncol = dim(thesegen)[1],
                           dimnames = list(as.character(0:thisploidy),
@@ -686,11 +680,11 @@ AddPloidyLikelihood.RADdata <- function(object, excludeTaxa = GetBlankTaxa(objec
     }
     # get ploidy likelihood
     thislikehd <- sapply(1:nAlleles, function(x){
-      if(any(is.na(object$priorProb[[i]][,x]))){
+      if(any(is.na(object$priorProb[[i,1]][,x]))){
         NA
       } else {
         dmultinom(countstable[,x], 
-                  prob = object$priorProb[[i]][,x])
+                  prob = object$priorProb[[i,1]][,x])
       }
     })
     object$ploidyLikelihood[i,] <- thislikehd
@@ -722,61 +716,68 @@ AddPloidyChiSq.RADdata <- function(object, excludeTaxa = GetBlankTaxa(object),
   }
   
   nAllele <- nAlleles(object)
-  object$ploidyChiSq <- matrix(NA, nrow = length(object$priorProb),
+  object$ploidyChiSq <- matrix(0, nrow = nrow(object$priorProb),
                                ncol = nAllele,
                                dimnames = list(NULL, GetAlleleNames(object)))
-  object$ploidyChiSqP <- matrix(NA, nrow = length(object$priorProb),
-                                ncol = nAllele,
-                                dimnames = list(NULL, GetAlleleNames(object)))
+  # object$ploidyChiSqP <- matrix(NA, nrow = length(object$priorProb),
+  #                               ncol = nAllele,
+  #                               dimnames = list(NULL, GetAlleleNames(object)))
   
   # get weighted genotype tallies from genotype likelihoods
-  gental <- list()
-  length(gental) <- length(object$genotypeLikelihood)
-  for(i in 1:length(gental)){
-    # likelihood total for each individual and locus at this ploidy
-    totlik <- colSums(object$genotypeLikelihood[[i]][,taxa,])
-    # normalize likelihoods by total for each individual and locus
-    normlik <- sweep(object$genotypeLikelihood[[i]][,taxa,],
-                     2:3, totlik, FUN = "/")
-    # get population proportion of genotype likelihoods for allele and copy number
-    gental[[i]] <- apply(normlik, c(1,3), mean)
+  gental <- array(list(),
+                  dim = dim(object$genotypeLikelihood),
+                  dimnames = dimnames(object$genotypeLikelihood))
+  for(i in seq_len(nrow(gental))){
+    for(h in seq_len(ncol(gental))){
+      thesetaxa <- intersect(taxa, dimnames(object$genotypeLikelihood[[i,h]])[[2]])
+      # likelihood total for each individual and locus at this ploidy
+      totlik <- colSums(object$genotypeLikelihood[[i,h]][,thesetaxa,, drop = FALSE])
+      # normalize likelihoods by total for each individual and locus
+      normlik <- sweep(object$genotypeLikelihood[[i,h]][,thesetaxa,, drop = FALSE],
+                       2:3, totlik, FUN = "/")
+      # get population proportion of genotype likelihoods for allele and copy number
+      gental[[i,h]] <- apply(normlik, c(1,3), mean)
+    }
   }
   
   # loop through ploidies
-  for(i in 1:length(object$priorProb)){
-    thisploidy <- dim(object$priorProb[[i]])[1] - 1
-    whichlik <- which(sapply(object$genotypeLikelihood, 
-                             function(x) dim(x)[1] - 1) == thisploidy)
-    stopifnot(length(whichlik) == 1)
-    # get priors
-    if(attr(object, "priorType") == "population"){
-      thesepriors <- object$priorProb[[i]]
-    } else {
-      # convert priors by taxon to population priors
-      thesepriors <- rowMeans(aperm(object$priorProb[[i]], c(1,3,2)), dims = 2)
+  for(i in seq_len(nrow(object$priorProb))){
+    thisploidy <- sum(object$possiblePloidies[[i]])
+    whichlik <-
+      which(sapply(object$genotypeLikelihood[,1], 
+                   function(x){
+                     dim(x)[1] - 1L == thisploidy *
+                       as.integer(colnames(object$genotypeLikelihood)[1]) / 2L
+                   }))
+    stopifnot(length(whichlik) == 1L)
+    stopifnot(all(sapply(colnames(object$genotypeLikelihood),
+                         function(x){
+                           dim(object$genotypeLikelihood[[whichlik,x]])[1] - 1L ==
+                             thisploidy * as.integer(x) / 2L
+                         })))
+    for(h in seq_len(ncol(object$priorProb))){
+      # skip ploidies not examined in mapping pop
+      if(all(is.na(gental[[whichlik,h]]))) next
+      # get priors
+      if(attr(object, "priorType") == "population"){
+        thesepriors <- object$priorProb[[i,h]]
+      } else {
+        # convert priors by taxon to population priors
+        thesepriors <- rowMeans(aperm(object$priorProb[[i,h]], c(1,3,2)), dims = 2)
+      }
+      # estimate the components that are summed to make chi square
+      chisqcomp <- (gental[[whichlik,h]] - thesepriors)^2/
+        thesepriors * length(taxa)
+      # chi-squared statistic
+      thesechisq <- apply(chisqcomp, 2, function(x) sum(x[x != Inf]))
+      object$ploidyChiSq[i,] <- object$ploidyChiSq[i,] + thesechisq
     }
-    # estimate the components that are summed to make chi square
-    chisqcomp <- (gental[[whichlik]] - thesepriors)^2/
-      thesepriors * length(taxa)
     # degrees of freedom
-    theseDF <- colSums(thesepriors != 0) - 1
-    # chi-squared statistic
-    thesechisq <- apply(chisqcomp, 2, function(x) sum(x[x != Inf]))
-    object$ploidyChiSq[i,] <- thesechisq
+    # theseDF <- colSums(thesepriors != 0) - 1
     # p-values
-    object$ploidyChiSqP[i,] <- pchisq(thesechisq, theseDF, lower.tail = FALSE)
+    # object$ploidyChiSqP[i,] <- pchisq(thesechisq, theseDF, lower.tail = FALSE)
   }
   
-  return(object)
-}
-
-AddPriorTimesLikelihood <- function(object, ...){
-  UseMethod("AddPriorTimesLikelihood", object)
-}
-AddPriorTimesLikelihood.RADdata <- function(object, ...){
-  results <- .priorTimesLikelihood(object)
-  
-  object$priorTimesLikelihood <- results
   return(object)
 }
 
@@ -784,17 +785,17 @@ AddGenotypePosteriorProb <- function(object, ...){
   UseMethod("AddGenotypePosteriorProb", object)
 }
 AddGenotypePosteriorProb.RADdata <- function(object, ...){
-  if(is.null(object$priorTimesLikelihood)){
-    PTL <- .priorTimesLikelihood(object)
-  } else {
-    PTL <- object$priorTimesLikelihood
-  }
-  object$posteriorProb <- list()
-  length(object$posteriorProb) <- length(PTL)
-  for(i in 1:length(object$posteriorProb)){
-    totPriorTimesLikeli <- colSums(PTL[[i]])
-    object$posteriorProb[[i]] <- sweep(PTL[[i]], c(2,3),
-                                       totPriorTimesLikeli, FUN = "/")
+  PTL <- .priorTimesLikelihood(object)
+  object$posteriorProb <- array(list(),
+                                dim = dim(PTL),
+                                dimnames = dimnames(PTL))
+
+  for(i in seq_len(nrow(object$posteriorProb))){
+    for(h in seq_len(ncol(object$posteriorProb))){
+      totPriorTimesLikeli <- colSums(PTL[[i,h]])
+      object$posteriorProb[[i,h]] <- sweep(PTL[[i,h]], c(2,3),
+                                         totPriorTimesLikeli, FUN = "/")
+    }
   }
   return(object)
 }
@@ -824,7 +825,7 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
     altokeep <- altokeep[-mymatch]
   }  
   
-  nPloidies <- length(object$priorProb)
+  nPloidies <- nrow(object$priorProb)
   
   # get weights for ploidies to use for each allele
   if(is.null(object$ploidyChiSq)){
@@ -851,22 +852,27 @@ GetWeightedMeanGenotypes.RADdata <- function(object, minval = 0, maxval = 1,
                    ncol = length(altokeep),
                    dimnames = list(GetTaxa(object),
                                    GetAlleleNames(object)[altokeep]))
-  # loop through ploidies
+  # loop through locus ploidies
   for(i in 1:nPloidies){
-    # values to represent each allele copy number
-    thesegenval <- seq(minval, maxval, length.out = dim(object$posteriorProb[[i]])[1])
-    # weighted mean genotypes for this ploidy
-    thesewm <- rowSums(aperm(sweep(object$posteriorProb[[i]][,,altokeep],
-                                   1, thesegenval, "*"), 
-                             c(2,3,1)), 
-                       dims = 2)
-    # multiply by weight for this ploidy and add to total
-    thesewm <- sweep(thesewm, 2, ploidyweights[i,], "*")
-    nasofar <- is.na(wmgeno)
-    nanew <- is.na(thesewm)
-    add <- !nasofar & !nanew
-    wmgeno[nasofar] <- thesewm[nasofar]
-    wmgeno[add] <- wmgeno[add] + thesewm[add]
+    # loop through taxa ploidies
+    for(h in seq_len(ncol(object$priorProb))){
+      # taxa with this ploidy
+      thesetaxa <- dimnames(object$posteriorProb[[i,h]])[[2]]
+      # values to represent each allele copy number
+      thesegenval <- seq(minval, maxval, length.out = dim(object$posteriorProb[[i,h]])[1])
+      # weighted mean genotypes for this ploidy
+      thesewm <- rowSums(aperm(sweep(object$posteriorProb[[i,h]][,,altokeep, drop = FALSE],
+                                     1, thesegenval, "*"), 
+                               c(2,3,1)), 
+                         dims = 2)
+      # multiply by weight for this ploidy and add to total
+      thesewm <- sweep(thesewm, 2, ploidyweights[i,], "*")
+      nasofar <- is.na(wmgeno[thesetaxa, ,drop = FALSE])
+      nanew <- is.na(thesewm)
+      add <- !nasofar & !nanew
+      wmgeno[thesetaxa,][nasofar] <- thesewm[nasofar]
+      wmgeno[thesetaxa,][add] <- wmgeno[thesetaxa,][add] + thesewm[add]
+    }
   }
   # where there was no good ploidy, put in missing data
   wmgeno[,colSums(ploidyweights) == 0] <- NA
@@ -906,48 +912,58 @@ GetProbableGenotypes.RADdata <- function(object, omit1allelePerLocus = TRUE,
                    dimnames = list(GetTaxa(object), 
                                    GetAlleleNames(object)[allelesToExport]))
   # index of which ploidy was exported for each allele
-  if(length(object$posteriorProb) == 1){
+  if(nrow(object$posteriorProb) == 1){
     pldindex <- rep(1L, length(allelesToExport))
     ploidyindices <- 1L
   } else {
     if(multiallelic == "ignore"){
       pldindex <- BestPloidies(object$ploidyChiSq[,allelesToExport,drop=FALSE]) # Rcpp function
+      pldindex[pldindex == 0] <- NA # 0 means missing from BestPloidies Rcpp fn
     } else {
       # If we are going to look at multiallelic genotypes, get the best ploidy
       # for each locus instead of each allele.
       locChiSq <- t(rowsum(t(object$ploidyChiSq), object$alleles2loc))
       pldindex_loc <- BestPloidies(locChiSq)
       names(pldindex_loc) <- colnames(locChiSq)
+      pldindex_loc[pldindex_loc == 0] <- NA
       pldindex <- unname(pldindex_loc[as.character(object$alleles2loc)])
     }
     ploidyindices <- sort(unique(pldindex))
+    ploidyindices <- ploidyindices[!is.na(ploidyindices)]
   }
   names(pldindex) <- GetAlleleNames(object)[allelesToExport]
   
-  # loop through ploidies and fill in matrix
+  # loop through locus ploidies and fill in matrix
   for(p in ploidyindices){
     thesealleles <- which(pldindex == p)
-    thispld = dim(object$posteriorProb[[p]])[1] - 1L
-    outmat[,thesealleles] <- BestGenos(object$posteriorProb[[p]][,,allelesToExport[thesealleles]],
-                                       thispld, nTaxa(object), length(thesealleles)) # Rcpp function
-    # correct or delete genotypes that don't sum to ploidy
-    if(multiallelic %in% c("na", "correct")){
-      # fix up alleles2loc and determine number of loci
-      thisA2L <- object$alleles2loc[thesealleles]
-      theseLoci <- unique(thisA2L)
-      thisA2L <- match(thisA2L, theseLoci)
-      # run the Rcpp function do to the correction
-      outmat[,thesealleles] <- 
-        CorrectGenos(outmat[,thesealleles], 
-                     object$posteriorProb[[p]][,,allelesToExport[thesealleles]],
-                     thisA2L, nTaxa(object), thispld, length(thesealleles),
-                     length(theseLoci), multiallelic == "correct")
+    # loop through taxa ploidies
+    for(h in seq_len(ncol(object$posteriorProb))){
+      thispld <- dim(object$posteriorProb[[p,h]])[1] - 1L
+      thesetaxa <- dimnames(object$posteriorProb[[p,h]])[[2]]
+      outmat[thesetaxa,thesealleles] <-
+        BestGenos(object$posteriorProb[[p,h]][,thesetaxa,allelesToExport[thesealleles], drop = FALSE],
+                  thispld, length(thesetaxa), length(thesealleles)) # Rcpp function
+      # correct or delete genotypes that don't sum to ploidy
+      if(multiallelic %in% c("na", "correct")){
+        # fix up alleles2loc and determine number of loci
+        thisA2L <- object$alleles2loc[thesealleles]
+        theseLoci <- unique(thisA2L)
+        thisA2L <- match(thisA2L, theseLoci)
+        # run the Rcpp function do to the correction
+        outmat[thesetaxa,thesealleles] <- 
+          CorrectGenos(outmat[thesetaxa,thesealleles, drop = FALSE], 
+                       object$posteriorProb[[p,h]][,thesetaxa,allelesToExport[thesealleles], drop = FALSE],
+                       thisA2L, length(thesetaxa), thispld, length(thesealleles),
+                       length(theseLoci), multiallelic == "correct")
+      }
     }
+    
     # correct parent genotypes if this is a mapping population
     if(correctParentalGenos && !is.null(object$likelyGeno_donor) &&
        !is.null(object$likelyGeno_recurrent)){
-      pld.d <- sum(object$donorPloidies[[p]])
-      pld.r <- sum(object$recurrentPloidies[[p]])
+      mlt <- sum(object$possiblePloidies[[p]]) / 2
+      pld.d <- GetTaxaPloidy(object)[GetDonorParent(object)] * mlt
+      pld.r <- GetTaxaPloidy(object)[GetRecurrentParent(object)] * mlt
       outmat[GetDonorParent(object), thesealleles] <- 
         object$likelyGeno_donor[as.character(pld.d), allelesToExport[thesealleles]]
       outmat[GetRecurrentParent(object), thesealleles] <- 
@@ -1086,25 +1102,30 @@ AddGenotypePriorProb_ByTaxa.RADdata <- function(object, selfing.rate = 0, ...){
   if(is.null(object$alleleFreqByTaxa)){
     stop("Need to run AddAlleleFreqByTaxa first.")
   }
-  priors <- list()
-  length(priors) <- length(object$possiblePloidies)
+  tx_pld_unique <- sort(unique(GetTaxaPloidy(object)))
+  priors <- array(list(),
+                  dim = c(length(object$possiblePloidies),
+                          length(tx_pld_unique)),
+                  dimnames = list(NULL, as.character(tx_pld_unique)))
   
-  for(i in 1:length(priors)){
-    pldtot <- sum(object$possiblePloidies[[i]])
-    priors[[i]] <- array(NA, dim = c(pldtot + 1,
-                                     nTaxa(object), nAlleles(object)),
-                         dimnames = list(as.character(0:pldtot),
-                                         GetTaxa(object),
-                                         GetAlleleNames(object)))
-    for(j in 1:nTaxa(object)){
-      priors[[i]][,j,] <- .HWEpriors(object$alleleFreqByTaxa[j,], 
-                                     object$possiblePloidies[[i]],
-                                     selfing.rate)
+  for(i in seq_along(object$possiblePloidies)){
+    for(j in seq_along(tx_pld_unique)){
+      pldtot <- sum(object$possiblePloidies[[i]]) * tx_pld_unique[j] / 2L
+      thesetaxa <- GetTaxaByPloidy(object, tx_pld_unique[j])
+      priors[[i, j]] <- array(NA, dim = c(pldtot + 1,
+                                       length(thesetaxa), nAlleles(object)),
+                           dimnames = list(as.character(0:pldtot),
+                                           thesetaxa,
+                                           GetAlleleNames(object)))
+      for(k in thesetaxa){
+        priors[[i, j]][,k,] <- .HWEpriors(object$alleleFreqByTaxa[k,], 
+                                       object$possiblePloidies[[i]] * tx_pld_unique[j] / 2L,
+                                       selfing.rate)
+      }
     }
   }
   
   object$priorProb <- priors
-  object$priorProbPloidies <- object$possiblePloidies
   attr(object, "priorType") <- "taxon"
   return(object)
 }
@@ -1119,93 +1140,108 @@ AddGenotypePriorProb_LD.RADdata <- function(object, type, ...){
   if(!type %in% c("mapping", "hwe", "popstruct")){
     stop("type must be 'mapping', 'hwe', or 'popstruct'.")
   }
+
   # Set up list of arrays to contain prior probabilities based on linked
   # loci alone.
-  nPld <- length(object$posteriorProb)
-  object$priorProbLD <- list()
-  length(object$priorProbLD) <- nPld
+  nPld <- nrow(object$posteriorProb)
+  object$priorProbLD <- array(list(), dim = dim(object$posteriorProb),
+                              dimnames = dimnames(object$posteriorProb))
   # Find parents, to exclude from correlations in mapping populations
   if(type == "mapping"){
     parents <- c(GetDonorParent(object), GetRecurrentParent(object))
-    progeny <- which(!GetTaxa(object) %in% parents)
+    progeny <- setdiff(GetTaxa(object), c(parents, GetBlankTaxa(object)))
+    if(length(unique(GetTaxaPloidy(object)[progeny])) > 1){
+      stop("Only one progeny ploidy allowed for mapping populations.")
+    }
   }
   
   # Loop through the possible ploidies
-  for(pldIndex in 1:nPld){
-    # set up array to be put into priorProbLD slot.
-    # (Setting up the array *in* the slot caused a mysterious problem
-    # where object would get copied to a new memory address on each
-    # iteration through the alleles, but only when the Rcpp function
-    # ThirdDimProd was used instead of apply.)
-    thisarr <- 
-      array(dim = dim(object$posteriorProb[[pldIndex]]),
-            dimnames = dimnames(object$posteriorProb[[pldIndex]]))
-    # number of possible genotypes
-    ngen <- dim(object$posteriorProb[[pldIndex]])[1]
-    # Loop through alleles
-    for(a in 1:nAlleles(object)){
-      atab <- object$alleleLinkages[[a]]
-      if(length(atab$allele) == 0){ # no linked alleles
-        thisarr[,,a] <- 1/ngen
-      } else {             # linked alleles exist
-        # get posterior probabilities for linked alleles
-        thispost <- object$posteriorProb[[pldIndex]][,, atab$allele, drop = FALSE]
-        
-        # in a mapping population, make sure we are considering genotypes that are possible
-        if(type == "mapping"){
-          # genotypes possible for this allele
-          possibleThisAllele <- which(object$priorProb[[pldIndex]][,a] > 0)
-          # array to hold new probabilities for getting priors
-          newpost <- array(0, dim = dim(thispost))
-          for(a2 in atab$allele){
-            # genotypes possible for this linked allele
-            possibleLinked <- which(object$priorProb[[pldIndex]][,a2] > 0)
-            i <- match(a2, atab$allele)
-            if(length(possibleThisAllele) == 2 && length(possibleLinked) == 2){
-              # If there are only two possible genotypes for each, we know that all
-              # copies of alleles are linked and can treat them that way.
-              newpost[possibleThisAllele,progeny,i] <- 
-                thispost[possibleLinked,progeny,i] * atab$corr[i]^2 +
-                0.5 * (1 - atab$corr[i]^2)
-            } else {
-              # If any allele has more than two genotypes, we aren't sure of
-              # complete phasing.
-              # regress posterior probs for each allele copy number on all posterior probs
-              for(j in possibleThisAllele){
-                thisX <- thispost[possibleLinked[-1],, i]
-                if(is.vector(thisX)){
-                  thisX <- matrix(thisX, nrow = length(thisX), ncol = 1)
-                } else {
-                  thisX <- t(thisX)
+  for(pldIndex in seq_len(nPld)){
+    for(h in seq_len(ncol(object$priorProbLD))){
+      # number of possible genotypes
+      ngen <- dim(object$posteriorProb[[pldIndex,h]])[1]
+      # set up array to be put into priorProbLD slot.
+      # (Setting up the array *in* the slot caused a mysterious problem
+      # where object would get copied to a new memory address on each
+      # iteration through the alleles, but only when the Rcpp function
+      # ThirdDimProd was used instead of apply.)
+      thisarr <- 
+        array(1 / ngen, dim = dim(object$posteriorProb[[pldIndex,h]]),
+              dimnames = dimnames(object$posteriorProb[[pldIndex,h]]))
+      
+      # skip if this is a mapping pop and this taxaploidy doesn't have progeny
+      if(type == "mapping" && !all(progeny %in% dimnames(thisarr)[[2]])){
+        object$priorProbLD[[pldIndex,h]] <- thisarr
+        next
+      }
+      
+      # Loop through alleles
+      for(a in 1:nAlleles(object)){
+        atab <- object$alleleLinkages[[a]]
+        if(length(atab$allele) == 0){ # no linked alleles
+          thisarr[,,a] <- 1/ngen
+        } else {             # linked alleles exist
+          # get posterior probabilities for linked alleles
+          thispost <- object$posteriorProb[[pldIndex,h]][,, atab$allele, drop = FALSE]
+          
+          # in a mapping population, make sure we are considering genotypes that are possible
+          if(type == "mapping"){
+            # genotypes possible for this allele
+            possibleThisAllele <- which(object$priorProb[[pldIndex,h]][,a] > 0)
+            # array to hold new probabilities for getting priors
+            newpost <- array(0, dim = dim(thispost),
+                             dimnames = dimnames(thispost))
+            for(a2 in atab$allele){
+              # genotypes possible for this linked allele
+              possibleLinked <- which(object$priorProb[[pldIndex,h]][,a2] > 0)
+              i <- match(a2, atab$allele)
+              if(length(possibleThisAllele) == 2 && length(possibleLinked) == 2){
+                # If there are only two possible genotypes for each, we know that all
+                # copies of alleles are linked and can treat them that way.
+                newpost[possibleThisAllele,progeny,i] <- 
+                  thispost[possibleLinked,progeny,i] * atab$corr[i]^2 +
+                  0.5 * (1 - atab$corr[i]^2)
+              } else {
+                # If any allele has more than two genotypes, we aren't sure of
+                # complete phasing.
+                # regress posterior probs for each allele copy number on all posterior probs
+                for(j in possibleThisAllele){
+                  thisX <- thispost[possibleLinked[-1],, i]
+                  if(is.vector(thisX)){
+                    thisX <- matrix(thisX, nrow = length(thisX), ncol = 1,
+                                    dimnames = list(names(thisX), NULL))
+                  } else {
+                    thisX <- t(thisX)
+                  }
+                  thislm <- lm.fit(x = cbind(rep(1, length(progeny)), thisX[progeny,, drop=FALSE]),
+                                   y = object$posteriorProb[[pldIndex,h]][j, progeny, a])
+                  newpost[j,progeny,i] <- thislm$fitted.values
                 }
-                thislm <- lm.fit(x = cbind(rep(1, length(progeny)), thisX[progeny,, drop=FALSE]),
-                                 y = object$posteriorProb[[pldIndex]][j, progeny, a])
-                newpost[j,progeny,i] <- thislm$fitted.values
               }
             }
+            newpost[newpost < 0] <- 0
+            newpost[newpost > 1] <- 1
+            thispost <- newpost
+          } else { # for hwe or pop structure situations
+            # multiply by correlation coefficient
+            thispost <- sweep(thispost, 3, atab$corr^2, "*")
+            # add even priors for the remainder of the coefficient
+            thispost <- sweep(thispost, 3, (1 - atab$corr^2)/ngen, "+")
           }
-          newpost[newpost < 0] <- 0
-          newpost[newpost > 1] <- 1
-          thispost <- newpost
-        } else { # for hwe or pop structure situations
-          # multiply by correlation coefficient
-          thispost <- sweep(thispost, 3, atab$corr^2, "*")
-          # add even priors for the remainder of the coefficient
-          thispost <- sweep(thispost, 3, (1 - atab$corr^2)/ngen, "+")
-        }
-        
-        # multiply across alleles to get priors
-        if(length(atab$allele) == 1){
-          thisarr[,,a] <- thispost[,, 1]
-        } else {
-#          thisLDprior <- apply(thispost, c(1, 2), prod) # non-compiled version
-          thisLDprior <- ThirdDimProd(thispost, ngen, nTaxa(object)) # Rcpp function
-          thisLDprior <- sweep(thisLDprior, 2, colSums(thisLDprior), "/")
-          thisarr[,,a] <- thisLDprior
-        }
-      } # end of chunk for if there are linked alleles
-    } # end of loop through alleles
-    object$priorProbLD[[pldIndex]] <- thisarr
+          
+          # multiply across alleles to get priors
+          if(length(atab$allele) == 1){
+            thisarr[,,a] <- thispost[,, 1]
+          } else {
+            #          thisLDprior <- apply(thispost, c(1, 2), prod) # non-compiled version
+            thisLDprior <- ThirdDimProd(thispost, ngen, dim(thispost)[2]) # Rcpp function
+            thisLDprior <- sweep(thisLDprior, 2, colSums(thisLDprior), "/")
+            thisarr[,,a] <- thisLDprior
+          }
+        } # end of chunk for if there are linked alleles
+      } # end of loop through alleles
+      object$priorProbLD[[pldIndex,h]] <- thisarr
+    } # end of loop through taxa ploidies
   } # end of loop through ploidies
   
   return(object)
@@ -1379,6 +1415,48 @@ SetContamRate.RADdata <- function(object, value, ...){
   return(object)
 }
 
+SetTaxaPloidy <- function(object, value, ...){
+  UseMethod("SetTaxaPloidy", object)
+}
+SetTaxaPloidy.RADdata <- function(object, value, ...){
+  storage.mode(value) <- "integer"
+  if(length(value) != nTaxa(object)){
+    stop("Need one ploidy for each taxon.")
+  }
+  if(any(is.na(value))){
+    stop("taxaPloidy must be integer.")
+  }
+  if(any(value < 1)){
+    stop("taxaPloidy must be positive integer.")
+  }
+  if(!(all(unlist(object$possiblePloidies) %% 2L == 0L) ||
+       all(value %% 2L == 0L))){
+    stop("Either possiblePloidies or taxaPloidy must consist entirely of even numbers.")
+  }
+  if(!is.null(names(value))){
+    if(!setequal(names(value), GetTaxa(object))){
+      stop("Vector names do not match taxa names in object")
+    }
+    value <- value[GetTaxa(object)]
+  } else {
+    names(value) <- GetTaxa(object)
+  }
+  object$taxaPloidy <- value
+  return(object)
+}
+GetTaxaPloidy <- function(object, ...){
+  UseMethod("GetTaxaPloidy", object)
+}
+GetTaxaPloidy.RADdata <- function(object, ...){
+  return(object$taxaPloidy)
+}
+GetTaxaByPloidy <- function(object, ...){
+  UseMethod("GetTaxaByPloidy")
+}
+GetTaxaByPloidy.RADdata <- function(object, ploidy, ...){
+  return(GetTaxa(object)[GetTaxaPloidy(object) == ploidy])
+}
+
 # Functions for assigning taxa to specific roles ####
 SetDonorParent <- function(object, value){
   UseMethod("SetDonorParent", object)
@@ -1504,7 +1582,7 @@ CanDoGetWeightedMeanGeno <- function(object, ...){
 }
 CanDoGetWeightedMeanGeno.RADdata <- function(object, ...){
   return(!is.null(object$posteriorProb) && 
-           (!is.null(object$ploidyChiSq) || length(object$posteriorProb) == 1))
+           (!is.null(object$ploidyChiSq) || nrow(object$posteriorProb) == 1))
 }
 
 SubsetByTaxon <- function(object, ...){
@@ -1539,6 +1617,25 @@ SubsetByTaxon.RADdata <- function(object, taxa, ...){
   splitRADdata$depthRatio <- object$depthRatio[taxa, , drop = FALSE]
   splitRADdata$antiAlleleDepth <- object$antiAlleleDepth[taxa, , drop = FALSE]
   splitRADdata$alleleNucleotides <- object$alleleNucleotides
+  splitRADdata$taxaPloidy <- object$taxaPloidy[taxa]
+  
+  # all taxa ploidies after subsetting
+  # get ploidies by taxa
+  tx_pld_unique <- sort(unique(GetTaxaPloidy(splitRADdata)))
+  
+  # Internal function to subset genotypeLikelihood and similarly structured slots
+  subset2D3D <- function(slot){
+    out <- array(list(), dim = c(dim(slot)[1], length(tx_pld_unique)),
+                 dimnames = list(dimnames(slot)[[1]], as.character(tx_pld_unique)))
+    for(i in seq_len(nrow(slot))){
+      for(h in as.character(tx_pld_unique)){
+        thesetaxa <- intersect(GetTaxa(object)[taxa],
+                               dimnames(slot[[i,h]])[[2]])
+        out[[i, h]] <- slot[[i, h]][, thesetaxa,, drop = FALSE]
+      }
+    }
+    return(out)
+  }
   
   # slots that may have been added by other functions
   if(!is.null(object$depthSamplingPermutations)){
@@ -1550,18 +1647,16 @@ SubsetByTaxon.RADdata <- function(object, taxa, ...){
   }
   if(!is.null(object$genotypeLikelihood)){
     splitRADdata$genotypeLikelihood <- 
-      lapply(object$genotypeLikelihood, function(x) x[, taxa,, drop = FALSE])
+      subset2D3D(object$genotypeLikelihood)
   }
   if(!is.null(object$priorProb)){
-    if(length(dim(object$priorProb[[1]])) == 3){
+    if(length(dim(object$priorProb[[1,1]])) == 3){
       splitRADdata$priorProb <- 
-        lapply(object$priorProb, function(x) x[, taxa,, drop = FALSE])
+        subset2D3D(object$priorProb)
     } else {
-      splitRADdata$priorProb <- object$priorProb
+      splitRADdata$priorProb <- object$priorProb[,as.character(tx_pld_unique),
+                                                 drop = FALSE]
     }
-  }
-  if(!is.null(object$priorProbPloidies)){
-    splitRADdata$priorProbPloidies <- object$priorProbPloidies
   }
   if(!is.null(object$ploidyChiSq)){
     splitRADdata$ploidyChiSq <- object$ploidyChiSq
@@ -1571,7 +1666,7 @@ SubsetByTaxon.RADdata <- function(object, taxa, ...){
   }
   if(!is.null(object$posteriorProb)){
     splitRADdata$posteriorProb <- 
-      lapply(object$posteriorProb, function(x) x[, taxa,, drop = FALSE])
+      subset2D3D(object$posteriorProb)
   }
   if(!is.null(object$alleleFreqByTaxa)){
     splitRADdata$alleleFreqByTaxa <- object$alleleFreqByTaxa[taxa,, drop = FALSE]
@@ -1581,7 +1676,7 @@ SubsetByTaxon.RADdata <- function(object, taxa, ...){
   }
   if(!is.null(object$priorProbLD)){
     splitRADdata$priorProbLD <- 
-      lapply(object$priorProbLD, function(x) x[, taxa,, drop = FALSE])
+      subset2D3D(object$priorProbLD)
   }
   
   return(splitRADdata)
@@ -1626,6 +1721,7 @@ SubsetByLocus.RADdata <- function(object, loci, ...){
   splitRADdata$antiAlleleDepth <- object$antiAlleleDepth[, thesealleles, drop = FALSE]
   splitRADdata$alleleNucleotides <- object$alleleNucleotides[thesealleles]
   attr(splitRADdata$alleleNucleotides, "Variable_sites_only") <- attr(object$alleleNucleotides, "Variable_sites_only")
+  splitRADdata$taxaPloidy <- object$taxaPloidy
   
   # additional components that may exist if some processing has already been done
   if(!is.null(object$depthSamplingPermutations)){
@@ -1638,20 +1734,23 @@ SubsetByLocus.RADdata <- function(object, loci, ...){
   }
   if(!is.null(object$genotypeLikelihood)){
     splitRADdata$genotypeLikelihood <- 
-      lapply(object$genotypeLikelihood, function(x) x[,, thesealleles, drop = FALSE])
+      array(lapply(object$genotypeLikelihood, function(x) x[,, thesealleles, drop = FALSE]),
+            dim = dim(object$genotypeLikelihood),
+            dimnames = dimnames(object$genotypeLikelihood))
   }
   if(!is.null(object$priorProb)){
     if(length(dim(object$priorProb[[1]])) == 3){
       splitRADdata$priorProb <- 
-        lapply(object$priorProb, function(x) x[,, thesealleles, drop = FALSE])
+        array(lapply(object$priorProb, function(x) x[,, thesealleles, drop = FALSE]),
+              dim = dim(object$priorProb),
+              dimnames = dimnames(object$priorProb))
     }
     if(length(dim(object$priorProb[[1]])) == 2){
       splitRADdata$priorProb <- 
-        lapply(object$priorProb, function(x) x[, thesealleles, drop = FALSE])
+        array(lapply(object$priorProb, function(x) x[, thesealleles, drop = FALSE]),
+              dim = dim(object$priorProb),
+              dimnames = dimnames(object$priorProb))
     }
-  }
-  if(!is.null(object$priorProbPloidies)){
-    splitRADdata$priorProbPloidies <- object$priorProbPloidies
   }
   if(!is.null(object$ploidyChiSq)){
     splitRADdata$ploidyChiSq <- object$ploidyChiSq[, thesealleles, drop = FALSE]
@@ -1661,7 +1760,9 @@ SubsetByLocus.RADdata <- function(object, loci, ...){
   }
   if(!is.null(object$posteriorProb)){
     splitRADdata$posteriorProb <- 
-      lapply(object$posteriorProb, function(x) x[,, thesealleles, drop = FALSE])
+      array(lapply(object$posteriorProb, function(x) x[,, thesealleles, drop = FALSE]),
+            dim = dim(object$posteriorProb),
+            dimnames = dimnames(object$posteriorProb))
   }
   if(!is.null(object$alleleFreqByTaxa)){
     splitRADdata$alleleFreqByTaxa <- object$alleleFreqByTaxa[, thesealleles, drop = FALSE]
@@ -1679,7 +1780,9 @@ SubsetByLocus.RADdata <- function(object, loci, ...){
   }
   if(!is.null(object$priorProbLD)){
     splitRADdata$priorProbLD <- 
-      lapply(object$priorProbLD, function(x) x[,, thesealleles, drop = FALSE])
+      array(lapply(object$priorProbLD, function(x) x[,, thesealleles, drop = FALSE]),
+            dim = dim(object$priorProbLD),
+            dimnames = dimnames(object$priorProbLD))
   }
   if(!is.null(object$alleleLinkages)){
     splitRADdata$alleleLinkages <- object$alleleLinkages[thesealleles]
@@ -1692,9 +1795,10 @@ SubsetByPloidy <- function(object, ...){
 }
 SubsetByPloidy.RADdata <- function(object, ploidies, ...){
   ploidies <- lapply(ploidies, as.integer)
+  oldploidies <- object$possiblePloidies
   object$possiblePloidies <- ploidies
   # don't need to subset much if genotype calling not done
-  if(is.null(object$priorProbPloidies)){
+  if(is.null(object$priorProb) && is.null(object$genotypeLikelihood)){
     return(object)
   }
   
@@ -1702,8 +1806,8 @@ SubsetByPloidy.RADdata <- function(object, ploidies, ...){
   # get indices of the desired ploidies in the object
   pldindex <- integer(npld)
   for(i in 1:npld){
-    for(j in 1:length(object$priorProbPloidies)){
-      if(identical(ploidies[[i]], object$priorProbPloidies[[j]])){
+    for(j in seq_along(oldploidies)){
+      if(identical(ploidies[[i]], oldploidies[[j]])){
         pldindex[i] <- j
         break
       }
@@ -1713,13 +1817,12 @@ SubsetByPloidy.RADdata <- function(object, ploidies, ...){
                  "not found in dataset."))
     }
   }
-  object$priorProbPloidies <- ploidies
   
   if(!is.null(object$priorProb)){
-    object$priorProb <- object$priorProb[pldindex]
+    object$priorProb <- object$priorProb[pldindex,, drop = FALSE]
   }
   if(!is.null(object$posteriorProb)){
-    object$posteriorProb <- object$posteriorProb[pldindex]
+    object$posteriorProb <- object$posteriorProb[pldindex,, drop = FALSE]
   }
   if(!is.null(object$ploidyChiSq)){
     object$ploidyChiSq <- object$ploidyChiSq[pldindex,, drop = FALSE]
@@ -1730,43 +1833,28 @@ SubsetByPloidy.RADdata <- function(object, ploidies, ...){
   if(!is.null(object$ploidyLikelihood)){
     object$ploidyLikelihood <- object$ploidyLikelihood[pldindex,, drop = FALSE]
   }
-  if(!is.null(object$priorTimesLikelihood)){
-    object$priorTimesLikelihood <- object$priorTimesLikelihood[pldindex]
-  }
   if(!is.null(object$priorProbLD)){
-    object$priorProbLD <- object$priorProbLD[pldindex]
+    object$priorProbLD <- object$priorProbLD[pldindex,, drop = FALSE]
   }
   
   # subset items relating to likelihood, which ignore auto/allo differences
   pldsums <- sapply(ploidies, sum)
   if(!is.null(object$genotypeLikelihood)){
-    likpld <- sapply(object$genotypeLikelihood, function(x) dim(x)[1] - 1L)
-    object$genotypeLikelihood <- object$genotypeLikelihood[likpld %in% pldsums]
+    likpld <- sapply(object$genotypeLikelihood[,1,drop = FALSE],
+                     function(x) dim(x)[1] - 1L) / 
+      as.integer(colnames(object$genotypeLikelihood)[1]) * 2L
+    object$genotypeLikelihood <- object$genotypeLikelihood[likpld %in% pldsums,, drop = FALSE]
   }
   if(!is.null(object$likelyGeno_donor)){
-    keeprow <- as.integer(rownames(object$likelyGeno_donor)) %in% pldsums
+    pldsums.d <- GetTaxaPloidy(object)[GetDonorParent(object)] * pldsums / 2
+    keeprow <- as.integer(rownames(object$likelyGeno_donor)) %in% pldsums.d
     object$likelyGeno_donor <- object$likelyGeno_donor[keeprow,, drop = FALSE]
   }
   if(!is.null(object$likelyGeno_recurrent)){
-    keeprow <- as.integer(rownames(object$likelyGeno_recurrent)) %in% pldsums
+    pldsums.r <- GetTaxaPloidy(object)[GetRecurrentParent(object)] * pldsums / 2
+    keeprow <- as.integer(rownames(object$likelyGeno_recurrent)) %in% pldsums.r
     object$likelyGeno_recurrent <- 
       object$likelyGeno_recurrent[keeprow,, drop = FALSE]
-  }
-  
-  # subset parental ploidies if mapping population
-  ploidyfound <- function(x){
-    for(pld in ploidies){
-      if(identical(pld, x)) return(TRUE)
-    }
-    return(FALSE)
-  }
-  if(!is.null(object$donorPloidies)){
-    keeppld <- sapply(object$donorPloidies, ploidyfound)
-    object$donorPloidies <- object$donorPloidies[keeppld]
-  }
-  if(!is.null(object$recurrentPloidies)){
-    keeppld <- sapply(object$recurrentPloidies, ploidyfound)
-    object$recurrentPloidies <- object$recurrentPloidies[keeppld]
   }
   
   return(object)
@@ -1842,8 +1930,7 @@ StripDown.RADdata <- function(object,
                                                "priorProbLD"),
                               ...){
   always.keep <- c("alleles2loc", "alleleNucleotides", "locTable", 
-                   "priorProbPloidies", "possiblePloidies", "ploidyChiSq", 
-                   "posteriorProb")
+                   "possiblePloidies", "ploidyChiSq", "posteriorProb")
   if(any(always.keep %in% remove.slots)){
     ak <- always.keep[always.keep %in% remove.slots]
     stop(paste(c("Removal of the following would interfere with data export:", 

@@ -19,8 +19,6 @@ AddGenotypePriorProb_Mapping2Parents(object, ...)
     donorParent = GetDonorParent(object), 
     recurrentParent = GetRecurrentParent(object), 
     n.gen.backcrossing = 0, n.gen.intermating = 0, n.gen.selfing = 0,
-    donorParentPloidies = object$possiblePloidies,
-    recurrentParentPloidies = object$possiblePloidies,
     minLikelihoodRatio = 10, \dots)
     
 EstimateParentalGenotypes(object, ...)
@@ -28,8 +26,6 @@ EstimateParentalGenotypes(object, ...)
     donorParent = GetDonorParent(object), 
     recurrentParent = GetRecurrentParent(object), 
     n.gen.backcrossing = 0, n.gen.intermating = 0, n.gen.selfing = 0,
-    donorParentPloidies = object$possiblePloidies,
-    recurrentParentPloidies = object$possiblePloidies,
     minLikelihoodRatio = 10, \dots)
 }
 \arguments{
@@ -63,17 +59,6 @@ genetic drift or selection).
 An integer, zero or greater, indicating how many generations of selfing were
 performed.
 }
-\item{donorParentPloidies}{
-A list, where each item in the list is an integer vector indicating a 
-potential inheritance mode that could be observed among loci in the donor
-parent.  \code{2} indicates diploid, \code{4} indicates autotetraploid, 
-\code{c(2, 2)} indicates allotetraploid, \emph{etc.}
-}
-\item{recurrentParentPloidies}{
-A list in the same format as \code{donorParentPloidies} indicating 
-inheritance modes that could be observed among loci in the recurrent
-parent.
-}
 \item{minLikelihoodRatio}{
 The minimum likelihood ratio for determining parental genotypes with 
 confidence, to be passed to \code{\link{GetLikelyGen}} for both
@@ -81,12 +66,13 @@ parental taxa.
 }
 }
 \details{
-\code{AddGenotypePriorProb_Mapping2Parents} first calls
-\code{EstimateParentalGenotypes} internally to determine which combinations
-of inheritance modes from
-the two parents should be examined in the progeny.  The expected progeny
-ploidy must be in \code{object$possiblePloidies} for a given combination
-to be examined.
+\code{AddGenotypePriorProb_Mapping2Parents} examines the parental and progeny
+ploidies stored in \code{object$taxaPloidy} and throws an error if they do not
+meet expectations.  In particular, all progeny must be the same ploidy, and that
+must be the ploidy that would be expected if the parents produced normal gametes.
+For example in an F1 cross, if one parent was diploid and the other tetraploid,
+all progeny must be triploid.  If both parents are tetraploid, all progeny must
+be tetraploid.
 
 The most likely genotypes for the two parents are estimated by
 \code{EstimateParentalGenotypes} using
@@ -110,22 +96,15 @@ intermated to produce the F2, one would instead use
 }
 \value{
 A \code{"RADdata"} object identical to that passed to the function, but with
-data stored in six new slots:
+data stored in three new slots:
 
-\item{priorProb }{A list of matrices, with one matrix per possible ploidy
-of offspring.  For each matrix, allele copy number (from zero to the total
+\item{priorProb }{A two-dimensional list of matrices, with rows corresponding to
+\code{object$possiblePloidies} and columns corresponding to unique values in
+\code{object$taxaPloidy}. Each item in the list is a matrix.  
+For each matrix, allele copy number (from zero to the total
 ploidy) is in rows, and alleles are in columns.  Each value is the probability
-of sampling an individual with that allele copy number from the population.}
-\item{priorProbPloidies }{A list in the same format as 
-\code{object$possiblePloidies}, and the same length as 
-\code{object$priorProb}.  Each item in the list is a vector indicating the
-inheritance mode for the corresponding matrix in \code{object$priorProb}.}
-\item{donorPloidies }{A list in the same format as \code{object$possiblePloidies},
-with one item corresponding to each in object$priorProbPloidies, indicating
-the donor parent ploidy for that progeny ploidy.}
-\item{recurrentPloidies }{A list in the same format as \code{object$possiblePloidies},
-with one item corresponding to each in \code{object$priorProbPloidies}, indicating
-the recurrent parent ploidy for that progeny ploidy.}
+of sampling an individual with that allele copy number from the population.
+For any taxa ploidies other than the progeny ploidy, even priors are returned.}
 \item{likelyGeno_donor }{A matrix of the donor parent genotypes that were
 used for estimating genotype prior probabilities.  Formatted like the
 output of \code{\link{GetLikelyGen}}.}

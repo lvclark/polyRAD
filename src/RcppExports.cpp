@@ -120,8 +120,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // HoTwoParents
-NumericVector HoTwoParents(IntegerVector genotypes1, IntegerVector genotypes2, IntegerVector alleles2loc, IntegerVector keeploc, double ploidy);
-RcppExport SEXP _polyRAD_HoTwoParents(SEXP genotypes1SEXP, SEXP genotypes2SEXP, SEXP alleles2locSEXP, SEXP keeplocSEXP, SEXP ploidySEXP) {
+NumericVector HoTwoParents(IntegerVector genotypes1, IntegerVector genotypes2, IntegerVector alleles2loc, IntegerVector keeploc, double ploidy1, double ploidy2);
+RcppExport SEXP _polyRAD_HoTwoParents(SEXP genotypes1SEXP, SEXP genotypes2SEXP, SEXP alleles2locSEXP, SEXP keeplocSEXP, SEXP ploidy1SEXP, SEXP ploidy2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -129,8 +129,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< IntegerVector >::type genotypes2(genotypes2SEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type alleles2loc(alleles2locSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type keeploc(keeplocSEXP);
-    Rcpp::traits::input_parameter< double >::type ploidy(ploidySEXP);
-    rcpp_result_gen = Rcpp::wrap(HoTwoParents(genotypes1, genotypes2, alleles2loc, keeploc, ploidy));
+    Rcpp::traits::input_parameter< double >::type ploidy1(ploidy1SEXP);
+    Rcpp::traits::input_parameter< double >::type ploidy2(ploidy2SEXP);
+    rcpp_result_gen = Rcpp::wrap(HoTwoParents(genotypes1, genotypes2, alleles2loc, keeploc, ploidy1, ploidy2));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -171,21 +172,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// MakeGTstrings
-StringVector MakeGTstrings(IntegerMatrix genotypes, int ploidy);
-RcppExport SEXP _polyRAD_MakeGTstrings(SEXP genotypesSEXP, SEXP ploidySEXP) {
+// MakeGTstring
+String MakeGTstring(IntegerVector genotype, int ploidy);
+RcppExport SEXP _polyRAD_MakeGTstring(SEXP genotypeSEXP, SEXP ploidySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerMatrix >::type genotypes(genotypesSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type genotype(genotypeSEXP);
     Rcpp::traits::input_parameter< int >::type ploidy(ploidySEXP);
-    rcpp_result_gen = Rcpp::wrap(MakeGTstrings(genotypes, ploidy));
+    rcpp_result_gen = Rcpp::wrap(MakeGTstring(genotype, ploidy));
     return rcpp_result_gen;
 END_RCPP
 }
 // PrepVCFexport
-List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc, IntegerMatrix alleleDepth, StringVector alleleNucleotides, DataFrame locTable, IntegerVector ploidy, bool asSNPs);
-RcppExport SEXP _polyRAD_PrepVCFexport(SEXP genotypesSEXP, SEXP alleles2locSEXP, SEXP alleleDepthSEXP, SEXP alleleNucleotidesSEXP, SEXP locTableSEXP, SEXP ploidySEXP, SEXP asSNPsSEXP) {
+List PrepVCFexport(IntegerMatrix genotypes, IntegerVector alleles2loc, IntegerMatrix alleleDepth, StringVector alleleNucleotides, DataFrame locTable, IntegerVector ploidy, IntegerVector taxaPloidy, bool asSNPs);
+RcppExport SEXP _polyRAD_PrepVCFexport(SEXP genotypesSEXP, SEXP alleles2locSEXP, SEXP alleleDepthSEXP, SEXP alleleNucleotidesSEXP, SEXP locTableSEXP, SEXP ploidySEXP, SEXP taxaPloidySEXP, SEXP asSNPsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -195,8 +196,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< StringVector >::type alleleNucleotides(alleleNucleotidesSEXP);
     Rcpp::traits::input_parameter< DataFrame >::type locTable(locTableSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type ploidy(ploidySEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type taxaPloidy(taxaPloidySEXP);
     Rcpp::traits::input_parameter< bool >::type asSNPs(asSNPsSEXP);
-    rcpp_result_gen = Rcpp::wrap(PrepVCFexport(genotypes, alleles2loc, alleleDepth, alleleNucleotides, locTable, ploidy, asSNPs));
+    rcpp_result_gen = Rcpp::wrap(PrepVCFexport(genotypes, alleles2loc, alleleDepth, alleleNucleotides, locTable, ploidy, taxaPloidy, asSNPs));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -216,8 +218,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // simGenoMapping
-NumericMatrix simGenoMapping(NumericVector donorGeno, NumericVector recurGeno, NumericMatrix progGeno, NumericVector genoProbs, IntegerVector alleles2loc, int nsam, int ploidy);
-RcppExport SEXP _polyRAD_simGenoMapping(SEXP donorGenoSEXP, SEXP recurGenoSEXP, SEXP progGenoSEXP, SEXP genoProbsSEXP, SEXP alleles2locSEXP, SEXP nsamSEXP, SEXP ploidySEXP) {
+NumericMatrix simGenoMapping(NumericVector donorGeno, NumericVector recurGeno, NumericMatrix progGeno, NumericVector genoProbs, IntegerVector alleles2loc, int nsam, int ploidyDon, int ploidyRec);
+RcppExport SEXP _polyRAD_simGenoMapping(SEXP donorGenoSEXP, SEXP recurGenoSEXP, SEXP progGenoSEXP, SEXP genoProbsSEXP, SEXP alleles2locSEXP, SEXP nsamSEXP, SEXP ploidyDonSEXP, SEXP ploidyRecSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -227,8 +229,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type genoProbs(genoProbsSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type alleles2loc(alleles2locSEXP);
     Rcpp::traits::input_parameter< int >::type nsam(nsamSEXP);
-    Rcpp::traits::input_parameter< int >::type ploidy(ploidySEXP);
-    rcpp_result_gen = Rcpp::wrap(simGenoMapping(donorGeno, recurGeno, progGeno, genoProbs, alleles2loc, nsam, ploidy));
+    Rcpp::traits::input_parameter< int >::type ploidyDon(ploidyDonSEXP);
+    Rcpp::traits::input_parameter< int >::type ploidyRec(ploidyRecSEXP);
+    rcpp_result_gen = Rcpp::wrap(simGenoMapping(donorGeno, recurGeno, progGeno, genoProbs, alleles2loc, nsam, ploidyDon, ploidyRec));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -272,14 +275,14 @@ static const R_CallMethodDef CallEntries[] = {
     {"_polyRAD_GiniSimpson", (DL_FUNC) &_polyRAD_GiniSimpson, 1},
     {"_polyRAD_HindHeMat", (DL_FUNC) &_polyRAD_HindHeMat, 5},
     {"_polyRAD_HoOneParent", (DL_FUNC) &_polyRAD_HoOneParent, 4},
-    {"_polyRAD_HoTwoParents", (DL_FUNC) &_polyRAD_HoTwoParents, 5},
+    {"_polyRAD_HoTwoParents", (DL_FUNC) &_polyRAD_HoTwoParents, 6},
     {"_polyRAD_InitHapAssign", (DL_FUNC) &_polyRAD_InitHapAssign, 1},
     {"_polyRAD_Hap2SNP", (DL_FUNC) &_polyRAD_Hap2SNP, 3},
     {"_polyRAD_Hap2Hap", (DL_FUNC) &_polyRAD_Hap2Hap, 3},
-    {"_polyRAD_MakeGTstrings", (DL_FUNC) &_polyRAD_MakeGTstrings, 2},
-    {"_polyRAD_PrepVCFexport", (DL_FUNC) &_polyRAD_PrepVCFexport, 7},
+    {"_polyRAD_MakeGTstring", (DL_FUNC) &_polyRAD_MakeGTstring, 2},
+    {"_polyRAD_PrepVCFexport", (DL_FUNC) &_polyRAD_PrepVCFexport, 8},
     {"_polyRAD_simGeno", (DL_FUNC) &_polyRAD_simGeno, 5},
-    {"_polyRAD_simGenoMapping", (DL_FUNC) &_polyRAD_simGenoMapping, 7},
+    {"_polyRAD_simGenoMapping", (DL_FUNC) &_polyRAD_simGenoMapping, 8},
     {"_polyRAD_simAD", (DL_FUNC) &_polyRAD_simAD, 7},
     {"_polyRAD_ThirdDimProd", (DL_FUNC) &_polyRAD_ThirdDimProd, 3},
     {NULL, NULL, 0}

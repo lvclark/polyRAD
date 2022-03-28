@@ -30,13 +30,14 @@ Additional arguments (none implemented).
 }
 
 \value{
-A \code{"RADdata"} object identical to that passed to the function, but with a list
-added to the \code{$priorProb} slot.  Each item in the list corresponds to one
-ploidy in \code{object$possiblePloidies}, and is a three-dimensional array with 
+A \code{"RADdata"} object identical to that passed to the function, but with a
+two-dimensional list added to the \code{$priorProb} slot.  Each row in the list
+corresponds to one ploidy in \code{object$possiblePloidies}, and each column
+to a unique ploidy in \code{object$taxaPloidy}. Each item is a three-dimensional
+array with 
 allele copy number in the first dimension, taxa in the second dimension, and
 alleles in the third dimension.  The values in the array are prior genotype
-probabilities.  Additionally, \code{object$possiblePloidies} is copied to
-\code{object$priorProbPloidies}, and \code{"taxon"} is recorded in the 
+probabilities.  Additionally, \code{"taxon"} is recorded in the 
 \code{"priorType"} attribute.
 }
 
@@ -62,15 +63,17 @@ exampleRAD <- AddAlleleFreqByTaxa(exampleRAD)
 # add prior probabilities
 exampleRAD <- AddGenotypePriorProb_ByTaxa(exampleRAD)
 
-exampleRAD$priorProb[[1]][,1,]
-exampleRAD$priorProb[[2]][,1,]
-exampleRAD$priorProb[[1]][,2,]
-exampleRAD$priorProb[[2]][,2,]
+exampleRAD$priorProb[[1,1]][,1,]
+exampleRAD$priorProb[[2,1]][,1,]
+exampleRAD$priorProb[[1,1]][,2,]
+exampleRAD$priorProb[[2,1]][,2,]
+exampleRAD$priorProb[[1,2]][,1,]
 
-# try it with inbreeding
-exampleRAD <- AddGenotypePriorProb_ByTaxa(exampleRAD, selfing.rate = 0.5)
+# try it with inbreeding, for diploid samples only
+exampleRAD2 <- SubsetByTaxon(exampleRAD, GetTaxa(exampleRAD)[exampleRAD$taxaPloidy == 2])
+exampleRAD2 <- AddGenotypePriorProb_ByTaxa(exampleRAD2, selfing.rate = 0.5)
 
-exampleRAD$priorProb[[1]][,1,]
+exampleRAD2$priorProb[[1,1]][,1,]
 }
 
 \keyword{ distribution }

@@ -20,8 +20,11 @@
     for(i in 0:ploidy){
       priors[i+1,] <- choose(ploidy, i) * freqs ^ i * antifreqs ^ (ploidy - i)
     }
+    if(selfing.rate > 0 && selfing.rate < 1 && ploidy %% 2 != 0){
+      warning("Not simulating self-fertilization for individuals of odd ploidy.")
+    }
     # adjust for self fertilization if applicable
-    if(selfing.rate > 0 && selfing.rate < 1){
+    if(selfing.rate > 0 && selfing.rate < 1 && ploidy %% 2 == 0){
       sm <- .selfmat(ploidy)
       # Equation 6 from de Silva et al. 2005 (doi:10.1038/sj.hdy.6800728)
       priors <- (1 - selfing.rate) * 
@@ -76,42 +79,49 @@
     stop("Genotype likelihoods must be added first.")
   }
   
-  ploidytotpriors <- sapply(object$priorProb, function(x) dim(x)[1] - 1)
-  ploidytotlikeli <- sapply(object$genotypeLikelihood, function(x) dim(x)[1] - 1)
+  ploidytotpriors <- sapply(object$priorProb[,1], function(x) dim(x)[1] - 1)
+  ploidytotlikeli <- sapply(object$genotypeLikelihood[,1], function(x) dim(x)[1] - 1)
   
-  results <- list()
-  length(results) <- length(object$priorProb)
+  results <- array(list(),
+                   dim = dim(object$priorProb),
+                   dimnames = dimnames(object$priorProb))
   
-  for(i in 1:length(object$priorProb)){
+  for(i in seq_len(nrow(object$priorProb))){
     j <- which(ploidytotlikeli == ploidytotpriors[i])
     stopifnot(length(j) == 1)
-    if(attr(object, "priorType") == "population"){
-      # expand priors out by individuals
-      thispriorarr <- array(object$priorProb[[i]], 
-                            dim = c(dim(object$priorProb[[i]])[1], 1, 
-                                    dim(object$priorProb[[i]])[2]))[,rep(1, nTaxa(object)),]
-      dimnames(thispriorarr) <- dimnames(object$genotypeLikelihoods)[[j]]
-    } else {
-      thispriorarr <- object$priorProb[[i]]
-    }
-    stopifnot(identical(dim(thispriorarr), dim(object$genotypeLikelihood[[j]])))
-    results[[i]] <- thispriorarr * object$genotypeLikelihood[[j]]
-    # factor in LD if present
-    if(!is.null(object$priorProbLD)){
-      results[[i]] <- results[[i]] * object$priorProbLD[[i]]
-    }
-    # find any that total to zero (within taxon x allele) and replace with priors
-    totzero <- which(colSums(results[[i]]) == 0)
-    if(length(totzero) > 0){
-      for(a in 1:dim(thispriorarr)[1]){
-        results[[i]][a,,][totzero] <- thispriorarr[a,,][totzero]
+    for(h in seq_len(ncol(object$priorProb))){
+      thesetaxa <- dimnames(object$genotypeLikelihood[[j,h]])[[2]]
+      if(attr(object, "priorType") == "population"){
+        # expand priors out by individuals
+        thispriorarr <- array(object$priorProb[[i,h]], 
+                              dim = c(dim(object$priorProb[[i,h]])[1], 1, 
+                                      dim(object$priorProb[[i,h]])[2]))[,rep(1, length(thesetaxa)),, drop = FALSE]
+        dimnames(thispriorarr) <- dimnames(object$genotypeLikelihoods[[j,h]])
+      } else {
+        thispriorarr <- object$priorProb[[i,h]]
       }
-    }
-    # in a mapping population, don't use priors for parents
-    if(!is.null(attr(object, "donorParent")) &&
-       !is.null(attr(object, "recurrentParent"))){
-      parents <- c(GetDonorParent(object), GetRecurrentParent(object))
-      results[[i]][, parents, ] <- object$genotypeLikelihood[[j]][, parents, ]
+      stopifnot(identical(dim(thispriorarr), dim(object$genotypeLikelihood[[j,h]])))
+      results[[i,h]] <- thispriorarr * object$genotypeLikelihood[[j,h]]
+      # factor in LD if present
+      if(!is.null(object$priorProbLD)){
+        results[[i,h]] <- results[[i,h]] * object$priorProbLD[[i,h]]
+      }
+      # find any that total to zero (within taxon x allele) and replace with priors
+      totzero <- which(colSums(results[[i,h]]) == 0)
+      if(length(totzero) > 0){
+        for(a in 1:dim(thispriorarr)[1]){
+          results[[i,h]][a,,][totzero] <- thispriorarr[a,,][totzero]
+        }
+      }
+      # in a mapping population, don't use priors for parents
+      if(!is.null(attr(object, "donorParent")) &&
+         !is.null(attr(object, "recurrentParent"))){
+        parents <- c(GetDonorParent(object), GetRecurrentParent(object))
+        parents <- intersect(parents, thesetaxa)
+        if(length(parents) > 0){ # only fix if this is the ploidy for at least one parent
+          results[[i,h]][, parents, ] <- object$genotypeLikelihood[[j,h]][, parents, ]
+        }
+      }
     }
   }
   
@@ -445,10 +455,10 @@ setMethod("reverseComplement", "character",
 }
 
 # Build progeny probability object for given mapping population properties
-.buildProgProb <- function(ploidy, gen_backcrossing, gen_selfing){
+.buildProgProb <- function(ploidy1, ploidy2, gen_backcrossing, gen_selfing){
   # set up parents; number indexes locus copy
-  p1 <- 1:ploidy
-  p2 <- p1 + ploidy
+  p1 <- 1:ploidy1
+  p2 <- (1:ploidy2) + ploidy1
   # create F1 progeny probabilities
   progprob <- .progenyProb2(.makeGametes2(p1), .makeGametes2(p2))
   # backcross
@@ -486,26 +496,27 @@ setMethod("reverseComplement", "character",
 # (No double reduction.)
 # Can take a few seconds to run if there are many generations, but it is only
 # intended to be run once for the whole dataset.
-.progAlProbs <- function(ploidy, gen_backcrossing, gen_selfing){
+.progAlProbs <- function(ploidy1, ploidy2, gen_backcrossing, gen_selfing){
   # set up parents; number indexes locus copy
-  p1 <- 1:ploidy
-  p2 <- p1 + ploidy
+  p1 <- 1:ploidy1
+  p2 <- (1:ploidy2) + ploidy1
   # probabilities of progeny genotypes
-  progprob <- .buildProgProb(ploidy, gen_backcrossing, gen_selfing)
+  progprob <- .buildProgProb(ploidy1, ploidy2, gen_backcrossing, gen_selfing)
+  ploidy.prog <- ncol(progprob[[1]])
   
   # total probability that (without replacement, from individual progeny):
   diffp1 <- 0 # two different locus copies, both from parent 1, are sampled
   diffp2 <- 0 # two different locus copies, both from parent 2, are sampled
   diff12 <- 0 # locus copies from two different parents are sampled
   
-  ncombo <- choose(ploidy, 2) # number of ways to choose 2 alleles from a genotype
+  ncombo <- choose(ploidy.prog, 2) # number of ways to choose 2 alleles from a genotype
   # examine each progeny genotype
   for(p in 1:nrow(progprob[[1]])){
     thisgen <- progprob[[1]][p,]
     thisprob <- progprob[[2]][p]
-    for(m in 1:(ploidy - 1)){
+    for(m in 1:(ploidy.prog - 1)){
       al1 <- thisgen[m]
-      for(n in (m + 1):ploidy){
+      for(n in (m + 1):ploidy.prog){
         al2 <- thisgen[n]
         if(al1 == al2) next
         if((al1 %in% p1) && (al2 %in% p1)){

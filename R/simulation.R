@@ -82,14 +82,23 @@ ExpectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
   
   for(i in seq_len(reps)){
     if(!quiet && i %% 10 == 1) message(paste("Simulating rep", i))
-    geno <- SimGenotypes(object$alleleFreq, object$alleles2loc, nTaxa(object),
-                         inbreeding, ploidy)
+    geno <- matrix(NA_integer_, nrow = nTaxa(object), ncol = nAlleles(object),
+                   dimnames = list(GetTaxa(object), GetAlleleNames(object)))
+    for(h in unique(GetTaxaPloidy(object))){
+      if((ploidy * h) %% 2L != 0){
+        stop("Either ploidy or all taxa ploidies must be even")
+      }
+      thesesam <- which(GetTaxaPloidy(object) == h)
+      geno[thesesam,] <- SimGenotypes(object$alleleFreq, object$alleles2loc,
+                                      length(thesesam),
+                                      inbreeding, (ploidy * h) %/% 2L)
+    }
     depths <- SimAlleleDepth(object$locDepth, geno, object$alleles2loc,
                              overdispersion, contamRate, errorRate)
     rownames(depths) <- GetTaxa(object)
     simrad <- RADdata(depths, object$alleles2loc, object$locTable,
                       object$possiblePloidies, GetContamRate(object),
-                      object$alleleNucleotides)
+                      object$alleleNucleotides, GetTaxaPloidy(object))
     out[,i] <- colMeans(HindHe(simrad), na.rm = TRUE)
   }
   
@@ -116,7 +125,8 @@ ExpectedHindHe <- function(object, ploidy = object$possiblePloidies[[1]],
 # expectedHindHe(mydata, reps = 10) # get from VCF in tutorial
 
 # Simulated genotypes in a mapping population
-SimGenotypesMapping <- function(donorGen, recurGen, alleles2loc, nsam, ploidy,
+SimGenotypesMapping <- function(donorGen, recurGen, alleles2loc, nsam,
+                                ploidy.don, ploidy.rec,
                                 n.gen.backcrossing, n.gen.selfing){
   if(length(donorGen) != length(recurGen) ||
      length(donorGen) != length(alleles2loc)){
@@ -124,10 +134,10 @@ SimGenotypesMapping <- function(donorGen, recurGen, alleles2loc, nsam, ploidy,
   }
   # get possible progeny and their probabilities, treating each allele
   # from each parent as unique.  (multiallelic genotypes)
-  progprob <- .buildProgProb(ploidy, n.gen.backcrossing, n.gen.selfing)
+  progprob <- .buildProgProb(ploidy.rec, ploidy.don, n.gen.backcrossing, n.gen.selfing)
   
   geno <- simGenoMapping(donorGen, recurGen, progprob[[1]], progprob[[2]],
-                         alleles2loc, nsam, ploidy) # Rcpp fn
+                         alleles2loc, nsam, ploidy.don, ploidy.rec) # Rcpp fn
   colnames(geno) <- names(donorGen)
   
   return(geno)
@@ -142,6 +152,7 @@ ExpectedHindHeMapping <- function(object, ploidy = object$possiblePloidies[[1]],
   if(length(ploidy) != 1){
     stop("Please give a single value for ploidy; function assumes diploid or autopolyploid inheritance")
   }
+  if(length(object$possiblePloidies) > 1) object <- SubsetByPloidy(object, ploidy)
   possfreq <- seq(0, 1, length.out = (n.gen.backcrossing + 1) * ploidy * 2 + 1)
   if(is.null(object$likelyGeno_donor) || is.null(object$likelyGeno_recurrent)){
     object <- AddAlleleFreqMapping(object, expectedFreqs = possfreq,
@@ -149,8 +160,6 @@ ExpectedHindHeMapping <- function(object, ploidy = object$possiblePloidies[[1]],
     object <- AddGenotypeLikelihood(object, overdispersion = overdispersion)
     object <- EstimateParentalGenotypes(object, n.gen.backcrossing = n.gen.backcrossing,
                                         n.gen.intermating = 0, n.gen.selfing = n.gen.selfing,
-                                        donorParentPloidies = list(ploidy),
-                                        recurrentParentPloidies = list(ploidy),
                                         minLikelihoodRatio = minLikelihoodRatio)
   }
   
@@ -160,15 +169,25 @@ ExpectedHindHeMapping <- function(object, ploidy = object$possiblePloidies[[1]],
   donParent <- GetDonorParent(object)
   recParent <- GetRecurrentParent(object)
   progeny <- setdiff(GetTaxa(object), c(donParent, recParent, GetBlankTaxa(object)))
+  pld.d <- ploidy * object$taxaPloidy[donParent] / 2
+  pld.r <- ploidy * object$taxaPloidy[recParent] / 2
+  
+  goodLocDon <- tapply(object$likelyGeno_donor[1,], object$alleles2loc,
+                       function(x) !any(is.na(x)) && sum(x) == pld.d)
+  goodLocRec <- tapply(object$likelyGeno_recurrent[1,], object$alleles2loc,
+                       function(x) !any(is.na(x)) && sum(x) == pld.r)
+  keeploc <- which(goodLocDon & goodLocRec)
+  object <- SubsetByLocus(object, keeploc)
   
   for(i in seq_len(reps)){
     if(!quiet && i %% 10 == 1) message(paste("Simulating rep", i))
-    geno <- SimGenotypesMapping(object$likelyGeno_donor[as.character(ploidy),],
-                                object$likelyGeno_recurrent[as.character(ploidy),],
-                                object$alleles2loc, length(progeny), ploidy,
+    geno <- SimGenotypesMapping(object$likelyGeno_donor[1,],
+                                object$likelyGeno_recurrent[1,],
+                                object$alleles2loc, length(progeny),
+                                pld.d, pld.r,
                                 n.gen.backcrossing, n.gen.selfing)
-    geno <- rbind(object$likelyGeno_donor[as.character(ploidy),],
-                  object$likelyGeno_recurrent[as.character(ploidy),],
+    geno <- rbind(object$likelyGeno_donor[1,],
+                  object$likelyGeno_recurrent[1,],
                   geno)
     depths <- SimAlleleDepth(object$locDepth[c(donParent, recParent, progeny),],
                              geno, object$alleles2loc,
@@ -176,7 +195,7 @@ ExpectedHindHeMapping <- function(object, ploidy = object$possiblePloidies[[1]],
     rownames(depths) <- c(donParent, recParent, progeny)
     simrad <- RADdata(depths, object$alleles2loc, object$locTable,
                       object$possiblePloidies, GetContamRate(object),
-                      object$alleleNucleotides)
+                      object$alleleNucleotides, object$taxaPloidy)
     simrad <- SetDonorParent(simrad, donParent)
     simrad <- SetRecurrentParent(simrad, recParent)
     simrad <- AddAlleleFreqMapping(simrad, expectedFreqs = possfreq,
@@ -185,8 +204,6 @@ ExpectedHindHeMapping <- function(object, ploidy = object$possiblePloidies[[1]],
     simrad <- AddGenotypeLikelihood(simrad, overdispersion = overdispersion)
     simrad <- EstimateParentalGenotypes(simrad, n.gen.backcrossing = n.gen.backcrossing,
                                         n.gen.intermating = 0, n.gen.selfing = n.gen.selfing,
-                                        donorParentPloidies = list(ploidy),
-                                        recurrentParentPloidies = list(ploidy),
                                         minLikelihoodRatio = minLikelihoodRatio)
     hh <- HindHeMapping(simrad, n.gen.backcrossing, 0, n.gen.selfing, ploidy,
                         minLikelihoodRatio)
