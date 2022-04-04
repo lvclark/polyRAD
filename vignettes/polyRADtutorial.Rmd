@@ -105,6 +105,8 @@ For identifying problematic loci and individuals:
 * `ExpectedHindHeMapping`
 * `InbreedingFromHindHe`
 
+For interrogating the genotype calling process, see `?ExamineGenotype`.
+
 See `?GetTaxa` for a list of accessor functions as well.
 
 ## Considerations for genome biology

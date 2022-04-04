@@ -2419,7 +2419,7 @@ MergeIdenticalHaplotypes.RADdata <- function(object, ...){
 }
 
 ExamineGenotype <- function(object, ...){
-  UseMethod("ExamineGenotypes", object)
+  UseMethod("ExamineGenotype", object)
 }
 ExamineGenotype.RADdata <- function(object, taxon, allele,
                                      pldindex = 1, ...){
