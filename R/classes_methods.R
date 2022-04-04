@@ -2417,3 +2417,55 @@ MergeIdenticalHaplotypes.RADdata <- function(object, ...){
   
   return(object)
 }
+
+ExamineGenotype <- function(object, ...){
+  UseMethod("ExamineGenotypes", object)
+}
+ExamineGenotype.RADdata <- function(object, taxon, allele,
+                                     pldindex = 1, ...){
+  dp1 <- object$alleleDepth[taxon, allele]
+  dp0 <- object$antiAlleleDepth[taxon, allele]
+  rat <- object$depthRatio[taxon, allele]
+  pld <- object$taxaPloidy[taxon]
+  pld2 <- dim(object$priorProb[[pldindex,as.character(pld)]])[1]
+  pldindex2 <- which(sapply(object$genotypeLikelihood[,as.character(pld)],
+                            function(x) dim(x)[1]) == pld2)
+  if(length(dim(object$priorProb[[pldindex,as.character(pld)]])) == 3){
+    priors <- object$priorProb[[pldindex,as.character(pld)]][,taxon,allele]
+  } else {
+    priors <- object$priorProb[[pldindex,as.character(pld)]][,allele]
+  }
+  likelihoods <- object$genotypeLikelihood[[pldindex2,as.character(pld)]][,taxon,allele]
+  posteriors <- object$posteriorProb[[pldindex,as.character(pld)]][,taxon,allele]
+  norm_likelihoods <- likelihoods / sum(likelihoods)
+  postmean <- sum(posteriors * (0:pld)) / pld
+  
+  par(mfrow = c(1, 2))
+  tit <- paste0(taxon, ", ", allele)
+  if(dp1 + dp0 == 0){
+    b <- barplot(matrix(c(postmean, 1 - postmean), nrow = 2, ncol = 1),
+            names.arg = "Posterior mean genotype", main = tit)
+    text(b[1], postmean / 2, round(postmean, 3))
+  } else{
+    b <- barplot(matrix(c(rat, 1 - rat, postmean, 1 - postmean), nrow = 2, ncol = 2),
+            names.arg = c("Read depth", "Post. mean genotype"), main = tit)
+    text(b[c(1, 1, 2)], c(rat / 2, rat + (1 - rat) / 2, postmean / 2),
+         c(dp1, dp0, round(postmean, 3)))
+  }
+  b <- barplot(matrix(c(priors, norm_likelihoods, posteriors), nrow = pld2, ncol = 3),
+               names.arg = c("Priors", "Likelihoods", "Posteriors"),
+               col = rainbow(pld2))
+  tx <- b[rep(1:3, each = pld2)]
+  ty <- c(cumsum(priors) - priors / 2,
+          cumsum(norm_likelihoods) - norm_likelihoods / 2,
+          cumsum(posteriors) - posteriors / 2)
+  tl <- rep((1:pld2) - 1, times = 3)
+  tx <- tx[ty >= 0.01 & ty <= 0.99]
+  tl <- tl[ty >= 0.01 & ty <= 0.99]
+  ty <- ty[ty >= 0.01 & ty <= 0.99]
+  text(tx, ty, tl)
+  
+  invisible(list(alleleDepth = dp1, antiAlleleDepth = dp0, depthRatio = rat,
+                 priorProb = priors, genotypeLikelihood = likelihoods,
+                 posteriorProb = posteriors, postMean = postmean))
+}

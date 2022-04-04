@@ -10,6 +10,8 @@ taxa in the second dimension, whereas previously these were one-dimensional
 lists reflecting inheritance modes across loci only. The priorProbPloidies slot
 has been removed as it is no longer needed.
 
+The ExamineGenotype function has been added.
+
 The AddPriorTimesLikelihood function has been removed.
 
 A warning is now returned if the user attempts to simulate self-fertilization

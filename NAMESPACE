@@ -8,7 +8,7 @@ AddGenotypePriorProb_HWE, AddGenotypePriorProb_LD,
 AddGenotypePriorProb_Mapping2Parents, AddPCA,
 AddPloidyChiSq, AddPloidyLikelihood,
 CanDoGetWeightedMeanGeno, EstimateContaminationRate, 
-EstimateParentalGenotypes, ExpectedHindHe, ExpectedHindHeMapping,
+EstimateParentalGenotypes, ExamineGenotype, ExpectedHindHe, ExpectedHindHeMapping,
 Export_adegenet_genind, ExportGAPIT, Export_GWASpoly,
 Export_MAPpoly, Export_polymapR, Export_polymapR_probs, Export_rrBLUP_Amat,
 Export_rrBLUP_GWAS, Export_Structure, Export_TASSEL_Numeric, GetAlleleNames,
@@ -58,6 +58,7 @@ S3method(AddPloidyLikelihood, RADdata)
 S3method(CanDoGetWeightedMeanGeno, RADdata)
 S3method(EstimateContaminationRate, RADdata)
 S3method(EstimateParentalGenotypes, RADdata)
+S3method(ExamineGenotype, RADdata)
 S3method(GetAlleleNames, RADdata)
 S3method(GetBlankTaxa, RADdata)
 S3method(GetContamRate, RADdata)
