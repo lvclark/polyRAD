@@ -123,6 +123,13 @@ A video tutorial from January 2021 is available on [YouTube](https://www.youtube
 A tutorial on [using polyRAD for population genetics](https://lvclark.r-universe.dev/articles/polyRADtutorials/population_genetics.html)
 is also available.  If you would like to have the dataset to follow along with that tutorial, run
 `install.packages("polyRADtutorials", repos = "https://lvclark.r-universe.dev")`.
+The tutorial covers genotype calling in a wild collection of diploid, triploid,
+and tetraploid _Miscanthus sacchariflorus_ (a perennial grass) and some downstream
+applications in R.
+
+The population genetics tutorial is also available as a
+[video](https://mediaspace.illinois.edu/media/t/1_0v7b2qoe) from April 2022.
+English closed captions are available for the video.
 
 Note that the tutorials hosted on R-universe are derived from the development
 version of polyRAD.  If you installed from CRAN and something from an R-universe
