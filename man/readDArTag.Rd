@@ -17,7 +17,7 @@ installation for example files.
 }
 \usage{
 readDArTag(file, botloci = NULL, blastfile = NULL, excludeHaps = NULL,
-           includeHaps = NULL, n.header.rows = 7, sample.name.row = 7,
+           includeHaps = NULL, n.header.rows = 0, sample.name.row = 1,
            trim.sample.names = "_[^_]+_[ABCDEFGH][[:digit:]][012]?$",
            sep.counts = ",", sep.blast = "\t", possiblePloidies = list(2),
            taxaPloidy = 2L, contamRate = 0.001)
@@ -117,6 +117,7 @@ Lindsay V. Clark
 \code{\link{RADdata2VCF}}
 }
 \examples{
+## Older Excellence in Breeding version
 # Example files installed with polyRAD
 dartfile <- system.file("extdata", "DArTag_example.csv", package = "polyRAD")
 blastfile <- system.file("extdata", "DArTag_BLAST_example.txt",
@@ -128,7 +129,23 @@ exclude_hap <- c("Chr1_30668472|RefMatch_004")
 # Import data
 mydata <- readDArTag(dartfile, blastfile = blastfile,
                       excludeHaps = exclude_hap,
-                      possiblePloidies = list(4))
+                      possiblePloidies = list(4),
+                      n.header.rows = 7, sample.name.row = 7)
+                      
+## Newer Excellence in Breeding version (2022)
+# Example files installed with polyRAD
+dartfile <- system.file("extdata", "DArTag_example2.csv", package = "polyRAD")
+blastfile <- system.file("extdata", "DArTag_BLAST_example2.txt",
+                         package = "polyRAD")
+
+# One haplotype doesn't seem to have correct alignment (see BLAST results)
+exclude_hap <- c("Chr1_30668472|RefMatch_0004")
+
+# Import data
+mydata <- readDArTag(dartfile, blastfile = blastfile,
+                      excludeHaps = exclude_hap,
+                      possiblePloidies = list(4),
+                      n.header.rows = 0, sample.name.row = 1)
 }
 
 \keyword{ file }

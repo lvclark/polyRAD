@@ -23,6 +23,9 @@ IteratePopStruct and IteratePopStructLD now have an argument called
 maxR2changeratio to allow more fine-tuning of the number of principal components
 used.
 
+The readDArTag function has been updated to support a newer format from
+Excellence in Breeding, as well as their original format.
+
 ## Changes in v1.6 ##
 
 TestOverdispersion now prints a helpful suggestion for which overdispersion

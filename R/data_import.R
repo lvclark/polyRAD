@@ -1503,7 +1503,7 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
 
 readDArTag <- function(file, botloci = NULL, blastfile = NULL,
                        excludeHaps = NULL, includeHaps = NULL,
-                       n.header.rows = 7, sample.name.row = 7, 
+                       n.header.rows = 0, sample.name.row = 1, 
                        trim.sample.names = "_[^_]+_[ABCDEFGH][[:digit:]][012]?$",
                        sep.counts = ",", sep.blast = "\t",
                        possiblePloidies = list(2), taxaPloidy = 2L,
@@ -1525,12 +1525,17 @@ readDArTag <- function(file, botloci = NULL, blastfile = NULL,
   close(mycon)
   
   # determine number of leading columns
-  hdr.split <- strsplit(hdr, split = ",")
-  n.lead.cols <-
-    unique(sapply(hdr.split, function(x) min(grep(".+", x)) - 1))
-  if(length(n.lead.cols) != 1){
-    stop("Not all sample headers start on same column. Be sure not to count the row starting with AlleleID towards n.header.rows.")
+  if(n.header.rows > 0){
+    hdr.split <- strsplit(hdr, split = ",")
+    n.lead.cols <-
+      unique(sapply(hdr.split, function(x) min(grep(".+", x)) - 1))
+    if(length(n.lead.cols) != 1){
+      stop("Not all sample headers start on same column. Be sure not to count the row starting with AlleleID towards n.header.rows.")
+    }
+  } else {
+    n.lead.cols <- sum(colnames(tab) %in% c("AlleleID", "CloneID", "AlleleSequence", "readCountSum"))
   }
+  
   if(!all(c("AlleleID", "CloneID", "AlleleSequence") %in% colnames(tab))){
     stop("Need AlleleID, CloneID, and AlleleSequence columns.")
   }
@@ -1577,7 +1582,10 @@ readDArTag <- function(file, botloci = NULL, blastfile = NULL,
   
   # Build locTable
   loci <- unique(tab$CloneID)
-  refals <- paste0(loci, "|Ref_001")
+  refals <- sapply(loci, function(L) grep(paste0("^", L, "\\|Ref(_[0]*1)?$"), tab$AlleleID, value = TRUE))
+  if(is.list(refals) || is.matrix(refals)){
+    stop("More than one reference allele found per locus.")
+  }
   locTable <- data.frame(row.names = loci,
                          Chr = sub("_[[:digit:]]+$", "", loci),
                          Pos = as.integer(sub("^.+_", "", loci)))
@@ -1639,8 +1647,8 @@ readDArTag <- function(file, botloci = NULL, blastfile = NULL,
     warning("Positions incorrect because target SNP could not be ascertained.")
   } else {
     locTable$Ref <- tab$AlleleSequence[match(refals, tab$AlleleID)]
-    altals <- paste0(loci, "|Alt_002")
-    if(!all(altals %in% tab$AlleleID)){
+    altals <- sapply(loci, function(L) grep(paste0("^", L, "\\|Alt(_[0]*2)?$"), tab$AlleleID, value = TRUE))
+    if(is.list(altals) || is.matrix(altals)){
       warning("Positions incorrect because target SNP could not be ascertained.")
     } else {
       # Convert position from target SNP to tag start
