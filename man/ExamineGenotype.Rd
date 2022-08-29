@@ -29,6 +29,9 @@ A single character string indicating the allele to show.
 \item{pldindex}{
 An index of which inheritance mode to use within \code{object$possiblePloidies}.
 }
+\item{...}{
+Other arguments (none implemented).
+}
 }
 \value{
 A barplot is generated. Invisibly, a list is returned:

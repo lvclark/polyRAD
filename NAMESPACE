@@ -36,8 +36,9 @@ importFrom("utils", "read.csv", "read.table","write.table", "write.csv",
 importFrom("fastmatch", "%fin%")
 importFrom("methods", "is", "setGeneric", "setMethod")
 importFrom("Rcpp", "evalCpp")
-importFrom("graphics", "plot", "points", "text", "hist")
+importFrom("graphics", "plot", "points", "text", "hist", "barplot", "par")
 importFrom("stringi", "stri_reverse", "stri_trans_char")
+importFrom("grDevices", "rainbow")
 
 S3method(print, RADdata)
 S3method(AddAlleleFreqByTaxa, RADdata)
