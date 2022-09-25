@@ -2380,6 +2380,7 @@ MergeIdenticalHaplotypes.RADdata <- function(object, ...){
   if(!is.null(object$alleleFreq) || !is.null(object$depthSamplingPermutations)){
     stop("Run MergeIdenticalHaplotypes before running any pipeline functions.")
   }
+  varsiteonly <- attr(object$alleleNucleotides, "Variable_sites_only")
   
   remal <- integer(0) # indices of alleles to remove
   for(L in 1:nLoci(object)){
@@ -2404,13 +2405,14 @@ MergeIdenticalHaplotypes.RADdata <- function(object, ...){
   }
   
   # remove duplicated alleles from all slots
-  object$alleleDepth <- object$alleleDepth[,-remal]
-  object$antiAlleleDepth <- object$antiAlleleDepth[,-remal]
-  object$alleles2loc <- object$alleles2loc[-remal]
-  varsiteonly <- attr(object$alleleNucleotides, "Variable_sites_only")
-  object$alleleNucleotides <- object$alleleNucleotides[-remal]
+  if(length(remal) > 0){
+    object$alleleDepth <- object$alleleDepth[,-remal]
+    object$antiAlleleDepth <- object$antiAlleleDepth[,-remal]
+    object$alleles2loc <- object$alleles2loc[-remal]
+    object$alleleNucleotides <- object$alleleNucleotides[-remal]
+    object$depthRatio <- object$depthRatio[,-remal]
+  }
   attr(object$alleleNucleotides, "Variable_sites_only") <- varsiteonly
-  object$depthRatio <- object$depthRatio[,-remal]
   
   return(object)
 }
