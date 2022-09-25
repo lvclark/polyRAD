@@ -26,7 +26,9 @@ used.
 * The `readDArTag` function has been updated to support a newer format from
 Excellence in Breeding, as well as their original format.
 
-* `MergeIdenticalHaplotypes` now takes IUPAC ambiguity codes into account.
+* `MergeIdenticalHaplotypes` now takes IUPAC ambiguity codes into account. It is
+now used internally by `VCF2RADdata`, `readStacks`, `readTASSELGBSv2`, and
+`readProcessIsoloci`.
 
 # polyRAD 1.6
 
