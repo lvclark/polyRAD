@@ -926,6 +926,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
   message("Merging rare haplotypes...")
   radout <- MergeRareHaplotypes(radout, 
                                 min.ind.with.haplotype = min.ind.with.minor.allele)
+  radout <- MergeIdenticalHaplotypes(radout)
   radout <- RemoveMonomorphicLoci(radout)
   
   # indicate whether non-variable sites included in alleleNucleotides
@@ -1102,6 +1103,7 @@ readStacks <- function(allelesFile, matchesFolder, version = 2,
   message("Merging rare haplotypes...")
   radout <- MergeRareHaplotypes(radout, 
                                 min.ind.with.haplotype = min.ind.with.minor.allele)
+  radout <- MergeIdenticalHaplotypes(radout)
   radout <- RemoveMonomorphicLoci(radout)
   return(radout)
 }
@@ -1252,6 +1254,7 @@ readTASSELGBSv2 <- function(tagtaxadistFile, samFile, min.ind.with.reads = 200,
                     contamRate, samseq, taxaPloidy)
   radout <- MergeRareHaplotypes(radout, 
                                 min.ind.with.haplotype = min.ind.with.minor.allele)
+  radout <- MergeIdenticalHaplotypes(radout)
   radout <- RemoveMonomorphicLoci(radout)
   attr(radout$alleleNucleotides, "Variable_sites_only") <- FALSE
   return(radout)
@@ -1496,6 +1499,7 @@ readProcessIsoloci <- function(sortedfile, min.ind.with.reads = 200,
   if(mergeRareHap){
     radout <- MergeRareHaplotypes(radout, 
                                   min.ind.with.haplotype = min.ind.with.minor.allele)
+    radout <- MergeIdenticalHaplotypes(radout)
     radout <- RemoveMonomorphicLoci(radout)
   }
   return(radout)

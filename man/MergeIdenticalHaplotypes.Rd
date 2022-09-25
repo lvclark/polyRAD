@@ -5,7 +5,8 @@
 Merge Alleles with Identical DNA Sequences
 }
 \description{
-If any alleles within a locus have identical \code{alleleNucleotides} values,
+If any alleles within a locus have identical \code{alleleNucleotides} values
+(including those identical based on IUPAC ambiguity codes),
 this function merges those alleles, summing their read depths.  This function is
 primarily intended to be used internally in cases where tags vary in length
 within a locus, resulting in truncated \code{alleleNucleotides}.
@@ -38,7 +39,7 @@ Lindsay V. Clark
 \examples{
 data(exampleRAD)
 # change a haplotype for this example
-exampleRAD$alleleNucleotides[5] <- "GC"
+exampleRAD$alleleNucleotides[5] <- "GY"
 
 nAlleles(exampleRAD)
 exampleRAD <- MergeIdenticalHaplotypes(exampleRAD)

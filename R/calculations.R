@@ -247,6 +247,40 @@ polyRADsubmat <- matrix(c(0,1,1,1, 0,0,0,1,1,1, 0,0,0,1, 0,1,1, # A
                                            'S', 'Y', 'K', 'V', 'H', 'D', 'B', 
                                            'N', '-', '.')))
 
+# get distance (number of mutations) between two sets of nucleotide strings
+.nucdist <- function(alleles1, alleles2 = NULL){
+  nsites <- unique(nchar(c(alleles1, alleles2)))
+  stopifnot(length(nsites) == 1)
+  splitnuc1 <- strsplit(alleles1, split = "")
+  
+  if(is.null(alleles2)){ # square matrix for all combinations of alleles
+    nal <- length(alleles1)
+    out <- matrix(0L, nrow = nal, ncol = nal, dimnames = list(alleles1, alleles1))
+    for(a1 in 1:(nal - 1)){
+      for(a2 in (a1 + 1):nal){
+        out[a1,a2] <- out[a2,a1] <-
+          sum(sapply(seq_len(nsites),
+                     function(i) polyRADsubmat[splitnuc1[[a1]][i],
+                                               splitnuc1[[a2]][i]]))
+      }
+    }
+  } else { # all comparisons between sets of alleles
+    out <- matrix(0L, nrow = length(alleles1), ncol = length(alleles2),
+                  dimnames = list(alleles1, alleles2))
+    splitnuc2 <- strsplit(alleles2, split = "")
+    for(a1 in seq_along(alleles1)){
+      for(a2 in seq_along(alleles2)){
+        if(alleles1[a1] == alleles2[a2]) next
+        out[a1,a2] <-
+          sum(sapply(seq_len(nsites),
+                     function(i) polyRADsubmat[splitnuc1[[a1]][i],
+                                               splitnuc2[[a2]][i]]))
+      }
+    }
+  }
+  return(out)
+}
+
 # Reverse complement; set up as S4 method to be compatible with Biostrings
 setGeneric("reverseComplement", signature="x",
            function(x, ...) standardGeneric("reverseComplement")
