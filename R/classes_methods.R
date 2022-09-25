@@ -2009,15 +2009,8 @@ MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
     while(length(theserare) > 0 && length(thesealleles) > 1){
       thisAl <- theserare[1]
       # get nucleotide distance between this allele and others
-      thesenuc <- object$alleleNucleotides[thesealleles]
-      splitnuc <- strsplit(thesenuc, split = "")
-      splitnucA <- splitnuc[[which(thesealleles == thisAl)]]
-      nucdist <- integer(length(thesealleles))
-      for(a in 1:length(thesealleles)){
-        nucdist[a] <- sum(sapply(1:length(splitnucA),
-                                 function(i) polyRADsubmat[splitnucA[i],
-                                                           splitnuc[[a]][i]]))
-      }
+      nucdist <- .nucdist(object$alleleNucleotides[thisAl],
+                          object$alleleNucleotides[thesealleles])
       # find the closest allele
       alToMerge <- thesealleles[nucdist == min(nucdist[-match(thisAl, thesealleles)])]
       if(length(alToMerge) > 1){
