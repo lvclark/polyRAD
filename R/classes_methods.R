@@ -2384,19 +2384,23 @@ MergeIdenticalHaplotypes.RADdata <- function(object, ...){
   remal <- integer(0) # indices of alleles to remove
   for(L in 1:nLoci(object)){
     thesecol <- which(object$alleles2loc == L)
-    dup <- duplicated(object$alleleNucleotides[thesecol])
-    for(al in thesecol[dup]){
-      # find allele to merge this one into
-      alM <- min(thesecol[object$alleleNucleotides[thesecol] == 
-                            object$alleleNucleotides[al]])
-      stopifnot(al != alM)
-      # consolidate read depth
-      object$alleleDepth[,alM] <- object$alleleDepth[,alM] +
-        object$alleleDepth[,al]
-      object$antiAlleleDepth[,alM] <- object$antiAlleleDepth[,alM] -
-        object$alleleDepth[,al]
+    nucident <- .nucdist(object$alleleNucleotides[thesecol]) == 0
+    diag(nucident) <- FALSE # don't need to merge allele to self
+    while(any(nucident)){
+      al <- which(rowSums(nucident) > 0)[1] # merge alleles into this one
+      alM <- which(nucident[al,]) # alleles to merge
+      object$alleleDepth[,thesecol[al]] <- object$alleleDepth[,thesecol[al]] +
+        rowSums(object$alleleDepth[,thesecol[alM], drop = FALSE])
+      object$antiAlleleDepth[,thesecol[al]] <- object$antiAlleleDepth[,thesecol[al]] +
+        rowSums(object$antiAlleleDepth[,thesecol[alM], drop = FALSE])
+      for(am in alM){
+        object$alleleNucleotides[thesecol[al]] <-
+          .mergeNucleotides(object$alleleNucleotides[thesecol[al]],
+                            object$alleleNucleotides[thesecol[am]])
+      }
+      remal <- c(remal, thesecol[alM])
+      nucident <- nucident[-alM, -alM]
     }
-    remal <- c(remal, thesecol[dup])
   }
   
   # remove duplicated alleles from all slots
