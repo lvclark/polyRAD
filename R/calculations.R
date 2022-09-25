@@ -256,6 +256,9 @@ polyRADsubmat <- matrix(c(0,1,1,1, 0,0,0,1,1,1, 0,0,0,1, 0,1,1, # A
   if(is.null(alleles2)){ # square matrix for all combinations of alleles
     nal <- length(alleles1)
     out <- matrix(0L, nrow = nal, ncol = nal, dimnames = list(alleles1, alleles1))
+    if(nal == 1){
+      return(out)
+    }
     for(a1 in 1:(nal - 1)){
       for(a2 in (a1 + 1):nal){
         out[a1,a2] <- out[a2,a1] <-

@@ -2443,6 +2443,7 @@ MergeIdenticalHaplotypes.RADdata <- function(object, ...){
     thesecol <- which(object$alleles2loc == L)
     nucident <- .nucdist(object$alleleNucleotides[thesecol]) == 0
     diag(nucident) <- FALSE # don't need to merge allele to self
+    remal2 <- integer(0)
     while(any(nucident)){
       al <- which(rowSums(nucident) > 0)[1] # merge alleles into this one
       alM <- which(nucident[al,]) # alleles to merge
@@ -2455,9 +2456,12 @@ MergeIdenticalHaplotypes.RADdata <- function(object, ...){
           .mergeNucleotides(object$alleleNucleotides[thesecol[al]],
                             object$alleleNucleotides[thesecol[am]])
       }
-      remal <- c(remal, thesecol[alM])
-      nucident <- nucident[-alM, -alM]
+      remal2 <- c(remal2, thesecol[alM])
+      thesecol <- thesecol[-alM]
+      nucident <- .nucdist(object$alleleNucleotides[thesecol]) == 0
+      diag(nucident) <- FALSE
     }
+    remal <- c(remal, remal2)
   }
   
   # remove duplicated alleles from all slots
