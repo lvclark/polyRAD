@@ -263,10 +263,6 @@ AddGenotypeLikelihood.RADdata <- function(object, overdispersion = 9, ...){
     message("Generating sampling permutations for allele depth.")
     object <- AddDepthSamplingPermutations(object)
   }
-  if(is.null(object$errorMatrices) && attr(object, "errorRate") > 0){
-    message("Generating sequencing error matrices between alleles.")
-    object <- AddErrorMatrices(object)
-  }
   
   # get ploidies, ignoring inheritance pattern
   ploidies <- sort(unique(sapply(object$possiblePloidies, sum)))
@@ -294,14 +290,6 @@ AddGenotypeLikelihood.RADdata <- function(object, overdispersion = 9, ...){
       for(j in seq_along(sampleReal)){
         alleleProb[j,] <- sampleReal[j] + sampleContam
       }
-      # Adjust for sequencing error
-      if(attr(object, "errorRate") > 0){
-        for(L in seq_len(nLoci(object))){
-          thesealleles <- which(object$alleles2loc == L)
-          alleleProb[,thesealleles] <- alleleProb[,thesealleles] %*% object$errorMatrices[[L]]
-        }
-      }
-      # probability of another allele
       antiAlleleProb <- 1 - alleleProb
       # multiply probabilities by overdispersion factor for betabinomial
       alleleProb <- alleleProb * overdispersion
@@ -1357,50 +1345,6 @@ AddAlleleBias.RADdata <- function(object, maxbias = 4, ...){
   
   object$alleleBias <- bias
   
-  return(object)
-}
-
-# Add matrices for adjusting read sampling probabilities based on sampling error
-AddErrorMatrices <- function(object, ...){
-  UseMethod("AddErrorMatrices", object)
-}
-AddErrorMatrices.RADdata <- function(object, ...){
-  out <- vector(mode = "list", length = nLoci(object))
-  names(out) <- GetLoci(object)
-  errorRate <- attr(object, "errorRate")
-  
-  for(L in seq_len(nLoci(object))){
-    thesealleles <- which(object$alleles2loc == L)
-    nal <- length(thesealleles)
-    if(nal == 1){
-      out[[L]] <- matrix(1, nrow = 1, ncol = 1)
-    } else{
-      thesenuc <- object$alleleNucleotides[thesealleles]
-      nsites <- unique(nchar(thesenuc))
-      stopifnot(length(nsites) == 1) # all allele seq same length
-      # Get distances between alleles and convert to error probs.
-      # If the true allele is [row], what is the prob we will see [col]?
-      splitnuc <- strsplit(thesenuc, split = "")
-      out[[L]] <- matrix(0, nrow = nal, ncol = nal)
-      for(a1 in 1:(nal - 1)){
-        for(a2 in (a1 + 1):nal){
-          nucdist <- sum(sapply(seq_len(nsites),
-                                function(i) polyRADsubmat[splitnuc[[a1]][i],
-                                                          splitnuc[[a2]][i]]))
-          stopifnot(nucdist > 0 & nucdist <= nsites)
-          out[[L]][a1,a2] <- out[[L]][a2,a1] <-
-            (errorRate ^ nucdist) * ((1 - errorRate) ^ (nsites - nucdist))
-        }
-      }
-      diag(out[[L]]) <- (1 - errorRate) ^ nsites # nothing mutated on diagonal
-      # normalize probs to sum to 1, since some possible haplotypes aren't present
-      out[[L]] <- sweep(out[[L]], 1, rowSums(out[[L]]), "/", check.margin = FALSE)
-    }
-    rownames(out[[L]]) <- colnames(out[[L]]) <-
-      GetAlleleNames(object)[thesealleles]
-  }
-  
-  object$errorMatrices <- out
   return(object)
 }
 
