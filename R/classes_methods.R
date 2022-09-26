@@ -1380,19 +1380,9 @@ AddErrorMatrices.RADdata <- function(object, ...){
       stopifnot(length(nsites) == 1) # all allele seq same length
       # Get distances between alleles and convert to error probs.
       # If the true allele is [row], what is the prob we will see [col]?
-      splitnuc <- strsplit(thesenuc, split = "")
-      out[[L]] <- matrix(0, nrow = nal, ncol = nal)
-      for(a1 in 1:(nal - 1)){
-        for(a2 in (a1 + 1):nal){
-          nucdist <- sum(sapply(seq_len(nsites),
-                                function(i) polyRADsubmat[splitnuc[[a1]][i],
-                                                          splitnuc[[a2]][i]]))
-          stopifnot(nucdist > 0 & nucdist <= nsites)
-          out[[L]][a1,a2] <- out[[L]][a2,a1] <-
-            (errorRate ^ nucdist) * ((1 - errorRate) ^ (nsites - nucdist))
-        }
-      }
-      diag(out[[L]]) <- (1 - errorRate) ^ nsites # nothing mutated on diagonal
+      nucdist <- .nucdist(thesenuc)
+      stopifnot(all(nucdist >= 0) && all(nucdist <= nsites))
+      out[[L]] <- (errorRate ^ nucdist) * ((1 - errorRate) ^ (nsites - nucdist))
       # normalize probs to sum to 1, since some possible haplotypes aren't present
       out[[L]] <- sweep(out[[L]], 1, rowSums(out[[L]]), "/", check.margin = FALSE)
     }
