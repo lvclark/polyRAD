@@ -97,8 +97,8 @@ alleles at a locus does not sum to the ploidy.  To retain the most probable
 copy number for each allele, even if they don't sum to the ploidy across
 all alleles, use \code{"ignore"}.  To be conservative and convert these allele
 copy numbers to \code{NA}, use \code{"na"}.  To adjust allele copy numbers to
-match the ploidy (maximizing the product of posterior probabilities across
-alleles, within the space of possible multiallelic genotypes), use \code{"correct"}.
+match the ploidy (adding or subtracting allele copies while maximizing the
+product of posterior probabilities across alleles), use \code{"correct"}.
 }
 }
 
