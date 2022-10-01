@@ -103,6 +103,40 @@ List BestMultiGeno(NumericVector probs, int ploidy, int nalleles, int choose) {
   return out;
 }
 
+// Function to correct a genotype that just needs one more allele. Designed to
+// explore a much smaller region of the search space than BestMultiGeno.
+// [[Rcpp::export]]
+IntegerVector AddOneAllele(IntegerVector geno, NumericVector probs, int ploidy,
+                           int nalleles) {
+  IntegerVector outgeno(nalleles);
+  double bestprob = 0;
+  double thisprob;
+  int p1 = ploidy + 1;
+  IntegerVector thisgeno(nalleles);
+  
+  // Get it working then make into while look to keep adding alleles up to ploidy
+  // Loop through alleles to potentially add
+  for(int a1 = 0; a1 < nalleles; a1++){
+    thisprob = 1;
+    // Loop to calculate probability and build genotype
+    for(int a2 = 0; a2 < nalleles; a2++){
+      if(a1 == a2){
+        thisprob *= probs[RCto1D(p1, geno[a2] + 1, a2)];
+        thisgeno[a2] = geno[a2] + 1;
+      } else {
+        thisprob *= probs[RCto1D(p1, geno[a2], a2)];
+        thisgeno[a2] = geno[a2];
+      }
+    }
+    if(thisprob > bestprob){
+      bestprob = thisprob;
+      std::copy( thisgeno.begin(), thisgeno.end(), outgeno.begin() ) ;
+    }
+  }
+  
+  return outgeno;
+}
+
 // Function to determine if multi-allelic genotypes are consistent with ploidy
 // after calling under a pseudo-biallelic model.  Can set inconsistent
 // genotypes either to missing or correct them.
