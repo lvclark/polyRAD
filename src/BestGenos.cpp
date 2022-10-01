@@ -105,7 +105,6 @@ List BestMultiGeno(NumericVector probs, int ploidy, int nalleles, int choose) {
 
 // Function to correct a genotype that just needs one more allele. Designed to
 // explore a much smaller region of the search space than BestMultiGeno.
-// [[Rcpp::export]]
 IntegerVector AddOneAllele(IntegerVector geno, NumericVector probs, int ploidy,
                            int nalleles) {
   IntegerVector outgeno(nalleles);
@@ -114,7 +113,6 @@ IntegerVector AddOneAllele(IntegerVector geno, NumericVector probs, int ploidy,
   int p1 = ploidy + 1;
   IntegerVector thisgeno(nalleles);
   
-  // Get it working then make into while look to keep adding alleles up to ploidy
   // Loop through alleles to potentially add
   for(int a1 = 0; a1 < nalleles; a1++){
     thisprob = 1;
@@ -179,8 +177,13 @@ IntegerMatrix CorrectGenos(IntegerMatrix bestgenos, NumericVector probs,
           }
         }
         // find the most probable multiallelic genotype
-        newgeno = BestMultiGeno(theseprobs, ploidy, thisnal, ploidy);
-        thisgeno = newgeno["outgeno"];
+        while(sum(thisgeno) < ploidy){
+          thisgeno = AddOneAllele(thisgeno, theseprobs, ploidy, thisnal);
+        }
+        if(sum(thisgeno) > ploidy){
+          newgeno = BestMultiGeno(theseprobs, ploidy, thisnal, ploidy);
+          thisgeno = newgeno["outgeno"];
+        }
         // fill in new genotypes
         for(int a = 0; a < thisnal; a++){
           bestgenos(t, thesecol[a]) = thisgeno[a];
