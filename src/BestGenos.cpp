@@ -50,6 +50,7 @@ int RCto1D(int nrow, int row, int col) {
 // Works on one individual * locus.
 // choose is how many alleles to choose, which starts at ploidy and is reduced
 // to zero by recursion.
+// Now deprecated in polyRAD v2.0 because it is very slow.
 List BestMultiGeno(NumericVector probs, int ploidy, int nalleles, int choose) {
   // initialize at all zeros, which is what will be returned if no alleles can
   // be picked
@@ -135,6 +136,40 @@ IntegerVector AddOneAllele(IntegerVector geno, NumericVector probs, int ploidy,
   return outgeno;
 }
 
+// Function to find the best allele to remove from a genotype that has too many.
+IntegerVector LoseOneAllele(IntegerVector geno, NumericVector probs, int ploidy,
+                           int nalleles) {
+  IntegerVector outgeno(nalleles);
+  double bestprob = 0;
+  double thisprob;
+  int p1 = ploidy + 1;
+  IntegerVector thisgeno(nalleles);
+  
+  // Loop through alleles to potentially remove
+  for(int a1 = 0; a1 < nalleles; a1++){
+    if(geno[a1] == 0){
+      continue;
+    }
+    thisprob = 1;
+    // Loop to calculate probability and build genotype
+    for(int a2 = 0; a2 < nalleles; a2++){
+      if(a1 == a2){
+        thisprob *= probs[RCto1D(p1, geno[a2] - 1, a2)];
+        thisgeno[a2] = geno[a2] - 1;
+      } else {
+        thisprob *= probs[RCto1D(p1, geno[a2], a2)];
+        thisgeno[a2] = geno[a2];
+      }
+    }
+    if(thisprob > bestprob){
+      bestprob = thisprob;
+      std::copy( thisgeno.begin(), thisgeno.end(), outgeno.begin() ) ;
+    }
+  }
+  
+  return outgeno;
+}
+
 // Function to determine if multi-allelic genotypes are consistent with ploidy
 // after calling under a pseudo-biallelic model.  Can set inconsistent
 // genotypes either to missing or correct them.
@@ -149,7 +184,6 @@ IntegerMatrix CorrectGenos(IntegerMatrix bestgenos, NumericVector probs,
   bool genoOK;
   NumericVector theseprobs;
   int p1 = ploidy + 1;
-  List newgeno;
   
   for(int L = 1; L < nloc + 1; L ++){
     thesecol = alleles[alleles2loc == L];
@@ -180,9 +214,8 @@ IntegerMatrix CorrectGenos(IntegerMatrix bestgenos, NumericVector probs,
         while(sum(thisgeno) < ploidy){
           thisgeno = AddOneAllele(thisgeno, theseprobs, ploidy, thisnal);
         }
-        if(sum(thisgeno) > ploidy){
-          newgeno = BestMultiGeno(theseprobs, ploidy, thisnal, ploidy);
-          thisgeno = newgeno["outgeno"];
+        while(sum(thisgeno) > ploidy){
+          thisgeno = LoseOneAllele(thisgeno, theseprobs, ploidy, thisnal);
         }
         // fill in new genotypes
         for(int a = 0; a < thisnal; a++){
