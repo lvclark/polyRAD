@@ -301,6 +301,8 @@ AddGenotypeLikelihood.RADdata <- function(object, overdispersion = 9, ...){
           alleleProb[,thesealleles] <- alleleProb[,thesealleles] %*% object$errorMatrices[[L]]
         }
       }
+      alleleProb[alleleProb < 0.0000001] <- 0.0000001
+      alleleProb[alleleProb > 0.9999999] <- 0.9999999
       # probability of another allele
       antiAlleleProb <- 1 - alleleProb
       # multiply probabilities by overdispersion factor for betabinomial
