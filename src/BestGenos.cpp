@@ -182,6 +182,7 @@ IntegerMatrix CorrectGenos(IntegerMatrix bestgenos, NumericVector probs,
   IntegerVector thisgeno;
   int thisnal;
   bool genoOK;
+  bool genoNA;
   NumericVector theseprobs;
   int p1 = ploidy + 1;
   
@@ -195,14 +196,14 @@ IntegerMatrix CorrectGenos(IntegerMatrix bestgenos, NumericVector probs,
         thisgeno[a] = bestgenos(t, thesecol[a]);
       }
       genoOK = sum(thisgeno) == ploidy;
-      if(is_true(any(is_na(thisgeno))) || 
-         (!do_correct && !genoOK)){
+      genoNA = is_true(any(is_na(thisgeno)));
+      if(genoNA || (!do_correct && !genoOK)){
         // fill in missing data for this genotype
         for(int a = 0; a < thisnal; a++){
           bestgenos(t, thesecol[a]) = NA_INTEGER;
         }
       }
-      if(do_correct && !genoOK){
+      if(do_correct && !genoOK && !genoNA){
         // get posterior probabilities at this taxon and locus
         for(int c = 0; c < p1; c++){
           for(int a = 0; a < thisnal; a++){
