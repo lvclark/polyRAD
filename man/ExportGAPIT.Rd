@@ -356,7 +356,7 @@ outfile4 <- tempfile() # temporary file for example
 Export_Structure(exampleRAD, outfile4)
 
 # export to adegenet
-if(requireNamespace("adegenet", quiet = TRUE)){
+if(requireNamespace("adegenet", quietly = TRUE)){
   mygenind <- Export_adegenet_genind(exampleRAD)
 }
 }
