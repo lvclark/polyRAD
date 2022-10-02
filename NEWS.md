@@ -28,7 +28,12 @@ Excellence in Breeding, as well as their original format.
 
 * `MergeIdenticalHaplotypes` now takes IUPAC ambiguity codes into account. It is
 now used internally by `VCF2RADdata`, `readStacks`, `readTASSELGBSv2`, and
-`readProcessIsoloci`.
+`readProcessIsoloci`. Some additional loci will now be filtered out by these
+functions.
+
+* `GetProbableGenotypes` with `multiallelic = "correct"`, and by extension
+`RADdata2VCF`, now run much faster by searching a much narrower range of
+possible multiallelic genotypes.
 
 # polyRAD 1.6
 
