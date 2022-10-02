@@ -340,7 +340,10 @@ It looks like `12` follows the expected distribution of p-values most
 closely, both from the automated output of `TestOverdispersion` and from
 examining the quantiles of p-values.  In the matrix of quantiles, we are
 looking for columns where the 25th percentile is about 0.25, the 50th
-percentile is about 0.5, etc.
+percentile is about 0.5, etc.  These libraries were made with 15 PCR
+cycles.  If you used more PCR cycles you are likely to have a lower optimal
+value for the overdispersion parameter, or conversely if you used fewer PCR
+cycles you will probably have a higher value for the overdispersion parameter.
 
 ```{r}
 my_ovdisp <- overdispersionP$optimal
@@ -605,7 +608,10 @@ sapply(overdispersionP[names(overdispersionP) != "optimal"],
 
 In this case, ten looks like a good value.  In the matrix of quantiles, we are
 looking for columns where the 25th percentile is about 0.25, the 50th
-percentile is about 0.5, etc.
+percentile is about 0.5, etc. These libraries were made with 15 PCR
+cycles.  If you used more PCR cycles you are likely to have a lower optimal
+value for the overdispersion parameter, or conversely if you used fewer PCR
+cycles you will probably have a higher value for the overdispersion parameter.
 
 ```{r}
 my_ovdisp <- overdispersionP$optimal
@@ -667,7 +673,7 @@ ExpectedHindHe(mydata, inbreeding = 0.25, ploidy = 2, overdispersion = my_ovdisp
 ```
 
 According to these results, good quality markers can be expected to have
-$H_{ind}/H_E$ values from about 0.25 to 0.47.  Values lower than that
+$H_{ind}/H_E$ values from about 0.24 to 0.48.  Values lower than that
 indicate technical problems such as restriction cut site polymorphisms,
 causing overdispersion in the data that could reduce genotyping quality.
 Values higher than that indicate paralogy or higher ploidy than expected.
@@ -676,8 +682,8 @@ only remove markers where $H_{ind}/H_E$ is too low (although you may
 consider filtering differently in your own dataset).
 
 ```{r}
-mean(myhindheByLoc < 0.25) # about 33% of markers would be removed
-keeploci <- names(myhindheByLoc)[myhindheByLoc >= 0.26]
+mean(myhindheByLoc < 0.24) # about 29% of markers would be removed
+keeploci <- names(myhindheByLoc)[myhindheByLoc >= 0.24]
 mydata <- SubsetByLocus(mydata, keeploci)
 ```
 
