@@ -82,13 +82,9 @@ RADdata <- function(alleleDepth, alleles2loc, locTable, possiblePloidies,
   names(taxaPloidy) <- taxa
   nTaxa <- dim(alleleDepth)[1]
   nLoci <- dim(locTable)[1]
-  locDepth <- t(apply(alleleDepth, 1, function(x) tapply(x, alleles2loc, sum)))
+  locDepth <- t(rowsum(t(alleleDepth), alleles2loc))
      # dimnames(locDepth)[[2]] is integer from alleles2loc converted to character
-  if(length(unique(alleles2loc)) == 1){
-    locDepth <- matrix(locDepth, nrow = nTaxa, ncol = nLoci,
-                       dimnames = list(taxa, as.character(unique(alleles2loc))))
-  }
-  
+
   expandedLocDepth <- locDepth[,as.character(alleles2loc), drop = FALSE]
   
   # for each allele and taxon, get proportion of reads for that locus
