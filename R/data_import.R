@@ -1037,29 +1037,16 @@ readStacks <- function(allelesFile, matchesFolder, version = 2,
   alleleDepth <- alleleDepth[reorder,]
   
   # filter loci
-  alRemove <- integer(0)
-  alIndex <- 1L
   indperal <- colSums(alleleDepth > 0)
-  while(alIndex <= length(alleleNames)){
-    # find allele columns for this locus
-    thisLoc <- locNames[alIndex]
-    thesecol <- alIndex
-    alIndex <- alIndex + 1L
-    while(alIndex <= length(alleleNames) && 
-          locNames[alIndex] == thisLoc){
-      thesecol <- c(thesecol, alIndex)
-      alIndex <- alIndex + 1L
-    }
-    
-    # determine whether to keep the locus
-    keepLoc <- sum(rowSums(alleleDepth[,thesecol, drop = FALSE]) > 0) >= min.ind.with.reads
-    if(keepLoc){
-      commonAllele <- which.max(indperal[thesecol])
-      keepLoc <- sum(indperal[thesecol[-commonAllele]]) >= min.ind.with.minor.allele
-    }
-    # update list of alleles to remove
-    if(!keepLoc) alRemove <- c(alRemove, thesecol)
-  }
+  indperloc <- rowSums(rowsum(t(alleleDepth), locNames) > 0)
+  locRemove <- which(indperloc < min.ind.with.reads |
+                       tapply(indperal, locNames,
+                              function(x){
+                                x <- x[-which.max(x)]
+                                sum(x) < min.ind.with.minor.allele
+                              }))
+  alRemove <- which(locNames %in% names(indperloc)[locRemove])
+  
   # subset objects
   alleleDepth <- alleleDepth[, -alRemove]
   locNames <- locNames[-alRemove]
