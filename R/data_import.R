@@ -784,42 +784,21 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
     thisAlDepth[is.na(thisAlDepth)] <- 0L
     # how many individuals have each allele
     indperal <- colSums(thisAlDepth > 0)
-    # loop to filter markers
+
+    # filter loci
     message("Filtering markers...")
-    keepLoc <- logical(thisNloc) # should loci be retained?
-    remAl <- integer(0) # list of alleles to be removed
-    iAl <- 0L # keep track of allele position for last locus
-    for(i in 1:thisNloc){
-      thiscol <- 1:(nAlt[i] + 1L) + iAl # allele columns for this locus
-      # check if it passes filtering
-      iDepth <- thisAlDepth[,thiscol, drop = FALSE]
-      if(sum(rowSums(iDepth) > 0) < min.ind.with.reads){
-        keepLoc[i] <- FALSE
-      } else {
-        keepLoc[i] <- sum(indperal[thiscol] >= min.ind.with.minor.allele) >= 2
-      }
-      # get rid of funny stuff from TASSEL-GBSv2
-      if(keepLoc[i] && any(grepl("N", thisAlleleNucleotides[thiscol]))){
-        keepLoc[i] <- FALSE
-      }
-      # pad out indels, using VCF convention of listing nucleotide before indel
-      if(keepLoc[i] && 
-         length(unique(nchar(thisAlleleNucleotides[thiscol]))) > 1){
-        thisAN <- thisAlleleNucleotides[thiscol]
-        maxWidth <- max(nchar(thisAN))
-        for(a in 1:length(thisAN)){
-          while(nchar(thisAN[a]) < maxWidth){
-            thisAN[a] <- paste(thisAN[a], "-", sep = "")
-          }
-        }
-        thisAlleleNucleotides[thiscol] <- thisAN
-      }
-      # cut the locus if it does not pass filtering
-      if(!keepLoc[i]){
-        remAl <- c(remAl, thiscol)
-      }
-      iAl <- iAl + nAlt[i] + 1L # update last allele index
-    }
+    indperloc <- rowSums(rowsum(t(thisAlDepth), thisAlleles2loc) > 0)
+    keepLoc <- indperloc >= min.ind.with.reads &
+      tapply(indperal, thisAlleles2loc,
+             function(x){
+               sum(x >= min.ind.with.minor.allele) >= 2
+             })
+    # get rid of funny stuff from TASSEL-GBSv2
+    locWithN <- unique(thisAlleles2loc[grep("N", thisAlleleNucleotides)])
+    keepLoc[locWithN] <- FALSE
+    # list alleles to remove
+    remAl <- which(!thisAlleles2loc %in% which(keepLoc))
+    
     # remove cut alleles from allele objects
     if(length(remAl) > 0){
       thisAlleleNucleotides <- thisAlleleNucleotides[-remAl]
@@ -837,6 +816,21 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
     }
     thisNallele <- length(thisAlleles2loc)
     
+    # pad out indels, using VCF convention of listing nucleotide before indel
+    indelLoc <- which(tapply(nchar(thisAlleleNucleotides), thisAlleles2loc,
+                             function(x) length(unique(x)) > 1))
+    for(i in indelLoc){
+      thiscol <- which(thisAlleles2loc == i)
+      thisAN <- thisAlleleNucleotides[thiscol]
+      maxWidth <- max(nchar(thisAN))
+      for(a in 1:length(thisAN)){
+        while(nchar(thisAN[a]) < maxWidth){
+          thisAN[a] <- paste(thisAN[a], "-", sep = "")
+        }
+      }
+      thisAlleleNucleotides[thiscol] <- thisAN
+    }
+
     # group SNPs into tags
     if(phaseSNPs && thisNloc > 0){
       # add the last marker to the current set if appropriate
