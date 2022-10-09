@@ -35,6 +35,8 @@ functions.
 `RADdata2VCF`, now run much faster by searching a much narrower range of
 possible multiallelic genotypes.
 
+* Optimizations to improve speed of data import.
+
 # polyRAD 1.6
 
 * `TestOverdispersion` now prints a helpful suggestion for which overdispersion
