@@ -2001,6 +2001,7 @@ MergeRareHaplotypes.RADdata <- function(object, min.ind.with.haplotype = 10,
   # loop through loci that need fixing
   for(L in lociToFix){
     thesealleles <- which(object$alleles2loc == L)
+    thesealleles <- thesealleles[!thesealleles %fin% zeroalleles]
     theserare <- thesealleles[thesealleles %fin% rarealleles]
     while(length(theserare) > 0 && length(thesealleles) > 1){
       thisAl <- theserare[1]

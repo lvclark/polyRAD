@@ -37,6 +37,8 @@ possible multiallelic genotypes.
 
 * Optimizations to improve speed of data import.
 
+* Bug fix in `MergeRareHaplotypes` when some alleles have zero reads.
+
 # polyRAD 1.6
 
 * `TestOverdispersion` now prints a helpful suggestion for which overdispersion
