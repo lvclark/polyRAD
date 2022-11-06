@@ -64,9 +64,9 @@ the two input files.
 \references{
 TASSEL GBSv2 pipeline: \url{https://bitbucket.org/tasseladmin/tassel-5-source/wiki/Tassel5GBSv2Pipeline}
 
-Bowtie2: \url{http://bowtie-bio.sourceforge.net/bowtie2/index.shtml}
+Bowtie2: \url{https://bowtie-bio.sourceforge.net/bowtie2/index.shtml}
 
-BWA: \url{http://bio-bwa.sourceforge.net/}
+BWA: \url{https://bio-bwa.sourceforge.net/}
 }
 \author{
 Lindsay V. Clark

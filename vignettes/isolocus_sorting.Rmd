@@ -137,9 +137,9 @@ Depending on the complexity of your dataset, it can be quite a large file.
 
 Next, align the FASTQ file generated in step 2 of the previous section to your
 reference genome.  If you have never used
-[Bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml)
+[Bowtie2](https://bowtie-bio.sourceforge.net/bowtie2/index.shtml)
 on your reference genome before, you will first need to
-[make an index](http://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#the-bowtie2-build-indexer).
+[make an index](https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#the-bowtie2-build-indexer).
 
 ```
 bowtie2-build Msinensis_497_v7.0.hardmasked.fa Msi_DH1_7

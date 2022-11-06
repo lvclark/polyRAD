@@ -34,7 +34,7 @@ polyRAD/extdata/simulate_rad_data.R.
 
 \emph{M. sinensis} sequencing data available at
 \url{https://www.ncbi.nlm.nih.gov//bioproject/PRJNA207721}, with full genotype
-calls at \url{https://doi.org/10.13012/B2IDB-1402948_V1}.
+calls at \doi{10.13012/B2IDB-1402948_V1}.
 }
 
 \examples{
