@@ -1575,6 +1575,18 @@ readDArTag <- function(file, botloci = NULL, blastfile = NULL,
                          Chr = sub("_[[:digit:]]+$", "", loci),
                          Pos = as.integer(sub("^.+_", "", loci)))
   
+  # Trim allele tags as needed. DArT provided newer alleles as longer sequence.
+  taglength <- nchar(tab$AlleleSequence)
+  minlength <- tapply(taglength, tab$CloneID, min)
+  if(length(unique(minlength)) == 1){
+    tab$AlleleSequence <- substring(tab$AlleleSequence, 1, minlength[1])
+  } else {
+    for(L in loci){
+      theserows <- which(tab$CloneID == L)
+      tab$AlleleSequence[theserows] <- substring(tab$AlleleSequence[theserows], 1, minlength[L])
+    }
+  }
+  
   # Do reverse complement where appropriate
   if(!is.null(blastfile)){
     # Import BLAST results
@@ -1656,6 +1668,9 @@ readDArTag <- function(file, botloci = NULL, blastfile = NULL,
   rownames(alleleDepth) <- samples
   
   message("Building RADdata object...")
-  return(RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
-                 contamRate, alleleNucleotides, taxaPloidy))
+  out <- RADdata(alleleDepth, alleles2loc, locTable, possiblePloidies,
+                 contamRate, alleleNucleotides, taxaPloidy)
+  message("Merging identical haplotypes...")
+  out <- MergeIdenticalHaplotypes(out)
+  return(out)
 }
