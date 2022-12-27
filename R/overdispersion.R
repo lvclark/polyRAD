@@ -99,8 +99,7 @@ TestOverdispersion.RADdata <- function(object, to_test = seq(6, 20, by = 2),
   if(best == min(to_test)){
     cat("Consider testing lower values.", sep = "\n")
     best <- NA
-  }
-  if(best == max(to_test)){
+  } else if(best == max(to_test)){
     cat("Consider testing higher values.", sep = "\n")
     best <- NA
   }

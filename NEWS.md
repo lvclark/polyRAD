@@ -1,3 +1,7 @@
+# polyRAD 2.0.1
+
+* Bug fix in `TestOverdispersion` when the optimal value is the minimum tested.
+
 # polyRAD 2.0
 
 * Multiploid populations are now supported. This includes natural populations with
