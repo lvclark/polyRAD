@@ -1,6 +1,7 @@
 # polyRAD 2.0.1
 
 * Bug fix in `TestOverdispersion` when the optimal value is the minimum tested.
+* `VCF2RADdata` now can make use of .csi indices on VCFs that are already bgzipped.
 
 # polyRAD 2.0
 

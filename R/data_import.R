@@ -700,11 +700,16 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
       message(paste("Compressed VCF sent to", file))
     }
   }
-  if(is.character(file) && !file.exists(paste(file, ".tbi", sep = ""))){
+  if(is.character(file) && file.exists(paste0(file, ".csi"))){
+    idx <- paste0(file, ".csi")
+  } else {
+    idx <- paste0(file, ".tbi")
+  }
+  if(is.character(file) && !file.exists(idx)){
     message("Indexing VCF.")
     Rsamtools::indexTabix(file, format = "vcf")
   }
-  tfile <- Rsamtools::TabixFile(file, yieldSize = yieldSize)
+  tfile <- Rsamtools::TabixFile(file, index = idx, yieldSize = yieldSize)
   
   # set up genome argument if needed
   genome <- VariantAnnotation::seqinfo(hdr)

@@ -124,6 +124,9 @@ for installation instructions.
 If you anticipate running \code{VCF2RADdata} on the same file more than once,
 it is recommended to run \code{bgzip} and \code{indexTabix} from the package
 \pkg{Rsamtools} once before running \code{VCF2RADdata}.  See examples.
+If the reference genome is large enough to require a .csi index rather than a
+.tbi index, after bgzipping the file you can generate the index from the bash
+terminal using \code{tabix --csi} from Samtools.
 
 \code{min.ind.with.minor.allele} is used for filtering SNPs as the VCF file is
 read.  Additionally, because phasing SNPs into haplotypes can cause some 
