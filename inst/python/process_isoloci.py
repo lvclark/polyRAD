@@ -126,6 +126,9 @@ def ProcessRowGroup(alignrows, depthrows, nisoloci, thresh, expHindHe,
     depthsOut = [depths[j] for j in hapAssign[i]]
     tagsOut = [alignrows[j][nisoloci] for j in hapAssign[i]]
     refNucs = alNucs[i].pop()
+    # skip cases where tags varied in length and some became identical
+    if any([an == '' for an in alNucs[i]]) or len(alNucs[i]) != len(set(alNucs[i])):
+      continue
     [outwriter.writerow([aligns[i], varpos[i], alNucs[i][j], refNucs, tagsOut[j]] + depthsOut[j]) \
      for j in range(len(hapAssign[i]))]
 
