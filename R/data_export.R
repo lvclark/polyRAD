@@ -291,7 +291,7 @@ Export_MAPpoly <- function(object, file, pheno = NULL, ploidyIndex = 1,
   # Write genotype posterior probabilities
   genotab <- data.frame(rep(GetAlleleNames(object)[keepal], each = length(progeny)),
                         rep(progeny, times = length(keepal)),
-                        matrix(round(object$posteriorProb[[ploidyIndex,as.character(pld.p)]][, progeny, keepal], digits),
+                        matrix(round(object$posteriorProb[[ploidyIndex,as.character(pld.p / ploidy * 2)]][, progeny, keepal], digits),
                                byrow = TRUE, nrow = length(progeny) * length(keepal),
                                ncol = pld.p + 1))
   write.table(genotab, file = file, append = TRUE, quote = FALSE,
