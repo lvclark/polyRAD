@@ -3,6 +3,7 @@
 * Bug fix in `TestOverdispersion` when the optimal value is the minimum tested.
 * `VCF2RADdata` now can make use of .csi indices on VCFs that are already bgzipped.
 * Bug fix in `Export_MAPpoly` relating to how ploidy is coded.
+* Bug fix in `AddAlleleFreqByTaxa` if only one PC is used.
 
 # polyRAD 2.0
 

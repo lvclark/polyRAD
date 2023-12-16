@@ -1079,7 +1079,7 @@ AddAlleleFreqByTaxa.RADdata <- function(object, minfreq = 0.0001, ...){
   PCcoef[is.na(PCcoef)] <- 0 # for non-variable sites
   
   # predict allele frequencies from PC axes
-  predAl <- object$PCA %*% PCcoef[-1,] + 
+  predAl <- object$PCA %*% PCcoef[-1,,drop=FALSE] + 
     matrix(PCcoef[1,], byrow = TRUE, nrow = nTaxa(object), 
            ncol = nAlleles(object))
   
