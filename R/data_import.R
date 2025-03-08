@@ -935,7 +935,7 @@ VCF2RADdata <- function(file, phaseSNPs = TRUE, tagsize = 80, refgenome = NULL,
 }
 
 # Function to import from Stacks 1.48
-readStacks <- function(allelesFile, matchesFolder, version = 2, 
+readStacks <- function(allelesFile, matchesFolder, version = '2.68', 
                        min.ind.with.reads = 200,
                        min.ind.with.minor.allele = 10,
                        readAlignmentData = FALSE,
@@ -943,10 +943,31 @@ readStacks <- function(allelesFile, matchesFolder, version = 2,
                        possiblePloidies = list(2), taxaPloidy = 2L,
                        contamRate = 0.001){
   # get columns depending on version number
-  if(!version %in% c(1,2)){
-    stop("Version must be equal to 1 or 2.")
+  if(!version %in% c('1', '2', '2.68')){
+    stop("Version must be equal to 1, 2, or 2.68.")
   }
-  if(version == 2){
+  if(version %in% c('2', '2.68')){
+    # for sumstats file
+    sloccol <- 1
+    schrcol <- 2
+    sposcol <- 3
+    sfcols <- list(integer(0), character(0), integer(0), NULL, NULL, NULL,
+                   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+                   NULL, NULL, NULL, NULL, NULL, NULL)
+  }
+  if(version == '2.68'){
+    # for catalog alleles file
+    hapcol <- 2
+    loccol <- 1
+    afcols <- list(integer(0), character(0), NULL, NULL)
+    # for matches file
+    mloccol <- 1
+    msamcol <- 2
+    mhapcol <- 3
+    mdepcol <- 4
+    mfcols <- list(integer(0), integer(0), character(0), integer(0),
+                   NULL)
+  } else if(version == '2'){
     # for catalog alleles file
     hapcol <- 3
     loccol <- 2
@@ -958,13 +979,6 @@ readStacks <- function(allelesFile, matchesFolder, version = 2,
     mdepcol <- 5
     mfcols <- list(integer(0), integer(0), NULL, character(0), integer(0),
                    NULL)
-    # for sumstats file
-    sloccol <- 1
-    schrcol <- 2
-    sposcol <- 3
-    sfcols <- list(integer(0), character(0), integer(0), NULL, NULL, NULL,
-                   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-                   NULL, NULL, NULL, NULL, NULL, NULL)
   } else {
     # for catalog alleles file
     hapcol <- 4

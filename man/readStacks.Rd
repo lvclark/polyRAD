@@ -9,7 +9,7 @@ this function imports read depth into a \code{\link{RADdata}} object.  If
 genomic alignments were used, alignment data can optionally be imported.
 }
 \usage{
-readStacks(allelesFile, matchesFolder, version = 2,
+readStacks(allelesFile, matchesFolder, version = '2.68',
            min.ind.with.reads = 200,
            min.ind.with.minor.allele = 10, readAlignmentData = FALSE, 
            sumstatsFile = "populations.sumstats.tsv",
@@ -23,7 +23,10 @@ Path to the "alleles" file from the Stacks catalog.
 Path to the folder containing "matches" files to import.
 }
 \item{version}{
-Either the number 1 or 2, indicating the version of Stacks.
+Either the string '1', '2', or '2.68', indicating the version of Stacks. File
+formats changed slightly between version 2.0 and version 2.68, so if you are
+using a version in between those you may need to try both and see which does
+not give an error.
 }
 
   \item{min.ind.with.reads}{
