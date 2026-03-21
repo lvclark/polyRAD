@@ -70,7 +70,7 @@ Lindsay V. Clark
 }
 
 \seealso{
-\code{\link[GenomicFeatures]{makeTxDbFromGFF}}, \code{\link{GetLoci}}
+\code{\link[txdbmaker]{makeTxDbFromGFF}}, \code{\link{GetLoci}}
 }
 \examples{
 data(exampleRAD)

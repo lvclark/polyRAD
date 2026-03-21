@@ -5,6 +5,7 @@
 * Bug fix in `Export_MAPpoly` relating to how ploidy is coded.
 * Bug fix in `AddAlleleFreqByTaxa` if only one PC is used.
 * Update `readStacks` for new file formats.
+* Update Bioconductor links to pass CRAN checks
 
 # polyRAD 2.0
 
