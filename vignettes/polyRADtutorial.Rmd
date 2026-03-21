@@ -533,7 +533,7 @@ iteration until convergence is reached.
 
 Here we'll import a RAD-seq dataset from a large collection of wild and
 ornamental *Miscanthus* from Clark *et al.* (2014;
-[doi:10.1093/aob/mcu084](http://hdl.handle.net/10.1093/aob/mcu084)).
+[doi:10.1093/aob/mcu084](https://doi.org/10.1093/aob/mcu084)).
 
 Since the data are in VCF format, we will need the Bioconductor package
 VariantAnnotation to load them.  See 
